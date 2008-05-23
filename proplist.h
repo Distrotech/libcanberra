@@ -1,5 +1,5 @@
-#ifndef foocacommonh
-#define foocacommonh
+#ifndef foocaproplisthfoo
+#define foocaproplisthfoo
 
 /* $Id$ */
 
@@ -24,16 +24,30 @@
 ***/
 
 #include "canberra.h"
-#include "macro.h"
 #include "mutex.h"
 
-struct ca_context {
-    ca_bool_t opened;
+#define N_HASHTABLE 31
+
+typedef struct ca_prop {
+    char *key;
+    size_t nbytes;
+    struct ca_prop *next_in_slot, *next_item, *prev_item;
+} ca_prop;
+
+#define CA_PROP_DATA(p) ((void*) ((char*) (p) + CA_ALIGN(sizeof(ca_prop))))
+
+struct ca_proplist {
     ca_mutex *mutex;
 
-    ca_proplist *props;
-
-    void *private;
+    ca_prop *prop_hashtable[N_HASHTABLE];
+    ca_prop *first_item;
 };
+
+int ca_proplist_merge(ca_proplist **_a, ca_proplist *b, ca_proplist *c);
+ca_bool_t ca_proplist_contains(ca_proplist *p, const char *key);
+
+/* Both of the following two functions are not locked! Need manual locking! */
+ca_prop* ca_context_get_unlocked(ca_proplist *c, const char *key);
+const char* ca_context_gets_unlocked(ca_proplist *c, const char *key);
 
 #endif

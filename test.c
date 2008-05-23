@@ -1,3 +1,25 @@
+/* $Id$ */
+
+/***
+  This file is part of libcanberra.
+
+  Copyright 2008 Lennart Poettering
+
+  libcanberra is free software; you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as
+  published by the Free Software Foundation, either version 2.1 of the
+  License, or (at your option) any later version.
+
+  libcanberra is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with libcanberra. If not, If not, see
+  <http://www.gnu.org/licenses/>.
+***/
+
 #include <unistd.h>
 
 #include "canberra.h"
@@ -12,7 +34,7 @@ int main(int argc, char *argv[]) {
     /* Initialize a few meta variables for the following play()
      * calls. They stay valid until they are overwritten with
      * ca_context_set() again. */
-    ca_context_puts(c,
+    ca_context_change_props(c,
                     CA_PROP_APPLICATION_NAME, "An example",
                     CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
                     CA_PROP_MEDIA_LANGUAGE, "de_DE",
@@ -20,8 +42,6 @@ int main(int argc, char *argv[]) {
                      NULL);
 
     /* .. */
-
-    ca_context_put(c, CA_PROP_MEDIA_ICON, "some png data here", 23);
 
     ca_context_open(c);
 

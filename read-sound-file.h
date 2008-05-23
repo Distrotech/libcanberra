@@ -1,5 +1,5 @@
-#ifndef foocacommonh
-#define foocacommonh
+#ifndef foocareadsoundfilehfoo
+#define foocareadsoundfilehfoo
 
 /* $Id$ */
 
@@ -23,17 +23,22 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
-#include "canberra.h"
-#include "macro.h"
-#include "mutex.h"
+typedef enum ca_sample_type {
+    CA_SAMPLE_S16NE,
+    CA_SAMPLE_S16RE,
+    CA_SAMPLE_U8
+} ca_sample_type_t;
 
-struct ca_context {
-    ca_bool_t opened;
-    ca_mutex *mutex;
+typedef struct ca_sound_file wa_sound_file;
 
-    ca_proplist *props;
+int ca_sound_file_open(ca_sound_file *f, const char *fn);
+void ca_sound_file_close(ca_sound_file *f);
 
-    void *private;
-};
+unsigned ca_sound_file_get_nchannels(ca_sound_file *f);
+unsigned ca_sound_file_get_rate(ca_sound_file *f);
+ca_sample_type_t ca_sound_file_get_sample_type(ca_sound_file *f);
+
+int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, unsigned *n);
+int ca_sound_file_read_uint8(ca_sound_file *f, uint8_t *d, unsigned *n);
 
 #endif

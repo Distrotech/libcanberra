@@ -1,5 +1,5 @@
-#ifndef foocacommonh
-#define foocacommonh
+#ifndef foocareadvorbishfoo
+#define foocareadvorbishfoo
 
 /* $Id$ */
 
@@ -23,17 +23,16 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
-#include "canberra.h"
-#include "macro.h"
-#include "mutex.h"
+#include <stdio.h>
 
-struct ca_context {
-    ca_bool_t opened;
-    ca_mutex *mutex;
+typedef struct ca_vorbis ca_vorbis;
 
-    ca_proplist *props;
+int ca_vorbis_open(ca_vorbis *v, FILE *f);
+void ca_vorbis_close(ca_vorbis *v);
 
-    void *private;
-};
+unsigned ca_vorbis_get_nchannels(ca_vorbis *v);
+unsigned ca_vorbis_get_rate(ca_vorbis *v);
+
+int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n);
 
 #endif

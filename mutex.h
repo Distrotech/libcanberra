@@ -1,5 +1,5 @@
-#ifndef foocacommonh
-#define foocacommonh
+#ifndef foocamutexhfoo
+#define foocamutexhfoo
 
 /* $Id$ */
 
@@ -23,17 +23,15 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
-#include "canberra.h"
 #include "macro.h"
-#include "mutex.h"
 
-struct ca_context {
-    ca_bool_t opened;
-    ca_mutex *mutex;
+typedef struct ca_mutex ca_mutex;
 
-    ca_proplist *props;
+ca_mutex* ca_mutex_new(void);
+void ca_mutex_free(ca_mutex *m);
 
-    void *private;
-};
+void ca_mutex_lock(ca_mutex *m);
+ca_bool_t ca_mutex_try_lock(ca_mutex *m);
+void ca_mutex_unlock(ca_mutex *m);
 
 #endif

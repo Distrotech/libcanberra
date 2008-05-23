@@ -1,4 +1,28 @@
+/* $Id$ */
+
+/***
+  This file is part of libcanberra.
+
+  Copyright 2008 Lennart Poettering
+
+  libcanberra is free software; you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as
+  published by the Free Software Foundation, either version 2.1 of the
+  License, or (at your option) any later version.
+
+  libcanberra is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with libcanberra. If not, If not, see
+  <http://www.gnu.org/licenses/>.
+***/
+
 #include <pulse/thread-mainloop.h>
+#include <pulse/context.h>
+#include <pulse/scache.h>
 
 #include "canberra.h"
 #include "common."
@@ -11,10 +35,15 @@ struct private {
 
 #define PRIVATE(c) ((struct private *) ((c)->private)
 
+static pa_proplist *convert_proplist(ca_proplist *c) {
+    ca_assert(c);
+}
+
 int driver_open(ca_context *c) {
     pa_proplist *l;
     struct private *p;
     ca_prop *i;
+
     ca_return_val_if_fail(c, PA_ERROR_INVALID);
 
     if (!(p = PRIVATE(c) = ca_new0(struct private, 1)))
@@ -72,8 +101,7 @@ int driver_open(ca_context *c) {
 
 int driver_destroy(ca_context *c) {
     ca_return_val_if_fail(c, PA_ERROR_INVALID);
-
-    p = PRIVATE(c);
+    ca_assert_se(p = PRIVATE(c));
 
     if (p->mainloop)
         pa_threaded_mainloop_stop(p->mainloop);
