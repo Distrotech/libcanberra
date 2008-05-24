@@ -124,7 +124,8 @@ enum {
     CA_ERROR_SYSTEM = -6,
     CA_ERROR_CORRUPT = -7,
     CA_ERROR_TOOBIG = -8,
-    _CA_ERROR_MAX = -9
+    CA_ERROR_NOT_FOUND = -9,
+    _CA_ERROR_MAX = -10
 };
 
 typedef struct ca_proplist ca_proplist;

@@ -25,6 +25,7 @@
 struct ca_sound_file {
     ca_wav *wav;
     ca_vorbis *vorbis;
+    char *filename;
 
     unsigned nchannels;
     unsigned rate;
@@ -42,8 +43,13 @@ int ca_sound_file_open(ca_sound_file *_f, const char *fn) {
     if (!(f = ca_new0(ca_sound_file, 1)))
         return CA_ERROR_OOM;
 
+    if (!(f->filename = ca_strdup(fn))) {
+        ret = CA_ERROR_OOM;
+        goto fail;
+    }
+
     if (!(file = fopen(fn, "r"))) {
-        ret = CA_ERROR_SYSTEM;
+        ret = errno == ENOENT ? CA_ERROR_NOTFOUND : CA_ERROR_SYSTEM;
         goto fail;
     }
 
@@ -72,6 +78,8 @@ int ca_sound_file_open(ca_sound_file *_f, const char *fn) {
     }
 
 fail:
+
+    ca_free(f->filename);
     ca_free(f);
 
     return ret;
