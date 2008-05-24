@@ -80,32 +80,34 @@
 #endif
 
 /** Context, event, and playback properties */
-#define CA_PROP_MEDIA_NAME                  "media.name"
-#define CA_PROP_MEDIA_TITLE                 "media.title"
-#define CA_PROP_MEDIA_ARTIST                "media.artist"
-#define CA_PROP_MEDIA_LANGUAGE              "media.language"
-#define CA_PROP_MEDIA_FILENAME              "media.filename"
-#define CA_PROP_MEDIA_ICON                  "media.icon"
-#define CA_PROP_MEDIA_ICON_NAME             "media.icon_name"
-#define CA_PROP_MEDIA_ROLE                  "media.role"
-#define CA_PROP_EVENT_ID                    "event.id"
-#define CA_PROP_EVENT_MOUSE_X               "event.mouse.x"
-#define CA_PROP_EVENT_MOUSE_Y               "event.mouse.y"
-#define CA_PROP_EVENT_MOUSE_BUTTON          "event.mouse.button"
-#define CA_PROP_WINDOW_X11_DISPLAY          "window.x11.display"
-#define CA_PROP_WINDOW_X11_XID              "window.x11.xid"
-#define CA_PROP_APPLICATION_NAME            "application.name"
-#define CA_PROP_APPLICATION_ID              "application.id"
-#define CA_PROP_APPLICATION_VERSION         "application.version"
-#define CA_PROP_APPLICATION_ICON            "application.icon"
-#define CA_PROP_APPLICATION_ICON_NAME       "application.icon_name"
-#define CA_PROP_APPLICATION_LANGUAGE        "application.language"
-#define CA_PROP_APPLICATION_PROCESS_ID      "application.process.id"
-#define CA_PROP_APPLICATION_PROCESS_BINARY  "application.process.binary"
-#define CA_PROP_APPLICATION_PROCESS_USER    "application.process.user"
-#define CA_PROP_APPLICATION_PROCESS_HOST    "application.process.host"
-#define CA_PROP_CANBERRA_CONTROL_CACHE      "canberra.control.cache"    /* permanent, volatile, never */
-#define CA_PROP_CANBERRA_CONTROL_VOLUME     "canberra.control.volume"   /* decibel */
+#define CA_PROP_MEDIA_NAME                         "media.name"
+#define CA_PROP_MEDIA_TITLE                        "media.title"
+#define CA_PROP_MEDIA_ARTIST                       "media.artist"
+#define CA_PROP_MEDIA_LANGUAGE                     "media.language"
+#define CA_PROP_MEDIA_FILENAME                     "media.filename"
+#define CA_PROP_MEDIA_ICON                         "media.icon"
+#define CA_PROP_MEDIA_ICON_NAME                    "media.icon_name"
+#define CA_PROP_MEDIA_ROLE                         "media.role"
+#define CA_PROP_EVENT_ID                           "event.id"
+#define CA_PROP_EVENT_MOUSE_X                      "event.mouse.x"
+#define CA_PROP_EVENT_MOUSE_Y                      "event.mouse.y"
+#define CA_PROP_EVENT_MOUSE_BUTTON                 "event.mouse.button"
+#define CA_PROP_WINDOW_X11_DISPLAY                 "window.x11.display"
+#define CA_PROP_WINDOW_X11_XID                     "window.x11.xid"
+#define CA_PROP_APPLICATION_NAME                   "application.name"
+#define CA_PROP_APPLICATION_ID                     "application.id"
+#define CA_PROP_APPLICATION_VERSION                "application.version"
+#define CA_PROP_APPLICATION_ICON                   "application.icon"
+#define CA_PROP_APPLICATION_ICON_NAME              "application.icon_name"
+#define CA_PROP_APPLICATION_LANGUAGE               "application.language"
+#define CA_PROP_APPLICATION_PROCESS_ID             "application.process.id"
+#define CA_PROP_APPLICATION_PROCESS_BINARY         "application.process.binary"
+#define CA_PROP_APPLICATION_PROCESS_USER           "application.process.user"
+#define CA_PROP_APPLICATION_PROCESS_HOST           "application.process.host"
+#define CA_PROP_CANBERRA_CACHE_CONTROL             "canberra.cache-control"             /* permanent, volatile, never */
+#define CA_PROP_CANBERRA_VOLUME                    "canberra.volume"                    /* decibel */
+#define CA_PROP_CANBERRA_XDG_THEME_NAME            "canberra.xdg-theme.name"            /* XDG theme name */
+#define CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE  "canberra.xdg-theme.output-profile"  /* XDG theme profile */
 
 /* Context object */
 typedef struct ca_context ca_context;
