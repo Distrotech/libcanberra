@@ -28,7 +28,9 @@
 int driver_open(ca_context *c);
 int driver_destroy(ca_context *c);
 
+int driver_change_device(ca_context *c, char *device);
 int driver_change_props(ca_context *c, ca_proplist *changed, ca_proplist *merged);
+
 int driver_play(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata);
 int driver_cancel(ca_context *c, uint32_t id);
 int driver_cache(ca_context *c, ca_proplist *p);

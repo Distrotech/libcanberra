@@ -135,3 +135,41 @@ int ca_sound_file_read_uint8(ca_sound_file *fn, uint8_t *d, unsigned *n) {
     if (f->wav)
         return ca_wav_read_u8(f->wav, d, n);
 }
+
+int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
+    int ret;
+
+    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(d, CA_ERROR_INVALID);
+    ca_return_val_if_fail(n, CA_ERROR_INVALID);
+    ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
+    ca_return_val_if_fail(f->wav && !f->vorbis, CA_ERROR_STATE);
+
+    switch (f->type) {
+        case CA_SAMPLE_S16NE:
+        case CA_SAMPLE_S16RE: {
+            unsigned k;
+
+            k = *n / sizeof(int16_t);
+            if ((ret = ca_sound_file_read_int16(f, d, &k)) == CA_SUCCESS)
+                *n = k * sizeof(int16_t);
+
+            break;
+        }
+
+        case CA_SAMPLE_S16RE: {
+            unsigned k;
+
+            k = *n;
+            if ((ret = ca_sound_file_read_uint8(f, d, &k)) == CA_SUCCESS)
+                *n = k;
+
+            break;
+        }
+
+        default:
+            ca_assert_not_reached();
+    }
+
+    return ret;
+}

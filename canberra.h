@@ -79,7 +79,10 @@
 #define CA_GCC_SENTINEL
 #endif
 
-/** Context, event, and playback properties */
+/** Properties for the media that is being played, about the event
+ * that caused the media to play, the window on which behalf this
+ * media is being played, the application that this window belongs to
+ * and finally properties for libcanberra specific usage. */
 #define CA_PROP_MEDIA_NAME                         "media.name"
 #define CA_PROP_MEDIA_TITLE                        "media.title"
 #define CA_PROP_MEDIA_ARTIST                       "media.artist"
@@ -92,6 +95,10 @@
 #define CA_PROP_EVENT_MOUSE_X                      "event.mouse.x"
 #define CA_PROP_EVENT_MOUSE_Y                      "event.mouse.y"
 #define CA_PROP_EVENT_MOUSE_BUTTON                 "event.mouse.button"
+#define CA_PROP_WINDOW_NAME                        "window.name"
+#define CA_PROP_WINDOW_ID                          "window.id"
+#define CA_PROP_WINDOW_ICON                        "window.icon"
+#define CA_PROP_WINDOW_ICON_NAME                   "window.icon_name"
 #define CA_PROP_WINDOW_X11_DISPLAY                 "window.x11.display"
 #define CA_PROP_WINDOW_X11_XID                     "window.x11.xid"
 #define CA_PROP_APPLICATION_NAME                   "application.name"
@@ -112,22 +119,28 @@
 /* Context object */
 typedef struct ca_context ca_context;
 
-/** Playback completion event callback */
-typedef void ca_finish_callback_t(ca_context *c, uint32_t id, void *userdata);
+/** Playback completion event callback. This callback will be called
+ * from a background thread. */
+typedef void ca_finish_callback_t(ca_context *c, uint32_t id, int error_code, void *userdata);
 
 /** Error codes */
 enum {
     CA_SUCCESS = 0,
-    CA_ERROR_NOT_SUPPORTED = -1,
+    CA_ERROR_NOTSUPPORTED = -1,
     CA_ERROR_INVALID = -2,
     CA_ERROR_STATE = -3,
     CA_ERROR_OOM = -4,
-    CA_ERROR_NO_DRIVER = -5,
+    CA_ERROR_NODRIVER = -5,
     CA_ERROR_SYSTEM = -6,
     CA_ERROR_CORRUPT = -7,
     CA_ERROR_TOOBIG = -8,
-    CA_ERROR_NOT_FOUND = -9,
-    _CA_ERROR_MAX = -10
+    CA_ERROR_NOTFOUND = -9,
+    CA_ERROR_DESTROYED = -10,
+    CA_ERROR_CANCELED = -11,
+    CA_ERROR_NOTAVAILABLE = -12,
+    CA_ERROR_ACCESS = -13,
+    CA_ERROR_IO = -14,
+    _CA_ERROR_MAX = -15
 };
 
 typedef struct ca_proplist ca_proplist;
@@ -140,6 +153,10 @@ int ca_proplist_set(ca_proplist *p, const char *key, const void *data, size_t nb
 
 /** Create an (unconnected) context object */
 int ca_context_create(ca_context **c);
+
+int ca_context_set_driver(ca_context **c, const char *driver);
+
+int ca_context_change_device(ca_context **c, const char *device);
 
 /** Connect the context. This call is implicitly called if necessary. It
  * is recommended to initialize the application.* properties before
@@ -165,7 +182,8 @@ int ca_context_change_props_full(ca_context *c, ca_proplist *p);
  * at once. It is recommended to pass 0 for the id if the event sound
  * shall never be canceled. If the requested sound is not cached in
  * the server yet this call might result in the sample being uploaded
- * temporarily or permanently. */
+ * temporarily or permanently. This function will only start playback
+ * in the background. It will not wait until playback completed. */
 int ca_context_play(ca_context *c, uint32_t id, ...) CA_GCC_SENTINEL;
 
 /** Play one event sound, and call the specified callback function
@@ -174,7 +192,8 @@ int ca_context_play(ca_context *c, uint32_t id, ...) CA_GCC_SENTINEL;
 int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata);
 
 /** Upload the specified sample into the server and attach the
- * specified properties to it */
+ * specified properties to it. This function will only return after
+ * the sample upload was finished. */
 int ca_context_cache(ca_context *c, ...) CA_GCC_SENTINEL;
 
 /** Upload the specified sample into the server and attach the

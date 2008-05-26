@@ -33,7 +33,18 @@ struct ca_context {
 
     ca_proplist *props;
 
+    char *driver;
+    char *device;
+
     void *private;
 };
+
+typedef enum ca_cache_control {
+    CA_CACHE_CONTROL_NEVER,
+    CA_CACHE_CONTROL_PERMANENT,
+    CA_CACHE_CONTROL_VOLATILE
+} ca_cache_control_t;
+
+int ca_parse_cache_control(ca_cache_control_t *control, const char *c);
 
 #endif

@@ -68,7 +68,59 @@ int ca_context_destroy(ca_context *c) {
         ca_assert_se(ca_proplist_destroy(c->props) == CA_SUCCESS);
 
     ca_mutex_free(c->mutex);
+    ca_free(c->driver);
+    ca_free(c->device);
     ca_free(c);
+
+    return ret;
+}
+
+int ca_context_set_driver(ca_context *c, char *driver) {
+    char *n;
+    int ret;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_mutex_lock(c->mutex);
+    ca_return_val_if_fail_unlock(!c->opened, CA_ERROR_STATE, c->mutex);
+
+    if (!(n = ca_strdup(driver))) {
+        ret = CA_ERROR_OOM;
+        goto fail;
+    }
+
+    ca_free(c->driver);
+    c->driver = n;
+
+    ret = CA_SUCCESS;
+
+fail:
+    ca_mutex_unlock(c->mutex);
+
+    return ret;
+}
+
+int ca_context_change_device(ca_context *c, char *device) {
+    char *n;
+    int ret;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_mutex_lock(c->mutex);
+
+    if (!(n = ca_strdup(device))) {
+        ret = CA_ERROR_OOM;
+        goto fail;
+    }
+
+    ret = c->opened ? driver_change_device(c, n) : CA_SUCCESS;
+
+    if (ret == CA_SUCCESS) {
+        ca_free(c->device);
+        c->device = n;
+    } else
+        ca_free(n);
+
+fail:
+    ca_mutex_unlock(c->mutex);
 
     return ret;
 }
@@ -308,4 +360,21 @@ const char *ca_strerror(int code) {
     ca_return_val_if_fail(code > _CA_ERROR_MAX, NULL);
 
     return error_table[-code];
+}
+
+/* Not exported */
+int ca_parse_cache_control(ca_cache_control_t *control, const char *c) {
+    ca_return_val_if_fail(control, CA_ERROR_INVALID);
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+
+    if (streq(control, "never"))
+        *control = CA_CACHE_CONTROL_NEVER;
+    else if (streq(control, "permanent"))
+        *control = CA_CACHE_CONTROL_PERMANENT;
+    else if (streq(control, "volatile"))
+        *control = CA_CACHE_CONTROL_VOLATILE;
+    else
+        return CA_ERROR_INVALID;
+
+    return CA_SUCCESS;
 }
