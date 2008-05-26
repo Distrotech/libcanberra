@@ -486,7 +486,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
 
     if (bytes > 0) {
 
-        if ((ret = pa_stream_write(p, data, bytes)) < 0) {
+        if ((ret = pa_stream_writesp, data, bytes)) < 0) {
             ret = translate_error(ret);
             goto finish;
         }
@@ -808,7 +808,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     ca_return_val_if_fail(p->mainloop, PA_ERROR_STATE);
     ca_return_val_if_fail(p->context, PA_ERROR_STATE);
 
-    if (!(out = ca_new(struct outstanding, 1))) {
+    if (!(out = ca_new0(struct outstanding, 1))) {
         ret = CA_ERROR_OOM;
         goto finish;
     }
@@ -836,12 +836,12 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
             goto finish;
         }
 
-    strip_canberra_data(l);
-
     if (ct == CA_CACHE_CONTROL_NEVER) {
         ret = PA_ERROR_INVALID;
         goto finish;
     }
+
+    strip_canberra_data(l);
 
     /* Let's stream the sample directly */
     if ((ret = ca_lookup_sound(&out->file, &p->theme, proplist)) < 0)
