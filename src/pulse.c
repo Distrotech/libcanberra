@@ -295,13 +295,22 @@ int driver_open(ca_context *c) {
         return CA_ERROR_OOM;
     }
 
-    pa_threaded_mainloop_wait(p->mainloop);
+    for (;;) {
+        pa_context_state_t state = pa_context_get_state(p->context);
 
-    if (pa_context_get_state(p->context) != PA_CONTEXT_READY) {
-        ret = translate_error(pa_context_errno(p->context));
-        pa_threaded_mainloop_unlock(p->mainloop);
-        driver_destroy(c);
-        return ret;
+        if (state == PA_CONTEXT_READY)
+            break;
+
+        if (state == PA_CONTEXT_FAILED) {
+            ret = translate_error(pa_context_errno(p->context));
+            pa_threaded_mainloop_unlock(p->mainloop);
+            driver_destroy(c);
+            return ret;
+        }
+
+        ca_assert(state != PA_CONTEXT_TERMINATED);
+
+        pa_threaded_mainloop_wait(p->mainloop);
     }
 
     pa_threaded_mainloop_unlock(p->mainloop);
