@@ -550,7 +550,6 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
         }
 
         bytes -= rbytes;
-        fprintf(stderr, "writing %lu bytes\n", (unsigned long) rbytes);
     }
 
     if (ca_sound_file_get_size(out->file) <= 0) {
@@ -680,9 +679,8 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
     strip_canberra_data(l);
 
-    if (cb)
-        if ((ret = subscribe(c)) < 0)
-            goto finish;
+    if ((ret = subscribe(c)) < 0)
+        goto finish;
 
     for (;;) {
         pa_threaded_mainloop_lock(p->mainloop);
@@ -706,7 +704,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             goto finish;
 
         /* Hmm, we need to play it directly */
-        if (cache_control == CA_CACHE_CONTROL_NEVER)
+        if (cache_control != CA_CACHE_CONTROL_PERMANENT)
             break;
 
         /* Don't loop forever */
@@ -781,7 +779,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 finish:
 
     /* We keep the outstanding struct around if we need clean up later to */
-    if (ret == CA_SUCCESS && (out->type == OUTSTANDING_STREAM || cb)) {
+    if (ret == CA_SUCCESS) {
         out->clean_up = TRUE;
 
         ca_mutex_lock(p->outstanding_mutex);
@@ -901,7 +899,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
             goto finish;
         }
 
-    if (ct == CA_CACHE_CONTROL_NEVER) {
+    if (cache_control != CA_CACHE_CONTROL_PERMANENT) {
         ret = CA_ERROR_INVALID;
         goto finish;
     }
