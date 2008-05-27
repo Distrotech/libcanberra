@@ -126,7 +126,7 @@ static pa_proplist *strip_canberra_data(pa_proplist *l) {
     ca_assert(l);
 
     while ((key = pa_proplist_iterate(l, &state)))
-        if (strncmp(key, "canberra.", 12) == 0)
+        if (strncmp(key, "canberra.", 9) == 0)
             pa_proplist_unset(l, key);
 
     return l;
@@ -539,45 +539,47 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
         if ((ret = ca_sound_file_read_arbitrary(out->file, data, &rbytes)) < 0)
             goto finish;
 
-        if (rbytes > 0) {
-            ca_assert(rbytes <= bytes);
+        if (rbytes <= 0)
+            break;
 
-            if ((ret = pa_stream_write(s, data, rbytes, free, 0, PA_SEEK_RELATIVE)) < 0) {
-                ret = translate_error(ret);
+        ca_assert(rbytes <= bytes);
+
+        if ((ret = pa_stream_write(s, data, rbytes, free, 0, PA_SEEK_RELATIVE)) < 0) {
+            ret = translate_error(ret);
+            goto finish;
+        }
+
+        bytes -= rbytes;
+        fprintf(stderr, "writing %lu bytes\n", (unsigned long) rbytes);
+    }
+
+    if (ca_sound_file_get_size(out->file) <= 0) {
+
+        /* We reached EOF */
+
+        if (out->type == OUTSTANDING_UPLOAD) {
+
+            if (pa_stream_finish_upload(s) < 0) {
+                ret = translate_error(pa_context_errno(p->context));
                 goto finish;
             }
 
-            bytes -= rbytes;
+            /* Let's just signal driver_cache() which has been waiting for us */
+            pa_threaded_mainloop_signal(p->mainloop, FALSE);
 
         } else {
-            /* We reached EOF */
+            pa_operation *o;
+            ca_assert(out->type == OUTSTANDING_STREAM);
 
-            if (out->type == OUTSTANDING_UPLOAD) {
-
-                if (pa_stream_finish_upload(s) < 0) {
-                    ret = translate_error(pa_context_errno(p->context));
-                    goto finish;
-                }
-
-                /* Let's just signal driver_cache() which has been waiting for us */
-                pa_threaded_mainloop_signal(p->mainloop, FALSE);
-
-            } else {
-                pa_operation *o;
-                ca_assert(out->type == OUTSTANDING_STREAM);
-
-                if (!(o = pa_stream_drain(s, stream_drain_cb, out))) {
-                    ret = translate_error(pa_context_errno(p->context));
-                    goto finish;
-                }
-
-                pa_operation_unref(o);
+            if (!(o = pa_stream_drain(s, stream_drain_cb, out))) {
+                ret = translate_error(pa_context_errno(p->context));
+                goto finish;
             }
 
-            pa_stream_set_write_callback(s, NULL, NULL);
-
-            break;
+            pa_operation_unref(o);
         }
+
+        pa_stream_set_write_callback(s, NULL, NULL);
     }
 
     return;
@@ -910,7 +912,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
-    ss.channels = sample_type_table[ca_sound_file_get_sample_type(out->file)];
+    ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
