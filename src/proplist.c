@@ -94,9 +94,9 @@ static int _unset(ca_proplist *p, const char *key) {
 int ca_proplist_sets(ca_proplist *p, const char *key, const char *value) {
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(key, CA_ERROR_INVALID);
-    ca_return_val_if_fail(!value, CA_ERROR_INVALID);
+    ca_return_val_if_fail(value, CA_ERROR_INVALID);
 
-    return ca_proplist_set(p, key, value, sizeof(value)+1);
+    return ca_proplist_set(p, key, value, strlen(value)+1);
 }
 
 int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) {

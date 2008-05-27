@@ -270,7 +270,6 @@ int driver_open(ca_context *c) {
         return ret;
     }
 
-
     if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
         pa_proplist_free(l);
         driver_destroy(c);
@@ -345,6 +344,8 @@ int driver_destroy(ca_context *c) {
         ca_mutex_free(p->outstanding_mutex);
 
     ca_free(p);
+
+    c->private = NULL;
 
     return CA_SUCCESS;
 }
