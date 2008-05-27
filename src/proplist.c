@@ -254,6 +254,7 @@ int ca_proplist_destroy(ca_proplist *p) {
 
     for (prop = p->first_item; prop; prop = nprop) {
         nprop = prop->next_item;
+        ca_free(prop->key);
         ca_free(prop);
     }
 
