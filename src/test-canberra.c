@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <locale.h>
 
 #include "canberra.h"
 
@@ -35,17 +36,18 @@ int main(int argc, char *argv[]) {
 
     int id = 4711;
 
+    setlocale(LC_ALL, "");
+
     ca_context_create(&c);
 
     /* Initialize a few meta variables for the following play()
      * calls. They stay valid until they are overwritten with
      * ca_context_set() again. */
     ca_context_change_props(c,
-                    CA_PROP_APPLICATION_NAME, "An example",
-                    CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
-                    CA_PROP_MEDIA_LANGUAGE, "de_DE",
-                    CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
-                     NULL);
+                            CA_PROP_APPLICATION_NAME, "An example",
+                            CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
+                            CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
+                            NULL);
 
     /* .. */
 
@@ -55,11 +57,12 @@ int main(int argc, char *argv[]) {
     /* Signal a sound event. The meta data passed here overwrites the
      * data set in any previous ca_context_set() calls. */
     ca_context_play(c, id,
-                     CA_PROP_EVENT_ID, "click-event",
-                     CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/foo.wav",
-                     CA_PROP_MEDIA_NAME, "Button has been clicked",
-                     CA_PROP_MEDIA_ICON_NAME, "clicked",
-                     NULL);
+                    CA_PROP_EVENT_ID, "click-event",
+                    CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/foo.wav",
+                    CA_PROP_MEDIA_NAME, "Button has been clicked",
+                    CA_PROP_MEDIA_LANGUAGE, "de_DE@euro",
+                    CA_PROP_MEDIA_ICON_NAME, "clicked",
+                    NULL);
 
     /* .. */
 
