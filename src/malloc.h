@@ -1,4 +1,4 @@
-#ifndef foosydneymallochfoo
+#ifndef foocanberramallochfoo
 #define foocanberramallochfoo
 
 /* $Id$ */
@@ -37,5 +37,7 @@ void* ca_memdup(const void* p, size_t size);
 #define ca_new(t, n) ((t*) ca_malloc(sizeof(t)*(n)))
 #define ca_new0(t, n) ((t*) ca_malloc0(sizeof(t)*(n)))
 #define ca_newdup(t, p, n) ((t*) ca_memdup(p, sizeof(t)*(n)))
+
+char *ca_sprintf_malloc(const char *format, ...);
 
 #endif

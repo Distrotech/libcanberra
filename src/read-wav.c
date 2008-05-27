@@ -252,3 +252,9 @@ int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
 
     return CA_SUCCESS;
 }
+
+size_t ca_wav_get_size(ca_wav *v) {
+    ca_return_val_if_fail(v, CA_ERROR_INVALID);
+
+    return v->data_size;
+}

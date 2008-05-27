@@ -25,6 +25,7 @@
 #endif
 
 #include <errno.h>
+#include <locale.h>
 
 #include "sound-theme-spec.h"
 #include "malloc.h"
@@ -122,11 +123,14 @@ static int add_data_dir(ca_theme_data *t, const char *name) {
     return CA_SUCCESS;
 }
 
+static int load_theme_dir(ca_theme_data *t, const char *name);
+
 static int load_theme_path(ca_theme_data *t, const char *prefix, const char *name) {
     char *fn, *inherits = NULL;
     FILE *f;
     ca_bool_t in_sound_theme_section = FALSE;
     ca_data_dir *current_data_dir = NULL;
+    int ret;
 
     ca_return_val_if_fail(t, CA_ERROR_INVALID);
     ca_return_val_if_fail(prefix, CA_ERROR_INVALID);
@@ -178,7 +182,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
                 goto fail;
             }
 
-            current_data_dir = find_data_dir(e, d);
+            current_data_dir = find_data_dir(t, d);
             ca_free(d);
 
             in_sound_theme_section = FALSE;
@@ -230,7 +234,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
                     if (d[k] == 0)
                         break;
 
-                    = k+1;
+                    d += k+1;
                 }
 
                 continue;
@@ -259,7 +263,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
     t->n_theme_dir ++;
 
     if (inherits) {
-        i = inherits;
+        char *i = inherits;
         for (;;) {
             size_t k = strcspn(i, ", ");
 
@@ -281,7 +285,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
             if (i[k] == 0)
                 break;
 
-            i = k+1;
+            i += k+1;
         }
     }
 
@@ -290,13 +294,16 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
 fail:
 
     ca_free(inherits);
-    ca_free(directories);
     fclose(f);
 
     return ret;
 }
 
 static int load_theme_dir(ca_theme_data *t, const char *name) {
+    int ret;
+    char *e;
+    const char *g;
+
     ca_return_val_if_fail(t, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
     ca_return_val_if_fail(t->n_theme_dir < N_THEME_DIR_MAX, CA_ERROR_CORRUPT);
@@ -315,18 +322,18 @@ static int load_theme_dir(ca_theme_data *t, const char *name) {
             return ret;
     }
 
-    if (!(e = getenv("XDG_DATA_DIRS")) || *e = 0)
-        e = "/usr/local/share:/usr/share";
+    if (!(g = getenv("XDG_DATA_DIRS")) || *g == 0)
+        g = "/usr/local/share:/usr/share";
 
     for (;;) {
         size_t k;
 
-        k = strcspn(e, ":");
+        k = strcspn(g, ":");
 
-        if (e[0] == '/' && k > 0) {
+        if (g[0] == '/' && k > 0) {
             char *p;
 
-            if (!(p = ca_strndup(e, k)))
+            if (!(p = ca_strndup(g, k)))
                 return CA_ERROR_OOM;
 
             ret = load_theme_path(t, p, name);
@@ -336,10 +343,10 @@ static int load_theme_dir(ca_theme_data *t, const char *name) {
                 return ret;
         }
 
-        if (e[k] == 0)
+        if (g[k] == 0)
             break;
 
-        e += k+1;
+        g += k+1;
     }
 
     return CA_ERROR_NOTFOUND;
@@ -356,7 +363,7 @@ static int load_theme_data(ca_theme_data **_t, const char *name) {
         if (streq((*_t)->name, name))
             return CA_SUCCESS;
 
-    if (!(t = pa_xnew0(ca_theme_data, 1)))
+    if (!(t = ca_new0(ca_theme_data, 1)))
         return CA_ERROR_OOM;
 
     if (!(t->name = ca_strdup(name))) {
@@ -387,7 +394,8 @@ fail:
 }
 
 static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char *name, const char *path, const char *suffix, const char *locale, const char *subdir) {
-    const char *fn;
+    char *fn;
+    int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
@@ -399,7 +407,7 @@ static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char
                                  path,
                                  t ? "/" : "",
                                  t ? t->name : "",
-                                 subdir ? "/" : ""
+                                 subdir ? "/" : "",
                                  subdir ? subdir : "",
                                  locale ? "/" : "",
                                  locale ? locale : "",
@@ -414,6 +422,7 @@ static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char
 
 static int find_sound_in_path(ca_sound_file **f, ca_theme_data *t, const char *name, const char *path, const char *locale, const char *subdir) {
     int ret;
+    char *p;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
@@ -436,6 +445,8 @@ static int find_sound_in_path(ca_sound_file **f, ca_theme_data *t, const char *n
 static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *subdir) {
     int ret;
     char *e = NULL;
+    const char *g;
+
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
 
@@ -450,18 +461,18 @@ static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char 
             return ret;
     }
 
-    if (!(e = getenv("XDG_DATA_DIRS")) || *e = 0)
-        e = "/usr/local/share:/usr/share";
+    if (!(g = getenv("XDG_DATA_DIRS")) || *g == 0)
+        g = "/usr/local/share:/usr/share";
 
     for (;;) {
         size_t k;
 
-        k = strcspn(e, ":");
+        k = strcspn(g, ":");
 
-        if (e[0] == '/' && k > 0) {
+        if (g[0] == '/' && k > 0) {
             char *p;
 
-            if (!(p = ca_strndup(e, k)))
+            if (!(p = ca_strndup(g, k)))
                 return CA_ERROR_OOM;
 
             ret = find_sound_in_path(f, t, name, p, locale, subdir);
@@ -471,10 +482,10 @@ static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char 
                 return ret;
         }
 
-        if (e[k] == 0)
+        if (g[k] == 0)
             break;
 
-        e += k+1;
+        g += k+1;
     }
 
     return CA_ERROR_NOTFOUND;
@@ -501,6 +512,8 @@ static int find_sound_for_profile(ca_sound_file **f, ca_theme_data *t, const cha
 }
 
 static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *profile) {
+    int ret;
+
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
     ca_return_val_if_fail(profile, CA_ERROR_INVALID);
@@ -511,7 +524,7 @@ static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char 
 
     /* Then, fall back to stereo */
     if (!streq(profile, DEFAULT_OUTPUT_PROFILE))
-        if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_PROFILE)) != CA_ERROR_NOTFOUND)
+        if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
             return ret;
 
     /* And fall back to no profile */
@@ -520,6 +533,7 @@ static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char 
 
 static int find_sound_for_locale(ca_sound_file **f, ca_theme_data *theme, const char *name, const char *locale, const char *profile) {
     const char *e;
+    int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
@@ -579,11 +593,11 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
 
     /* First, try in the theme itself */
     if ((ret = load_theme_data(t, theme)) == CA_SUCCESS)
-        if ((ret = find_sound_in_theme(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
+        if ((ret = find_sound_for_locale(f, *t, name, locale, profile)) != CA_ERROR_NOTFOUND)
             return ret;
 
     /* Then, fall back to "unthemed" files */
-    return find_sound_in_theme(f, NULL, name, locale, profile);
+    return find_sound_for_locale(f, NULL, name, locale, profile);
 }
 
 int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *p) {
@@ -596,22 +610,22 @@ int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *p) {
 
     ca_mutex_lock(p->mutex);
 
-    if ((name = ca_proplist_gets(p, CA_PROP_EVENT_ID))) {
+    if ((name = ca_proplist_gets_unlocked(p, CA_PROP_EVENT_ID))) {
         const char *theme, *locale, *profile;
 
-        if (!(theme = ca_proplist_gets(p, CA_PROP_CANBERRA_XDG_THEME_NAME)))
+        if (!(theme = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_XDG_THEME_NAME)))
             theme = DEFAULT_THEME;
 
-        if (!(locale = ca_proplist_gets(p, CA_PROP_APPLICATION_LANGUAGE)))
+        if (!(locale = ca_proplist_gets_unlocked(p, CA_PROP_APPLICATION_LANGUAGE)))
             if (!(locale = setlocale(LC_MESSAGES, NULL)))
                 locale = "C";
 
-        if (!(profile = ca_proplist_gets(p, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE)))
+        if (!(profile = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE)))
             profile = DEFAULT_OUTPUT_PROFILE;
 
         ret = find_sound_for_theme(f, t, theme, name, locale, profile);
 
-    } else if ((fname = ca_proplist_gets(p, CA_PROP_MEDIA_FILENAME)))
+    } else if ((fname = ca_proplist_gets_unlocked(p, CA_PROP_MEDIA_FILENAME)))
         ret = ca_sound_file_open(f, fname);
     else
         ret = CA_ERROR_INVALID;

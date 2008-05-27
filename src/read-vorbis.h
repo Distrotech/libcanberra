@@ -36,4 +36,6 @@ unsigned ca_vorbis_get_rate(ca_vorbis *v);
 
 int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n);
 
+size_t ca_vorbis_get_size(ca_vorbis *f);
+
 #endif

@@ -186,3 +186,12 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
 
     return ret;
 }
+
+size_t ca_sound_file_get_size(ca_sound_file *f) {
+    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+
+    if (f->wav)
+        return ca_wav_get_size(f->wav);
+    else
+        return ca_vorbis_get_size(f->vorbis);
+}

@@ -26,15 +26,16 @@
 #endif
 
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "canberra.h"
 
 int main(int argc, char *argv[]) {
-    ca_context_t *c;
+    ca_context *c;
 
     int id = 4711;
 
-    ca_context_new(&c);
+    ca_context_create(&c);
 
     /* Initialize a few meta variables for the following play()
      * calls. They stay valid until they are overwritten with
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
                     CA_PROP_APPLICATION_NAME, "An example",
                     CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
                     CA_PROP_MEDIA_LANGUAGE, "de_DE",
-                    CA_PROP_EVENT_X11_DISPLAY, getenv("DISPLAY"),
+                    CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
                      NULL);
 
     /* .. */

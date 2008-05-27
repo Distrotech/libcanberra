@@ -92,6 +92,7 @@
 #define CA_PROP_MEDIA_ICON_NAME                    "media.icon_name"
 #define CA_PROP_MEDIA_ROLE                         "media.role"
 #define CA_PROP_EVENT_ID                           "event.id"
+#define CA_PROP_EVENT_DESCRIPTION                  "event.description"
 #define CA_PROP_EVENT_MOUSE_X                      "event.mouse.x"
 #define CA_PROP_EVENT_MOUSE_Y                      "event.mouse.y"
 #define CA_PROP_EVENT_MOUSE_BUTTON                 "event.mouse.button"

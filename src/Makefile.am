@@ -20,7 +20,6 @@
 
 AM_CFLAGS = $(PTHREAD_CFLAGS)
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
-AM_LIBADD = $(PTHREAD_LIBS)
 AM_LDADD = $(PTHREAD_LIBS)
 
 lib_LTLIBRARIES = \
@@ -42,7 +41,7 @@ libcanberra_la_SOURCES = \
 	sound-theme-spec.c sound-theme-spec.h \
 	llist.h \
 	macro.h \
-	malloc.h
+	malloc.c malloc.h
 libcanberra_la_LIBADD = \
 	$(PULSE_LIBS) \
 	$(VORBIS_LIBS)

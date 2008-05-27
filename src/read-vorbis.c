@@ -36,6 +36,7 @@
 
 struct ca_vorbis {
     OggVorbis_File ovf;
+    size_t size;
 };
 
 static int convert_error(int or) {
@@ -93,6 +94,8 @@ int ca_vorbis_open(ca_vorbis **_v, FILE *f)  {
         ov_clear(&v->ovf);
         goto fail;
     }
+
+    v->size = n * sizeof(int16_t);
 
     *_v = v;
 
@@ -155,4 +158,10 @@ int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
 
     *n = (unsigned) r;
     return CA_SUCCESS;
+}
+
+size_t ca_vorbis_get_size(ca_vorbis *v) {
+    ca_return_val_if_fail(v, CA_ERROR_INVALID);
+
+    return v->size;
 }
