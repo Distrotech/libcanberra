@@ -75,7 +75,7 @@ int ca_vorbis_open(ca_vorbis **_v, FILE *f)  {
     ca_return_val_if_fail(_v, CA_ERROR_INVALID);
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
 
-    if (!(v = ca_new(ca_vorbis, 1)))
+    if (!(v = ca_new0(ca_vorbis, 1)))
         return CA_ERROR_OOM;
 
     if ((or = ov_open(f, &v->ovf, NULL, 0)) < 0) {
@@ -135,28 +135,43 @@ unsigned ca_vorbis_get_rate(ca_vorbis *v) {
 int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
     long r;
     int section;
+    int length;
+    size_t n_read = 0;
 
     ca_return_val_if_fail(v, CA_ERROR_INVALID);
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
     ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
 
-    r = ov_read(&v->ovf, (char*) d, *n * sizeof(float),
+    length = *n * sizeof(int16_t);
+
+    do {
+
+        r = ov_read(&v->ovf, (char*) d, length,
 #ifdef WORDS_BIGENDIAN
-                1,
+                    1,
 #else
-                0,
+                    0,
 #endif
-                2, 1, &section);
+                    2, 1, &section);
 
-    if (r < 0)
-        return convert_error(r);
+        if (r < 0)
+            return convert_error(r);
 
-    /* We only read the first section */
-    if (section != 0)
-        return 0;
+        if (r == 0)
+            break;
 
-    *n = (unsigned) r;
+        /* We only read the first section */
+        if (section != 0)
+            break;
+
+        length -= r;
+        d += r/sizeof(int16_t);
+        n_read += r;
+
+    } while (length >= 4096);
+
+    *n = (unsigned) n_read/sizeof(int16_t);
     return CA_SUCCESS;
 }
 

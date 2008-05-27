@@ -158,7 +158,6 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
     ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
-    ca_return_val_if_fail(f->wav && !f->vorbis, CA_ERROR_STATE);
 
     switch (f->type) {
         case CA_SAMPLE_S16NE:
