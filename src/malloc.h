@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "canberra.h"
+#include "macro.h"
+
 #define ca_malloc malloc
 #define ca_free free
 #define ca_malloc0(size) calloc(1, (size))
@@ -38,6 +41,6 @@ void* ca_memdup(const void* p, size_t size);
 #define ca_new0(t, n) ((t*) ca_malloc0(sizeof(t)*(n)))
 #define ca_newdup(t, p, n) ((t*) ca_memdup(p, sizeof(t)*(n)))
 
-char *ca_sprintf_malloc(const char *format, ...);
+char *ca_sprintf_malloc(const char *format, ...) CA_GCC_PRINTF_ATTR(1,2);
 
 #endif
