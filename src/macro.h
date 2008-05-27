@@ -47,7 +47,7 @@
 #define ca_return_if_fail(expr)                                         \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             return;                                                     \
         }                                                               \
     } while(FALSE)
@@ -55,7 +55,7 @@
 #define ca_return_val_if_fail(expr, val) \
     do { \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             return (val);                                               \
         }                                                               \
     } while(FALSE)
@@ -65,7 +65,7 @@
 #define ca_return_if_fail_unlock(expr, mutex)                           \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             ca_mutex_unlock(mutex);                                     \
             return;                                                     \
         }                                                               \
@@ -74,7 +74,7 @@
 #define ca_return_val_if_fail_unlock(expr, val, mutex)                  \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             ca_mutex_unlock(mutex);                                     \
             return (val);                                               \
         }                                                               \
@@ -87,7 +87,7 @@
 #define ca_assert_se(expr)                                              \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s(). Aborting.", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s(). Aborting.\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             abort();                                                    \
         }                                                               \
     } while (FALSE)
@@ -101,7 +101,7 @@
 
 #define ca_assert_not_reached()                                         \
     do {                                                                \
-        fprintf(stderr, "Code should not be reached at %s:%u, function %s(). Aborting.", __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+        fprintf(stderr, "Code should not be reached at %s:%u, function %s(). Aborting.\n", __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
         abort();                                                        \
     } while (FALSE)
 
