@@ -68,7 +68,7 @@ int ca_sound_file_open(ca_sound_file **_f, const char *fn) {
         f->nchannels = ca_wav_get_nchannels(f->wav);
         f->rate = ca_wav_get_rate(f->wav);
         f->type = ca_wav_get_sample_type(f->wav);
-        *f = f;
+        *_f = f;
         return CA_SUCCESS;
     }
 
@@ -83,7 +83,7 @@ int ca_sound_file_open(ca_sound_file **_f, const char *fn) {
             f->nchannels = ca_vorbis_get_nchannels(f->vorbis);
             f->rate = ca_vorbis_get_rate(f->vorbis);
             f->type = CA_SAMPLE_S16NE;
-            *f = f;
+            *_f = f;
             return CA_SUCCESS;
         }
     }
@@ -100,9 +100,9 @@ void ca_sound_file_close(ca_sound_file *f) {
     ca_assert(f);
 
     if (f->wav)
-        ca_wav_free(f->wav);
+        ca_wav_close(f->wav);
     if (f->vorbis)
-        ca_vorbis_free(f->vorbis);
+        ca_vorbis_close(f->vorbis);
     ca_free(f);
 }
 
@@ -132,10 +132,10 @@ int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, unsigned *n) {
     if (f->wav)
         return ca_wav_read_s16le(f->wav, d, n);
     else
-        return ca_vorbis_read_s16ne(f->wav, d, n);
+        return ca_vorbis_read_s16ne(f->vorbis, d, n);
 }
 
-int ca_sound_file_read_uint8(ca_sound_file *fn, uint8_t *d, unsigned *n) {
+int ca_sound_file_read_uint8(ca_sound_file *f, uint8_t *d, unsigned *n) {
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
@@ -145,6 +145,8 @@ int ca_sound_file_read_uint8(ca_sound_file *fn, uint8_t *d, unsigned *n) {
 
     if (f->wav)
         return ca_wav_read_u8(f->wav, d, n);
+
+    return CA_ERROR_STATE;
 }
 
 int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
@@ -168,7 +170,7 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
             break;
         }
 
-        case CA_SAMPLE_S16RE: {
+        case CA_SAMPLE_U8: {
             unsigned k;
 
             k = *n;

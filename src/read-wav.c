@@ -24,8 +24,10 @@
 #include <config.h>
 #endif
 
+#include "canberra.h"
 #include "read-wav.h"
 #include "macro.h"
+#include "malloc.h"
 
 #define FILE_SIZE_MAX (64U*1024U*1024U)
 
@@ -38,16 +40,16 @@ struct ca_wav {
     unsigned depth;
 };
 
-static int skip_to_chunk(ca_wav *v, uint32_t id, uint32_t *size) {
+static int skip_to_chunk(ca_wav *w, uint32_t id, uint32_t *size) {
 
-    ca_return_val_if_fail(v, CA_ERROR_INVALID);
+    ca_return_val_if_fail(w, CA_ERROR_INVALID);
     ca_return_val_if_fail(size, CA_ERROR_INVALID);
 
     for (;;) {
         uint32_t chunk[2];
         size_t s;
 
-        if (fread(chunk, sizeof(uint32), CA_ELEMENTSOF(chunk), w->file) != CA_ELEMENTSOF(chunk))
+        if (fread(chunk, sizeof(uint32_t), CA_ELEMENTSOF(chunk), w->file) != CA_ELEMENTSOF(chunk))
             goto fail_io;
 
         s = PA_UINT32_FROM_LE(chunk[1]);
@@ -68,9 +70,9 @@ static int skip_to_chunk(ca_wav *v, uint32_t id, uint32_t *size) {
 
 fail_io:
 
-    if (feof(f))
+    if (feof(w->file))
         return CA_ERROR_CORRUPT;
-    else if (ferror(f))
+    else if (ferror(w->file))
         return CA_ERROR_SYSTEM;
 
     ca_assert_not_reached();
@@ -80,7 +82,7 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     uint32_t header[3], fmt_chunk[4];
     int ret;
     ca_wav *w;
-    uint32_t file_size, fmt_size, data_size;
+    uint32_t file_size, fmt_size;
 
     ca_return_val_if_fail(_w, CA_ERROR_INVALID);
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -88,9 +90,9 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     if (!(w = ca_new(ca_wav, 1)))
         return CA_ERROR_OOM;
 
-    v->file = f;
+    w->file = f;
 
-    if (fread(header, sizeof(uint32), CA_ELEMENTSOF(header), f) != CA_ELEMENTSOF(header))
+    if (fread(header, sizeof(uint32_t), CA_ELEMENTSOF(header), f) != CA_ELEMENTSOF(header))
         goto fail_io;
 
     if (PA_UINT32_FROM_LE(header[0]) != 0x46464952U ||
@@ -111,15 +113,15 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
         goto fail;
 
     if (fmt_size != 16) {
-        ret = CA_ERROR_NOT_SUPPORTED;
+        ret = CA_ERROR_NOTSUPPORTED;
         goto fail;
     }
 
-    if (fread(fmt_chunk, sizeof(uint32), CA_ELEMENTSOF(fmt_chunk), f) != CA_ELEMENTSOF(fmt_chunk))
+    if (fread(fmt_chunk, sizeof(uint32_t), CA_ELEMENTSOF(fmt_chunk), f) != CA_ELEMENTSOF(fmt_chunk))
         goto fail_io;
 
-    if (PA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF != 1) {
-        ret = CA_ERROR_NOT_SUPPORTED;
+    if ((PA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF) != 1) {
+        ret = CA_ERROR_NOTSUPPORTED;
         goto fail;
     }
 
@@ -127,13 +129,13 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     w->rate = PA_UINT32_FROM_LE(fmt_chunk[1]);
     w->depth = PA_UINT32_FROM_LE(fmt_chunk[3]) >> 16;
 
-    if (w->nchannels <= 0 || w->nrate <= 0) {
+    if (w->nchannels <= 0 || w->rate <= 0) {
         ret = CA_ERROR_CORRUPT;
         goto fail;
     }
 
     if (w->depth != 16 && w->depth != 8) {
-        ret = CA_ERROR_NOT_SUPPORTED;
+        ret = CA_ERROR_NOTSUPPORTED;
         goto fail;
     }
 
@@ -148,7 +150,7 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
 
     *_w = w;
 
-    return PA_SUCCESS;
+    return CA_SUCCESS;
 
 fail_io:
 
@@ -185,7 +187,7 @@ unsigned ca_wav_get_rate(ca_wav *w) {
     return w->rate;
 }
 
-ca_sample_type_t ca_wav_get_sample_type(ca_wav *f) {
+ca_sample_type_t ca_wav_get_sample_type(ca_wav *w) {
     ca_assert(w);
 
     return w->depth == 16 ?
@@ -224,7 +226,7 @@ int ca_wav_read_s16le(ca_wav *w, int16_t *d, unsigned *n) {
     return CA_SUCCESS;
 }
 
-int ca_wav_read_u(ca_wav *w, uint8_t *d, unsigned *n) {
+int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
     unsigned remaining;
 
     ca_return_val_if_fail(w, CA_ERROR_INVALID);

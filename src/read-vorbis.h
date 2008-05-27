@@ -28,7 +28,7 @@
 
 typedef struct ca_vorbis ca_vorbis;
 
-int ca_vorbis_open(ca_vorbis *v, FILE *f);
+int ca_vorbis_open(ca_vorbis **v, FILE *f);
 void ca_vorbis_close(ca_vorbis *v);
 
 unsigned ca_vorbis_get_nchannels(ca_vorbis *v);

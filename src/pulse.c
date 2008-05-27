@@ -831,7 +831,8 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     char *name = NULL;
     pa_sample_spec ss;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
-    struct outstanding out;
+    struct outstanding *out;
+    int ret;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(proplist, CA_ERROR_INVALID);
@@ -860,7 +861,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     }
 
     if (!(name = ca_strdup(n))) {
-        ret = PA_ERROR_OOM;
+        ret = CA_ERROR_OOM;
         goto finish;
     }
 
@@ -879,7 +880,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
     /* Let's stream the sample directly */
     if ((ret = ca_lookup_sound(&out->file, &p->theme, proplist)) < 0)
-        goto fail;
+        goto finish;
 
     ss.channels = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = ca_sound_file_get_nchannels(out->file);
@@ -890,21 +891,20 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, NULL, l))) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
-        goto fail;
+        goto finish;
     }
 
-    pa_stream_set_userdata(out->stream, out);
     pa_stream_set_state_callback(out->stream, stream_state_cb, out);
-    pa_stream_set_write_callback(out->stream, stream_request_cb, out);
+    pa_stream_set_write_callback(out->stream, stream_write_cb, out);
 
-    if (pa_stream_connect_upload(s, ca_sound_file_get_size(out->file)) < 0) {
+    if (pa_stream_connect_upload(out->stream, ca_sound_file_get_size(out->file)) < 0) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
-        goto fail;
+        goto finish;
     }
 
     for (;;) {
-        pa_stream_state state = pa_stream_get_state(s);
+        pa_stream_state_t state = pa_stream_get_state(out->stream);
 
         /* Stream sucessfully created and uploaded */
         if (state == PA_STREAM_TERMINATED)
@@ -914,7 +914,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         if (state == PA_STREAM_FAILED) {
             ret = translate_error(pa_context_errno(p->context));
             pa_threaded_mainloop_unlock(p->mainloop);
-            goto fail;
+            goto finish;
         }
 
         pa_threaded_mainloop_wait(p->mainloop);

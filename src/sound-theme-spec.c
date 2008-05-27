@@ -24,7 +24,10 @@
 #include <config.h>
 #endif
 
+#include <errno.h>
+
 #include "sound-theme-spec.h"
+#include "malloc.h"
 #include "llist.h"
 
 #define DEFAULT_THEME "freedesktop"
@@ -45,7 +48,7 @@ struct ca_theme_data {
     char *name;
 
     CA_LLIST_HEAD(ca_data_dir, data_dirs);
-    ca_theme_dir *last_dir;
+    ca_data_dir *last_dir;
 
     unsigned n_theme_dir;
     ca_bool_t loaded_fallback_theme;
@@ -76,11 +79,11 @@ static int get_data_home(char **e) {
 
 static ca_bool_t data_dir_matches(ca_data_dir *d, const char*output_profile) {
     ca_assert(d);
-    ca_assert(profile);
+    ca_assert(output_profile);
 
     /* We might want to add more elaborate matching here eventually */
 
-    return streq(d->profile, output_profile);
+    return streq(d->output_profile, output_profile);
 }
 
 static ca_data_dir* find_data_dir(ca_theme_data *t, const char *name) {
@@ -103,7 +106,7 @@ static int add_data_dir(ca_theme_data *t, const char *name) {
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
 
     if (find_data_dir(t, name))
-        return;
+        return CA_SUCCESS;
 
     if (!(d = ca_new0(ca_data_dir, 1)))
         return CA_ERROR_OOM;
@@ -146,7 +149,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
     for (;;) {
         char ln[1024];
 
-        if (!(fgets(ln, f))) {
+        if (!(fgets(ln, sizeof(ln), f))) {
 
             if (feof(f))
                 break;
