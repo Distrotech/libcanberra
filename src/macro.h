@@ -236,4 +236,6 @@ typedef int ca_bool_t;
  #define PA_UINT32_TO_BE(x) PA_UINT32_SWAP(x)
 #endif
 
+#define streq(a, b) (strcmp((a),(b)) == 0)
+
 #endif

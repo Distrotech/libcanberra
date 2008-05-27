@@ -47,7 +47,7 @@ int ca_proplist_merge(ca_proplist **_a, ca_proplist *b, ca_proplist *c);
 ca_bool_t ca_proplist_contains(ca_proplist *p, const char *key);
 
 /* Both of the following two functions are not locked! Need manual locking! */
-ca_prop* ca_context_get_unlocked(ca_proplist *c, const char *key);
-const char* ca_context_gets_unlocked(ca_proplist *c, const char *key);
+ca_prop* ca_proplist_get_unlocked(ca_proplist *p, const char *key);
+const char* ca_proplist_gets_unlocked(ca_proplist *p, const char *key);
 
 #endif

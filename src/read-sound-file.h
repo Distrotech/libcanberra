@@ -23,15 +23,18 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#include <sys/types.h>
+#include <inttypes.h>
+
 typedef enum ca_sample_type {
     CA_SAMPLE_S16NE,
     CA_SAMPLE_S16RE,
     CA_SAMPLE_U8
 } ca_sample_type_t;
 
-typedef struct ca_sound_file wa_sound_file;
+typedef struct ca_sound_file ca_sound_file;
 
-int ca_sound_file_open(ca_sound_file *f, const char *fn);
+int ca_sound_file_open(ca_sound_file **f, const char *fn);
 void ca_sound_file_close(ca_sound_file *f);
 
 unsigned ca_sound_file_get_nchannels(ca_sound_file *f);

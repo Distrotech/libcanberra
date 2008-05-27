@@ -20,7 +20,12 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "read-wav.h"
+#include "macro.h"
 
 #define FILE_SIZE_MAX (64U*1024U*1024U)
 

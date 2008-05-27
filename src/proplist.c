@@ -20,16 +20,16 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdarg.h>
 
 #include "canberra.h"
 #include "proplist.h"
 #include "macro.h"
 #include "malloc.h"
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 static unsigned calc_hash(const char *c) {
     unsigned hash = 0;

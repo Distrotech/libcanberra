@@ -24,6 +24,7 @@
 ***/
 
 #include <stdio.h>
+#include <inttypes.h>
 
 typedef struct ca_vorbis ca_vorbis;
 

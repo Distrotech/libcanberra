@@ -121,7 +121,7 @@ typedef struct ca_context ca_context;
 
 /** Playback completion event callback. This callback will be called
  * from a background thread. */
-typedef void ca_finish_callback_t(ca_context *c, uint32_t id, int error_code, void *userdata);
+typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code, void *userdata);
 
 /** Error codes */
 enum {
@@ -154,9 +154,9 @@ int ca_proplist_set(ca_proplist *p, const char *key, const void *data, size_t nb
 /** Create an (unconnected) context object */
 int ca_context_create(ca_context **c);
 
-int ca_context_set_driver(ca_context **c, const char *driver);
+int ca_context_set_driver(ca_context *c, const char *driver);
 
-int ca_context_change_device(ca_context **c, const char *device);
+int ca_context_change_device(ca_context *c, const char *device);
 
 /** Connect the context. This call is implicitly called if necessary. It
  * is recommended to initialize the application.* properties before

@@ -20,6 +20,10 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdarg.h>
 
 #include "canberra.h"
@@ -27,6 +31,7 @@
 #include "malloc.h"
 #include "driver.h"
 #include "proplist.h"
+#include "macro.h"
 
 int ca_context_create(ca_context **_c) {
     ca_context *c;
@@ -75,7 +80,7 @@ int ca_context_destroy(ca_context *c) {
     return ret;
 }
 
-int ca_context_set_driver(ca_context *c, char *driver) {
+int ca_context_set_driver(ca_context *c, const char *driver) {
     char *n;
     int ret;
 
@@ -99,7 +104,7 @@ fail:
     return ret;
 }
 
-int ca_context_change_device(ca_context *c, char *device) {
+int ca_context_change_device(ca_context *c, const char *device) {
     char *n;
     int ret;
 
@@ -164,7 +169,6 @@ static int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
 
     for (;;) {
         const char *key, *value;
-        int ret;
 
         if (!(key = va_arg(ap, const char*)))
             break;
@@ -348,12 +352,20 @@ const char *ca_strerror(int code) {
 
     const char * const error_table[-_CA_ERROR_MAX] = {
         [-CA_SUCCESS] = "Success",
-        [-CA_ERROR_NOT_SUPPORTED] = "Operation not supported",
+        [-CA_ERROR_NOTSUPPORTED] = "Operation not supported",
         [-CA_ERROR_INVALID] = "Invalid argument",
         [-CA_ERROR_STATE] = "Invalid state",
         [-CA_ERROR_OOM] = "Out of memory",
-        [-CA_ERROR_NO_DRIVER] = "No such driver",
-        [-CA_ERROR_SYSTEM] = "System error"
+        [-CA_ERROR_NODRIVER] = "No such driver",
+        [-CA_ERROR_SYSTEM] = "System error",
+        [-CA_ERROR_CORRUPT] = "File or data corrupt",
+        [-CA_ERROR_TOOBIG] = "File or data too large",
+        [-CA_ERROR_NOTFOUND] = "File or data not found",
+        [-CA_ERROR_DESTROYED] = "Destroyed",
+        [-CA_ERROR_CANCELED] = "Canceled",
+        [-CA_ERROR_NOTAVAILABLE] = "Not available",
+        [-CA_ERROR_ACCESS] = "Access forbidden",
+        [-CA_ERROR_IO] = "IO error"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);
@@ -367,11 +379,11 @@ int ca_parse_cache_control(ca_cache_control_t *control, const char *c) {
     ca_return_val_if_fail(control, CA_ERROR_INVALID);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
-    if (streq(control, "never"))
+    if (streq(c, "never"))
         *control = CA_CACHE_CONTROL_NEVER;
-    else if (streq(control, "permanent"))
+    else if (streq(c, "permanent"))
         *control = CA_CACHE_CONTROL_PERMANENT;
-    else if (streq(control, "volatile"))
+    else if (streq(c, "volatile"))
         *control = CA_CACHE_CONTROL_VOLATILE;
     else
         return CA_ERROR_INVALID;

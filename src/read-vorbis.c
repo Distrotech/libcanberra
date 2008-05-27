@@ -20,7 +20,15 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <vorbis/vorbisfile.h>
+#include <vorbis/codec.h>
+
 #include "read-vorbis.h"
+#include "macro.h"
 
 #define FILE_SIZE_MAX (64U*1024U*1024U)
 
@@ -30,12 +38,12 @@ struct ca_vorbis {
 
 static int convert_error(int or) {
     switch (or) {
-        case OV_NOSEEK:
-        case OV_BADPACKET:
-        case OV_BADLINK:
-        case OV_FAULT:
+        case OV_ENOSEEK:
+        case OV_EBADPACKET:
+        case OV_EBADLINK:
+        case OV_EFAULT:
         case OV_EREAD:
-        case OV_HOLE:
+        case OV_EHOLE:
             return CA_ERROR_IO;
 
         case OV_EIMPL:

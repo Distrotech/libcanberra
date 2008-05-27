@@ -20,7 +20,18 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <errno.h>
+
 #include "read-sound-file.h"
+#include "read-wav.h"
+#include "read-vorbis.h"
+#include "macro.h"
+#include "malloc.h"
+#include "canberra.h"
 
 struct ca_sound_file {
     ca_wav *wav;
@@ -32,13 +43,13 @@ struct ca_sound_file {
     ca_sample_type_t type;
 };
 
-int ca_sound_file_open(ca_sound_file *_f, const char *fn) {
+int ca_sound_file_open(ca_sound_file **_f, const char *fn) {
     FILE *file;
     ca_sound_file *f;
     int ret;
 
-    ca_return_val_if_fail(_f, PA_ERROR_INVALID);
-    ca_return_val_if_fail(fn, PA_ERROR_INVALID);
+    ca_return_val_if_fail(_f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(fn, CA_ERROR_INVALID);
 
     if (!(f = ca_new0(ca_sound_file, 1)))
         return CA_ERROR_OOM;
