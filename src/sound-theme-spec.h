@@ -28,7 +28,7 @@
 
 typedef struct ca_theme_data ca_theme_data;
 
-int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *p);
+int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *cp, ca_proplist *sp);
 void ca_theme_data_free(ca_theme_data *t);
 
 #endif

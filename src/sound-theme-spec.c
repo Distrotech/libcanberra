@@ -403,7 +403,7 @@ static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char
     ca_return_val_if_fail(path[0] == '/', CA_ERROR_INVALID);
     ca_return_val_if_fail(suffix, CA_ERROR_INVALID);
 
-    if (!(fn = ca_sprintf_malloc("%s/%s%s%s%s%s%s",
+    if (!(fn = ca_sprintf_malloc("%s%s%s%s%s%s%s/%s%s",
                                  path,
                                  t ? "/" : "",
                                  t ? t->name : "",
@@ -495,10 +495,8 @@ static int find_sound_for_profile(ca_sound_file **f, ca_theme_data *t, const cha
     ca_data_dir *d;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(t, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
-
-    if (!t)
-        return find_sound_in_subdir(f, NULL, name, locale, NULL);
 
     for (d = t->data_dirs; d; d = d->next)
         if (data_dir_matches(d, profile)) {
@@ -518,17 +516,19 @@ static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char 
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
     ca_return_val_if_fail(profile, CA_ERROR_INVALID);
 
-    /* First, try the profile def itself */
-    if ((ret = find_sound_for_profile(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
-        return ret;
-
-    /* Then, fall back to stereo */
-    if (!streq(profile, DEFAULT_OUTPUT_PROFILE))
-        if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
+    if (t) {
+        /* First, try the profile def itself */
+        if ((ret = find_sound_for_profile(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
             return ret;
 
+        /* Then, fall back to stereo */
+        if (!streq(profile, DEFAULT_OUTPUT_PROFILE))
+            if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
+                return ret;
+    }
+
     /* And fall back to no profile */
-    return find_sound_for_profile(f, t, name, locale, NULL);
+    return find_sound_in_subdir(f, t, name, locale, NULL);
 }
 
 static int find_sound_for_locale(ca_sound_file **f, ca_theme_data *theme, const char *name, const char *locale, const char *profile) {
@@ -548,7 +548,7 @@ static int find_sound_for_locale(ca_sound_file **f, ca_theme_data *theme, const 
     if ((e = strchr(locale, '@'))) {
         char *t;
 
-        if (!(t = ca_strndup(t, e - locale)))
+        if (!(t = ca_strndup(locale, e - locale)))
             return CA_ERROR_OOM;
 
         ret = find_sound_in_locale(f, theme, name, t, profile);
@@ -562,7 +562,7 @@ static int find_sound_for_locale(ca_sound_file **f, ca_theme_data *theme, const 
     if ((e = strchr(locale, '_'))) {
         char *t;
 
-        if (!(t = ca_strndup(t, e - locale)))
+        if (!(t = ca_strndup(locale, e - locale)))
             return CA_ERROR_OOM;
 
         ret = find_sound_in_locale(f, theme, name, t, profile);
@@ -600,37 +600,45 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
     return find_sound_for_locale(f, NULL, name, locale, profile);
 }
 
-int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *p) {
+int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *cp, ca_proplist *sp) {
     int ret;
     const char *name, *fname;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(t, CA_ERROR_INVALID);
-    ca_return_val_if_fail(p, CA_ERROR_INVALID);
+    ca_return_val_if_fail(cp, CA_ERROR_INVALID);
+    ca_return_val_if_fail(sp, CA_ERROR_INVALID);
 
-    ca_mutex_lock(p->mutex);
+    ca_mutex_lock(cp->mutex);
+    ca_mutex_lock(sp->mutex);
 
-    if ((name = ca_proplist_gets_unlocked(p, CA_PROP_EVENT_ID))) {
+    if ((name = ca_proplist_gets_unlocked(sp, CA_PROP_EVENT_ID))) {
         const char *theme, *locale, *profile;
 
-        if (!(theme = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_XDG_THEME_NAME)))
-            theme = DEFAULT_THEME;
+        if (!(theme = ca_proplist_gets_unlocked(sp, CA_PROP_CANBERRA_XDG_THEME_NAME)))
+            if (!(theme = ca_proplist_gets_unlocked(cp, CA_PROP_CANBERRA_XDG_THEME_NAME)))
+                theme = DEFAULT_THEME;
 
-        if (!(locale = ca_proplist_gets_unlocked(p, CA_PROP_APPLICATION_LANGUAGE)))
-            if (!(locale = setlocale(LC_MESSAGES, NULL)))
-                locale = "C";
+        if (!(locale = ca_proplist_gets_unlocked(sp, CA_PROP_MEDIA_LANGUAGE)))
+            if (!(locale = ca_proplist_gets_unlocked(sp, CA_PROP_APPLICATION_LANGUAGE)))
+                if (!(locale = ca_proplist_gets_unlocked(cp, CA_PROP_MEDIA_LANGUAGE)))
+                    if (!(locale = ca_proplist_gets_unlocked(cp, CA_PROP_APPLICATION_LANGUAGE)))
+                        if (!(locale = setlocale(LC_MESSAGES, NULL)))
+                            locale = "C";
 
-        if (!(profile = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE)))
-            profile = DEFAULT_OUTPUT_PROFILE;
+        if (!(profile = ca_proplist_gets_unlocked(sp, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE)))
+            if (!(profile = ca_proplist_gets_unlocked(cp, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE)))
+                profile = DEFAULT_OUTPUT_PROFILE;
 
         ret = find_sound_for_theme(f, t, theme, name, locale, profile);
 
-    } else if ((fname = ca_proplist_gets_unlocked(p, CA_PROP_MEDIA_FILENAME)))
+    } else if ((fname = ca_proplist_gets_unlocked(sp, CA_PROP_MEDIA_FILENAME)))
         ret = ca_sound_file_open(f, fname);
     else
         ret = CA_ERROR_INVALID;
 
-    ca_mutex_unlock(p->mutex);
+    ca_mutex_unlock(cp->mutex);
+    ca_mutex_unlock(sp->mutex);
 
     return ret;
 }
