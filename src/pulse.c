@@ -265,7 +265,7 @@ int driver_open(ca_context *c) {
         return CA_ERROR_OOM;
     }
 
-    if ((ret = convert_proplist(&l, c->props))) {
+    if ((ret = convert_proplist(&l, c->props)) < 0) {
         driver_destroy(c);
         return ret;
     }
@@ -385,7 +385,7 @@ int driver_change_props(ca_context *c, ca_proplist *changed, ca_proplist *merged
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
     ca_return_val_if_fail(p->context, CA_ERROR_STATE);
 
-    if ((ret = convert_proplist(&l, changed)))
+    if ((ret = convert_proplist(&l, changed)) < 0)
         return ret;
 
     strip_canberra_data(l);
@@ -438,16 +438,21 @@ static int subscribe(ca_context *c) {
 }
 
 static void play_sample_cb(pa_context *c, uint32_t idx, void *userdata) {
+    struct private *p;
     struct outstanding *out = userdata;
 
     ca_assert(c);
     ca_assert(out);
+
+    p = PRIVATE(out->context);
 
     if (idx != PA_INVALID_INDEX) {
         out->error = CA_SUCCESS;
         out->sink_input = idx;
     } else
         out->error = translate_error(pa_context_errno(c));
+
+    pa_threaded_mainloop_signal(p->mainloop, FALSE);
 }
 
 static void stream_state_cb(pa_stream *s, void *userdata) {
@@ -480,7 +485,7 @@ static void stream_state_cb(pa_stream *s, void *userdata) {
         }
     }
 
-    pa_threaded_mainloop_signal(p->mainloop, TRUE);
+    pa_threaded_mainloop_signal(p->mainloop, FALSE);
 }
 
 static void stream_drain_cb(pa_stream *s, int success, void *userdata) {
@@ -547,7 +552,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
             }
 
             /* Let's just signal driver_cache() which has been waiting for us */
-            pa_threaded_mainloop_signal(p->mainloop, TRUE);
+            pa_threaded_mainloop_signal(p->mainloop, FALSE);
 
         } else {
             pa_operation *o;
@@ -579,7 +584,7 @@ finish:
         outstanding_free(out);
     } else {
         pa_stream_disconnect(s);
-        pa_threaded_mainloop_signal(p->mainloop, TRUE);
+        pa_threaded_mainloop_signal(p->mainloop, FALSE);
         out->error = ret;
     }
 }
@@ -625,7 +630,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     out->callback = cb;
     out->userdata = userdata;
 
-    if ((ret = convert_proplist(&l, proplist)))
+    if ((ret = convert_proplist(&l, proplist)) < 0)
         goto finish;
 
     if (!(n = pa_proplist_gets(l, CA_PROP_EVENT_ID))) {
@@ -701,7 +706,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     out->type = OUTSTANDING_STREAM;
 
     /* Let's stream the sample directly */
-    if ((ret = ca_lookup_sound(&out->file, &p->theme, proplist)) < 0)
+    if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
     ss.channels = sample_type_table[ca_sound_file_get_sample_type(out->file)];
@@ -862,7 +867,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     out->context = c;
     out->sink_input = PA_INVALID_INDEX;
 
-    if ((ret = convert_proplist(&l, proplist)))
+    if ((ret = convert_proplist(&l, proplist)) < 0)
         goto finish;
 
     if (!(n = pa_proplist_gets(l, CA_PROP_EVENT_ID))) {
@@ -889,7 +894,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     strip_canberra_data(l);
 
     /* Let's stream the sample directly */
-    if ((ret = ca_lookup_sound(&out->file, &p->theme, proplist)) < 0)
+    if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
     ss.channels = sample_type_table[ca_sound_file_get_sample_type(out->file)];
