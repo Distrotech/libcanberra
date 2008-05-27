@@ -103,6 +103,8 @@ void ca_sound_file_close(ca_sound_file *f) {
         ca_wav_close(f->wav);
     if (f->vorbis)
         ca_vorbis_close(f->vorbis);
+
+    ca_free(f->filename);
     ca_free(f);
 }
 
@@ -113,7 +115,7 @@ unsigned ca_sound_file_get_nchannels(ca_sound_file *f) {
 
 unsigned ca_sound_file_get_rate(ca_sound_file *f) {
     ca_assert(f);
-    return f->nchannels;
+    return f->rate;
 }
 
 ca_sample_type_t ca_sound_file_get_sample_type(ca_sound_file *f) {
