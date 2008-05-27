@@ -121,7 +121,9 @@
 typedef struct ca_context ca_context;
 
 /** Playback completion event callback. This callback will be called
- * from a background thread. */
+ * from a background thread. The code implementing this function may
+ * not call any libcanberra API call from this callback -- this might
+ * result in a deadlock. */
 typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code, void *userdata);
 
 /** Error codes */
