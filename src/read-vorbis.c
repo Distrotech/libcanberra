@@ -95,7 +95,7 @@ int ca_vorbis_open(ca_vorbis **_v, FILE *f)  {
         goto fail;
     }
 
-    v->size = n * sizeof(int16_t);
+    v->size = n * sizeof(int16_t) * ca_vorbis_get_nchannels(v);
 
     *_v = v;
 
@@ -171,7 +171,11 @@ int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
 
     } while (length >= 4096);
 
+    ca_assert(v->size >= n_read);
+    v->size -= n_read;
+
     *n = (unsigned) n_read/sizeof(int16_t);
+
     return CA_SUCCESS;
 }
 
