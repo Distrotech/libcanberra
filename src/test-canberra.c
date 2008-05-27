@@ -32,63 +32,67 @@
 
 #include "canberra.h"
 
+static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
+    fprintf(stderr, "callback called for id %u, error '%s', userdata=%p\n", id, ca_strerror(error), userdata);
+}
+
 int main(int argc, char *argv[]) {
     ca_context *c;
+    ca_proplist *p;
+    int ret;
 
     setlocale(LC_ALL, "");
 
-    ca_context_create(&c);
+    ret = ca_context_create(&c);
+    fprintf(stderr, "create: %s\n", ca_strerror(ret));
 
     /* Initialize a few meta variables for the following play()
      * calls. They stay valid until they are overwritten with
-     * ca_context_set() again. */
-    ca_context_change_props(c,
-                            CA_PROP_APPLICATION_NAME, "An example",
-                            CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
-                            CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
-                            NULL);
+     * ca_context_change_props() again. */
+    ret = ca_context_change_props(c,
+                                  CA_PROP_APPLICATION_NAME, "An example",
+                                  CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
+                                  CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
+                                  NULL);
+    fprintf(stderr, "change_props: %s\n", ca_strerror(ret));
 
-    /* .. */
+    ret = ca_context_open(c);
+    fprintf(stderr, "open: %s\n", ca_strerror(ret));
 
-    ca_context_open(c);
+    /* Now trigger a sound event, the quick version */
+    ret = ca_context_play(c, 0,
+                          CA_PROP_EVENT_ID, "desktop-logout",
+                          CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/bar.wav",
+                          CA_PROP_MEDIA_NAME, "User has logged off from session",
+                          CA_PROP_MEDIA_LANGUAGE, "en_EN",
+                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                          NULL);
+    fprintf(stderr, "play: %s\n", ca_strerror(ret));
 
-
-    fprintf(stderr, "Play ...\n");
-
-    /* Signal a sound event. The meta data passed here overwrites the
-     * data set in any previous ca_context_set() calls. */
-/*     ca_context_play(c, 0, */
-/*                     CA_PROP_EVENT_ID, "desktop-logout", */
-/*                     CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/bar.wav", */
-/*                     CA_PROP_MEDIA_NAME, "User has logged off from session", */
-/*                     CA_PROP_MEDIA_LANGUAGE, "en_EN", */
-/*                     NULL); */
-
-    /* .. */
-
-
-    ca_context_play(c, 1,
-                    CA_PROP_EVENT_ID, "email-message-new",
-                    CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/uxknkurz.wav",
-                    CA_PROP_MEDIA_NAME, "New email received",
-                    CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                    NULL);
-    /* .. */
+    /* Now trigger a sound event, the complex version */
+    ca_proplist_create(&p);
+    ca_proplist_sets(p, CA_PROP_EVENT_ID, "email-message-new");
+    ca_proplist_sets(p, CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/uxknkurz.wav");
+    ca_proplist_sets(p, CA_PROP_MEDIA_NAME, "New email received");
+    ca_proplist_setf(p, "test.foo", "%u", 4711);
+    ret = ca_context_play_full(c, 1, p, callback, (void*) 0x4711);
+    ca_proplist_destroy(p);
+    fprintf(stderr, "play_full: %s\n", ca_strerror(ret));
 
     fprintf(stderr, "Sleep half a second ...\n");
     usleep(500000);
 
-
-    fprintf(stderr, "Cancel ...\n");
-    /* Stop one sounds */
-    ca_context_cancel(c, 0);
+    /* Stop one sound */
+    ret = ca_context_cancel(c, 0);
+    fprintf(stderr, "cancel: %s\n", ca_strerror(ret));
 
     fprintf(stderr, "Sleep 2s ...\n");
     sleep(2);
 
     /* .. */
 
-    ca_context_destroy(c);
+    ret = ca_context_destroy(c);
+    fprintf(stderr, "destroy: %s\n", ca_strerror(ret));
 
     return 0;
 }
