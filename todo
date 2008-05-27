@@ -2,3 +2,9 @@
 * gtk bridge
 * alsa backend
 * dso backend
+* lookup cache
+
+test:
+* upload
+* vorbis
+* finish callback

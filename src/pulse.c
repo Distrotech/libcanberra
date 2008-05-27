@@ -85,6 +85,8 @@ static void outstanding_free(struct outstanding *o) {
         ca_sound_file_close(o->file);
 
     if (o->stream) {
+        pa_stream_set_write_callback(o->stream, NULL, NULL);
+        pa_stream_set_state_callback(o->stream, NULL, NULL);
         pa_stream_disconnect(o->stream);
         pa_stream_unref(o->stream);
     }
@@ -329,6 +331,11 @@ int driver_destroy(ca_context *c) {
     if (p->mainloop)
         pa_threaded_mainloop_stop(p->mainloop);
 
+    if (p->context) {
+        pa_context_disconnect(p->context);
+        pa_context_unref(p->context);
+    }
+
     while (p->outstanding) {
         struct outstanding *out = p->outstanding;
         CA_LLIST_REMOVE(struct outstanding, p->outstanding, out);
@@ -338,11 +345,6 @@ int driver_destroy(ca_context *c) {
 
         outstanding_free(out);
     }
-    if (p->context) {
-        pa_context_disconnect(p->context);
-        pa_context_unref(p->context);
-    }
-
     if (p->mainloop)
         pa_threaded_mainloop_free(p->mainloop);
 
@@ -526,44 +528,55 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
 
     p = PRIVATE(out->context);
 
-    if (!(data = ca_malloc(bytes))) {
-        ret = CA_ERROR_OOM;
-        goto finish;
-    }
+    while (bytes > 0) {
+        size_t rbytes = bytes;
 
-    if ((ret = ca_sound_file_read_arbitrary(out->file, data, &bytes)) < 0)
-        goto finish;
-
-    if (bytes > 0) {
-
-        if ((ret = pa_stream_write(s, data, bytes, free, 0, PA_SEEK_RELATIVE)) < 0) {
-            ret = translate_error(ret);
+        if (!(data = ca_malloc(rbytes))) {
+            ret = CA_ERROR_OOM;
             goto finish;
         }
 
-    } else {
-        /* We reached EOF */
+        if ((ret = ca_sound_file_read_arbitrary(out->file, data, &rbytes)) < 0)
+            goto finish;
 
-        if (out->type == OUTSTANDING_UPLOAD) {
+        if (rbytes > 0) {
+            ca_assert(rbytes <= bytes);
 
-            if (pa_stream_finish_upload(s) < 0) {
-                ret = translate_error(pa_context_errno(p->context));
+            if ((ret = pa_stream_write(s, data, rbytes, free, 0, PA_SEEK_RELATIVE)) < 0) {
+                ret = translate_error(ret);
                 goto finish;
             }
 
-            /* Let's just signal driver_cache() which has been waiting for us */
-            pa_threaded_mainloop_signal(p->mainloop, FALSE);
+            bytes -= rbytes;
 
         } else {
-            pa_operation *o;
-            ca_assert(out->type = OUTSTANDING_STREAM);
+            /* We reached EOF */
 
-            if (!(o = pa_stream_drain(s, stream_drain_cb, out))) {
-                ret = translate_error(pa_context_errno(p->context));
-                goto finish;
+            if (out->type == OUTSTANDING_UPLOAD) {
+
+                if (pa_stream_finish_upload(s) < 0) {
+                    ret = translate_error(pa_context_errno(p->context));
+                    goto finish;
+                }
+
+                /* Let's just signal driver_cache() which has been waiting for us */
+                pa_threaded_mainloop_signal(p->mainloop, FALSE);
+
+            } else {
+                pa_operation *o;
+                ca_assert(out->type == OUTSTANDING_STREAM);
+
+                if (!(o = pa_stream_drain(s, stream_drain_cb, out))) {
+                    ret = translate_error(pa_context_errno(p->context));
+                    goto finish;
+                }
+
+                pa_operation_unref(o);
             }
 
-            pa_operation_unref(o);
+            pa_stream_set_write_callback(s, NULL, NULL);
+
+            break;
         }
     }
 
@@ -709,7 +722,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
-    ss.channels = sample_type_table[ca_sound_file_get_sample_type(out->file)];
+    ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 

@@ -136,7 +136,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
     ca_return_val_if_fail(prefix, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
 
-    if (!(fn = ca_new(char, strlen(prefix) + sizeof("/sounds/")-1 + strlen(name) + sizeof("index.theme"))))
+    if (!(fn = ca_new(char, strlen(prefix) + sizeof("/sounds/")-1 + strlen(name) + sizeof("/index.theme"))))
         return CA_ERROR_OOM;
 
     sprintf(fn, "%s/sounds/%s/index.theme", prefix, name);
@@ -174,7 +174,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
             continue;
         }
 
-        if (ln[0] == '[' && ln[strlen(ln-1)] == ']') {
+        if (ln[0] == '[' && ln[strlen(ln)-1] == ']') {
             char *d;
 
             if (!(d = ca_strndup(ln+1, strlen(ln)-2))) {
@@ -194,14 +194,14 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
 
         if (in_sound_theme_section) {
 
-            if (!strncmp(ln, "Inherits", 8)) {
+            if (!strncmp(ln, "Inherits=", 9)) {
 
                 if (inherits) {
                     ret = CA_ERROR_CORRUPT;
                     goto fail;
                 }
 
-                if (!(inherits = ca_strdup(ln + 8))) {
+                if (!(inherits = ca_strdup(ln + 9))) {
                     ret = CA_ERROR_OOM;
                     goto fail;
                 }
@@ -209,10 +209,10 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
                 continue;
             }
 
-            if (!strncmp(ln, "Directories", 11)) {
+            if (!strncmp(ln, "Directories=", 12)) {
                 char *d;
 
-                d = ln+11;
+                d = ln+12;
                 for (;;) {
                     size_t k = strcspn(d, ", ");
 
@@ -243,14 +243,14 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
 
         if (current_data_dir) {
 
-            if (!strncmp(ln, "OutputProfile", 13)) {
+            if (!strncmp(ln, "OutputProfile=", 14)) {
 
-                if (current_data_dir->output_profile && !streq(current_data_dir->output_profile, ln+13)) {
+                if (current_data_dir->output_profile && !streq(current_data_dir->output_profile, ln+14)) {
                     ret = CA_ERROR_CORRUPT;
                     goto fail;
                 }
 
-                if (!(current_data_dir->output_profile = ca_strdup(ln+13))) {
+                if (!(current_data_dir->output_profile = ca_strdup(ln+14))) {
                     ret = CA_ERROR_OOM;
                     goto fail;
                 }
