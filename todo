@@ -3,3 +3,4 @@
 * alsa backend
 * dso backend
 * lookup cache
+* ca_context_left_to_play()

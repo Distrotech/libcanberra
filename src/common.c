@@ -158,14 +158,10 @@ int ca_context_open(ca_context *c) {
     return ret;
 }
 
-static int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
+int ca_proplist_merge_ap(ca_proplist *p, va_list ap) {
     int ret;
-    ca_proplist *p;
 
-    ca_assert(_p);
-
-    if ((ret = ca_proplist_create(&p)) < 0)
-        return ret;
+    ca_return_val_if_fail(p, CA_ERROR_INVALID);
 
     for (;;) {
         const char *key, *value;
@@ -173,14 +169,26 @@ static int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
         if (!(key = va_arg(ap, const char*)))
             break;
 
-        if (!(value = va_arg(ap, const char*))) {
-            ret = CA_ERROR_INVALID;
-            goto fail;
-        }
+        if (!(value = va_arg(ap, const char*)))
+            return CA_ERROR_INVALID;
 
         if ((ret = ca_proplist_sets(p, key, value)) < 0)
-            goto fail;
+            return ret;
     }
+
+    return CA_SUCCESS;
+
+int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
+    int ret;
+    ca_proplist *p;
+
+    ca_return_val_if_fail(_p, CA_ERROR_INVALID);
+
+    if ((ret = ca_proplist_create(&p)) < 0)
+        return ret;
+
+    if ((ret = ca_proplist_merge_ap(p, ap)) < 0)
+        goto fail;
 
     *_p = p;
 

@@ -45,6 +45,9 @@ typedef enum ca_cache_control {
     CA_CACHE_CONTROL_VOLATILE
 } ca_cache_control_t;
 
+int ca_proplist_merge_ap(ca_proplist *p, va_list ap);
+int ca_proplist_from_ap(ca_proplist **_p, va_list ap);
+
 int ca_parse_cache_control(ca_cache_control_t *control, const char *c);
 
 #endif

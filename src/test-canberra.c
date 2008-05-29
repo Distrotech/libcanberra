@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     ret = ca_context_change_props(c,
                                   CA_PROP_APPLICATION_NAME, "An example",
                                   CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.Test",
-                                  CA_PROP_WINDOW_X11_DISPLAY, getenv("DISPLAY"),
+                                  CA_PROP_WINDOW_X11_SCREEN, getenv("DISPLAY"),
                                   NULL);
     fprintf(stderr, "change_props: %s\n", ca_strerror(ret));
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
     /* Now trigger a sound event, the quick version */
     ret = ca_context_play(c, 0,
-                          CA_PROP_EVENT_ID, "desktop-logout",
+                          CA_PROP_EVENT_ID, "desktop-login",
                           CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/bar.wav",
                           CA_PROP_MEDIA_NAME, "User has logged off from session",
                           CA_PROP_MEDIA_LANGUAGE, "en_EN",
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
     usleep(500000);
 
     /* Stop one sound */
-    ret = ca_context_cancel(c, 0);
+/*     ret = ca_context_cancel(c, 0); */
     fprintf(stderr, "cancel: %s\n", ca_strerror(ret));
 
     fprintf(stderr, "Sleep 2s ...\n");

@@ -272,6 +272,7 @@ AC_SUBST(HAVE_PULSE)
 AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
 
 PKG_CHECK_MODULES(VORBIS, [ vorbisfile ])
+PKG_CHECK_MODULES(GTK, [ gtk+-2.0 ])
 
 ###################################
 #            Output               #
