@@ -24,6 +24,7 @@
 ***/
 
 #include <canberra.h>
+#include <gtk/gtk.h>
 
 ca_context *ca_gtk_context_get(void);
 

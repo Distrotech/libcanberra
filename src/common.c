@@ -177,6 +177,7 @@ int ca_proplist_merge_ap(ca_proplist *p, va_list ap) {
     }
 
     return CA_SUCCESS;
+}
 
 int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
     int ret;

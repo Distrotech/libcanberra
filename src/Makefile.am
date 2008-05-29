@@ -23,7 +23,8 @@ AM_CXXFLAGS = $(PTHREAD_CFLAGS)
 AM_LDADD = $(PTHREAD_LIBS)
 
 lib_LTLIBRARIES = \
-        libcanberra.la
+        libcanberra.la \
+	libcanberra-gtk.la
 
 noinst_PROGRAMS = \
 	test-canberra
@@ -49,6 +50,14 @@ libcanberra_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(PULSE_CFLAGS) \
 	$(VORBIS_CFLAGS)
+
+libcanberra_gtk_la_SOURCES = \
+	canberra-gtk.h \
+	canberra-gtk.c
+libcanberra_gtk_la_LIBADD = \
+	$(GTK_LIBS)
+libcanberra_gtk_la_CFLAGS = \
+	$(GTK_CFLAGS)
 
 test_canberra_SOURCES = \
         test-canberra.c

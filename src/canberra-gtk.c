@@ -24,10 +24,18 @@
 #include <config.h>
 #endif
 
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+
+#include "canberra.h"
+#include "canberra-gtk.h"
+#include "common.h"
+#include "malloc.h"
+
 ca_context *ca_gtk_context_get(void) {
     static GStaticPrivate context_private = G_STATIC_PRIVATE_INIT;
     ca_context *c = NULL;
-    int ret;
     const char *name;
 
     if ((c = g_static_private_get(&context_private)))
@@ -41,33 +49,29 @@ ca_context *ca_gtk_context_get(void) {
     g_static_private_set(&context_private, c, (GDestroyNotify) ca_context_destroy);
 
     return c;
-
-fail:
-
-    if (c)
-        g_asset_se(ca_context_destroy(c) == 0);
 }
 
 static GtkWindow* get_toplevel(GtkWidget *w) {
-    if (!(w = gtk_wídget_get_toplevel(w)))
+    if (!(w = gtk_widget_get_toplevel(w)))
         return NULL;
 
     if (!GTK_IS_WINDOW(w))
         return NULL;
 
     return GTK_WINDOW(w);
-};
+}
 
-int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *w) {
+int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *widget) {
+    GtkWindow *w;
     int ret;
-    const char *t, role;
+    const char *t, *role;
     GdkWindow *dw;
     GdkScreen *screen;
 
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
-    ca_return_val_if_fail(w, CA_ERROR_INVALID);
+    ca_return_val_if_fail(widget, CA_ERROR_INVALID);
 
-    if (!(w = get_toplevel(w)))
+    if (!(w = get_toplevel(widget)))
         return CA_ERROR_INVALID;
 
     if ((t = gtk_window_get_title(w)))
@@ -79,11 +83,11 @@ int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *w) {
             char *id = ca_sprintf_malloc("%s#%s", t, role);
 
             if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_ID, id)) < 0) {
-                ca_free(t);
+                ca_free(id);
                 return ret;
             }
 
-            ca_free(t);
+            ca_free(id);
         }
     } else if (t)
         if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_ID, t)) < 0)
@@ -97,17 +101,17 @@ int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *w) {
         if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_X11_XID, "%lu", (unsigned long) GDK_WINDOW_XID(dw))) < 0)
             return ret;
 
-    if ((screen = gtk_widget_get_screen(w))) {
+    if ((screen = gtk_widget_get_screen(widget))) {
 
-        if ((t = gtk_display_get_name(gdk_screen_get_display(screen))))
+        if ((t = gdk_display_get_name(gdk_screen_get_display(screen))))
             if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_X11_DISPLAY, t)) < 0)
                 return ret;
 
-        if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_X11_SCREEN, "%i", gdk_screen_get_number(screen))) < 0)
+        if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_X11_SCREEN, "%i", gdk_screen_get_number(screen))) < 0)
             return ret;
 
         if (dw)
-            if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_X11_MONITOR, "%i", gdk_screen_get_monitor_at_window(screen, dw))) < 0)
+            if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_X11_MONITOR, "%i", gdk_screen_get_monitor_at_window(screen, dw))) < 0)
                 return ret;
     }
 
@@ -117,28 +121,46 @@ int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *w) {
 int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
     gdouble x, y;
     GdkWindow *gw;
-    GtkWindow *w = NULL;
+    GtkWidget *w = NULL;
+    int ret;
 
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(e, CA_ERROR_INVALID);
 
-    if (gw = gdk_event_get_window(e))
-        if ((w = gtk_lookup_window(gw)))
+    if ((gw = e->any.window)) {
+        gdk_window_get_user_data(gw, (gpointer*) &w);
+
+        if (w)
             if ((ret = ca_gtk_proplist_set_for_window(p, w)) < 0)
                 return ret;
+    }
 
     if (gdk_event_get_root_coords(e, &x, &y)) {
+
         if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_X, "%0.0f", x)) < 0)
             return ret;
 
         if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_Y, "%0.0f", y)) < 0)
             return ret;
+
+        if (w)  {
+            int width, height;
+
+            width = gdk_screen_get_width(gtk_widget_get_screen(w));
+            height = gdk_screen_get_height(gtk_widget_get_screen(w));
+
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_HPOS, "%0.0f", x/width)) < 0)
+                return ret;
+
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_VPOS, "%0.0f", y/height)) < 0)
+                return ret;
+        }
     }
 
-    if (e->event_type == GDK_BUTTON_PRESS ||
-        e->event_type == GDK_2BUTTON_PRESS ||
-        e->event_type == GDK_3BUTTON_PRESS ||
-        e->event_type == GDK_BUTTON_RELEASE) {
+    if (e->type == GDK_BUTTON_PRESS ||
+        e->type == GDK_2BUTTON_PRESS ||
+        e->type == GDK_3BUTTON_PRESS ||
+        e->type == GDK_BUTTON_RELEASE) {
 
         if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_BUTTON, "%u", e->button.button)) < 0)
             return ret;
@@ -181,7 +203,7 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     int ret;
     ca_proplist *p;
 
-    ca_return_val_if_fail(w, CA_ERROR_INVALID);
+    ca_return_val_if_fail(e, CA_ERROR_INVALID);
 
     if ((ret = ca_proplist_create(&p)) < 0)
         return ret;
