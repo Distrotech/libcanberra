@@ -412,7 +412,7 @@ int driver_change_props(ca_context *c, ca_proplist *changed, ca_proplist *merged
 static int subscribe(ca_context *c) {
     struct private *p;
     pa_operation *o;
-    int ret;
+    int ret = CA_SUCCESS;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(c->private, CA_ERROR_STATE);
@@ -420,7 +420,9 @@ static int subscribe(ca_context *c) {
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
     ca_return_val_if_fail(p->context, CA_ERROR_STATE);
-    ca_return_val_if_fail(!p->subscribed, CA_SUCCESS);
+
+    if (p->subscribed)
+        return CA_SUCCESS;
 
     pa_threaded_mainloop_lock(p->mainloop);
 
@@ -818,7 +820,7 @@ int driver_cancel(ca_context *c, uint32_t id) {
      * value */
 
     for (out = p->outstanding; out; out = n) {
-        int ret2;
+        int ret2 = CA_SUCCESS;
         n = out->next;
 
         if (out->type == OUTSTANDING_UPLOAD ||
