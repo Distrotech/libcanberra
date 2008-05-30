@@ -28,12 +28,12 @@
 
 ca_context *ca_gtk_context_get(void);
 
-int ca_gtk_play_for_window(GtkWidget *w, uint32_t id, ...) CA_GCC_SENTINEL;
-
-int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) CA_GCC_SENTINEL;
-
-int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *w);
+int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *w);
+int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) CA_GCC_SENTINEL;
 
 int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e);
+int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) CA_GCC_SENTINEL;
+
+void ca_gtk_widget_disable_sounds(GtkWidget *w, gboolean enable);
 
 #endif

@@ -61,7 +61,7 @@ static GtkWindow* get_toplevel(GtkWidget *w) {
     return GTK_WINDOW(w);
 }
 
-int ca_gtk_proplist_set_for_window(ca_proplist *p, GtkWidget *widget) {
+int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
     GtkWindow *w;
     int ret;
     const char *t, *role;
@@ -131,7 +131,7 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
         gdk_window_get_user_data(gw, (gpointer*) &w);
 
         if (w)
-            if ((ret = ca_gtk_proplist_set_for_window(p, w)) < 0)
+            if ((ret = ca_gtk_proplist_set_for_widget(p, w)) < 0)
                 return ret;
     }
 
@@ -169,7 +169,7 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
     return CA_SUCCESS;
 }
 
-int ca_gtk_play_for_window(GtkWidget *w, uint32_t id, ...) {
+int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) {
     va_list ap;
     int ret;
     ca_proplist *p;
@@ -179,7 +179,7 @@ int ca_gtk_play_for_window(GtkWidget *w, uint32_t id, ...) {
     if ((ret = ca_proplist_create(&p)) < 0)
         return ret;
 
-    if ((ret = ca_gtk_proplist_set_for_window(p, w)) < 0)
+    if ((ret = ca_gtk_proplist_set_for_widget(p, w)) < 0)
         goto fail;
 
     va_start(ap, id);
@@ -225,4 +225,14 @@ fail:
     ca_assert_se(ca_proplist_destroy(p) == 0);
 
     return ret;
+}
+
+void ca_gtk_widget_disable_sounds(GtkWidget *w, gboolean enable) {
+    static GQuark disable_sound_quark = 0;
+
+    /* This is the same quark used by libgnomeui! */
+    if (!disable_sound_quark)
+        disable_sound_quark = g_quark_from_static_string("gnome_disable_sound_events");
+
+    g_object_set_qdata(G_OBJECT(w), disable_sound_quark, GINT_TO_POINTER(!!enable));
 }

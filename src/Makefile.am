@@ -18,6 +18,8 @@
 # License along with libcanberra. If not, If not, see
 # <http://www.gnu.org/licenses/>.
 
+moduledir = @GTK_MODULES_DIR@
+
 AM_CFLAGS = $(PTHREAD_CFLAGS)
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
 AM_LDADD = $(PTHREAD_LIBS)
@@ -25,6 +27,9 @@ AM_LDADD = $(PTHREAD_LIBS)
 lib_LTLIBRARIES = \
         libcanberra.la \
 	libcanberra-gtk.la
+
+module_LTLIBRARIES = \
+	libcanberra-gtk-module.la
 
 noinst_PROGRAMS = \
 	test-canberra
@@ -55,8 +60,20 @@ libcanberra_gtk_la_SOURCES = \
 	canberra-gtk.h \
 	canberra-gtk.c
 libcanberra_gtk_la_LIBADD = \
-	$(GTK_LIBS)
+	$(GTK_LIBS) \
+	libcanberra.la
 libcanberra_gtk_la_CFLAGS = \
+	$(GTK_CFLAGS)
+
+libcanberra_gtk_module_la_SOURCES = \
+	canberra-gtk-module.c
+libcanberra_gtk_module_la_LIBADD = \
+	$(GTK_LIBS) \
+	libcanberra.la \
+	libcanberra-gtk.la
+libcanberra_gtk_module_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
+libcanberra_gtk_module_la_CFLAGS = \
 	$(GTK_CFLAGS)
 
 test_canberra_SOURCES = \

@@ -274,6 +274,10 @@ AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
 PKG_CHECK_MODULES(VORBIS, [ vorbisfile ])
 PKG_CHECK_MODULES(GTK, [ gtk+-2.0 ])
 
+GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+GTK_MODULES_DIR="${libdir}/gtk-2.0/modules"
+AC_SUBST(GTK_MODULES_DIR)
+
 ###################################
 #            Output               #
 ###################################
@@ -306,6 +310,7 @@ echo "
     CFLAGS:                 ${CFLAGS}
     C++-Compiler:           ${CXX}
     CXXFLAGS:               ${CXXFLAGS}
-    Enable Alsa:            ${ENABLE_ALSA}
-    Enable Pulse:           ${ENABLE_PULSE}
+    Enable ALSA:            ${ENABLE_ALSA}
+    Enable PulseAudio:      ${ENABLE_PULSE}
+    GTK Modules Directory:  ${GTK_MODULES_DIR}
 "
