@@ -1,5 +1,6 @@
-* gtk bridge
 * alsa backend
 * dso backend
+
+Later:
 * lookup cache
 * ca_context_left_to_play()
