@@ -28,15 +28,28 @@
 
 #include "canberra-gtk.h"
 
+typedef struct {
+    guint signal_id;
+    GObject *object;
+    GValue arg1;
+    gboolean arg1_is_set;
+    GdkEvent *event;
+} SoundEventData;
+
 static guint
-    signal_id_message_dialog_show,
     signal_id_dialog_response,
-    signal_id_menu_show,
-    signal_id_menu_hide,
+    signal_id_widget_show,
+    signal_id_widget_hide,
     signal_id_check_menu_item_toggled,
     signal_id_menu_item_activate,
     signal_id_toggle_button_toggled,
     signal_id_button_clicked;
+
+static GQuark disable_sound_quark;
+
+/* Make sure GCC doesn't warn us about a missing prototype for this
+ * exported function */
+void gtk_module_init(gint *argc, gchar ***argv[]);
 
 static const char *translate_message_tye(GtkMessageType mt) {
     static const char *const message_type_table[] = {
@@ -103,54 +116,65 @@ static GtkDialog* find_parent_dialog(GtkWidget *w) {
     return NULL;
 }
 
-static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_values, const GValue *param_values, gpointer data) {
+static void destroy_cb(SoundEventData *d) {
+
+    g_object_unref(d->object);
+
+    if (d->arg1_is_set)
+        g_value_unset(&d->arg1);
+
+    if (d->event)
+        gdk_event_free(d->event);
+
+    g_slice_free(d, sizeof(SoundEventData));
+}
+
+static gboolean idle_cb(SoundEventData *d) {
     int ret = CA_SUCCESS;
-    static GQuark disable_sound_quark = 0;
-    GObject *object;
 
-    /* This is the same quark used by libgnomeui! */
-    if (!disable_sound_quark)
-        disable_sound_quark = g_quark_from_static_string("gnome_disable_sound_events");
+    idle_id = 0;
 
-    object = g_value_get_object(&param_values[0]);
+    if (!GTK_WIDGET_DRAWABLE(d->object))
+        return FALSE;
 
-    if (g_object_get_qdata(object, disable_sound_quark))
-        return TRUE;
+    if (g_object_get_qdata(d->object, disable_sound_quark))
+        return FALSE;
 
-    if (!GTK_IS_WIDGET(object))
-        return TRUE;
+    if (d->signal_id == signal_id_widget_show) {
+        gboolean played_sound = FALSE;
 
-    if (!GTK_WIDGET_DRAWABLE(object))
-        return TRUE;
+        /* Show signals for non-dialogs have already been filtered out
+         * by the emission hook! */
 
-/*     g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object))); */
+        if (GTK_IS_MESSAGE_DIALOG(d->object)) {
+            GtkMessageType mt;
+            const char *id;
 
-    if (GTK_IS_MESSAGE_DIALOG(object) && hint->signal_id == signal_id_message_dialog_show) {
-        GtkMessageType mt;
-        const char *id;
+            g_object_get(d->object, "message_type", &mt, NULL);
 
-        g_object_get(object, "message_type", &mt, NULL);
+            if ((id = translate_message_tye(mt))) {
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                             CA_PROP_EVENT_ID, id,
+                                             CA_PROP_EVENT_DESCRIPTION, "Message dialog shown",
+                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                             NULL);
+                played_sound = TRUE;
+            }
 
-        if ((id = translate_message_tye(mt)))
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
-                                         CA_PROP_EVENT_ID, id,
-                                         CA_PROP_EVENT_DESCRIPTION, "Message dialog shown",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+        } else {
 
-        /* Hmm, why do we get two of these? */
-    }
+        }
 
-    if (GTK_IS_DIALOG(object) && hint->signal_id == signal_id_dialog_response) {
+    if (GTK_IS_DIALOG(d->object) && d->signal_id == signal_id_dialog_response) {
 
         int response;
         const char *id;
 
-        response = g_value_get_int(&param_values[1]);
+        response = g_value_get_int(&d->arg1);
 
         if ((id = translate_response(response))) {
 
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, id,
                                          CA_PROP_EVENT_DESCRIPTION, "Dialog closed",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
@@ -158,87 +182,86 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
         }
     }
 
-    if (GTK_IS_MENU(object)) {
+    if (GTK_IS_WINDOW(d->object) && GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
 
         /* This doesn't work */
 
-        if (hint->signal_id == signal_id_menu_show)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+        if (d->signal_id == signal_id_widget_show)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "menu-popup",
                                          CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
-        else if (hint->signal_id == signal_id_menu_hide)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+        else if (d->signal_id == signal_id_widget_hide)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "menu-popdown",
                                          CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
     }
 
-    if (GTK_IS_CHECK_MENU_ITEM(object) && hint->signal_id == signal_id_check_menu_item_toggled) {
+    if (GTK_IS_CHECK_MENU_ITEM(d->object) && d->signal_id == signal_id_check_menu_item_toggled) {
 
-        if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(object)))
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+        if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(d)))
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d), 0,
                                          CA_PROP_EVENT_ID, "button-toggle-on",
                                          CA_PROP_EVENT_DESCRIPTION, "Check menu item checked",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
         else
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d), 0,
                                          CA_PROP_EVENT_ID, "button-toggle-off",
                                          CA_PROP_EVENT_DESCRIPTION, "Check menu item unchecked",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
 
-    } else if (GTK_IS_MENU_ITEM(object) && hint->signal_id == signal_id_menu_item_activate) {
+    } else if (GTK_IS_MENU_ITEM(d->object) && d->signal_id == signal_id_menu_item_activate) {
 
-        if (!GTK_MENU_ITEM(object)->submenu)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+        if (!GTK_MENU_ITEM(d->object)->submenu)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "menu-click",
                                          CA_PROP_EVENT_DESCRIPTION, "Menu item clicked",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
     }
 
-    if (GTK_IS_TOGGLE_BUTTON(object) && hint->signal_id == signal_id_toggle_button_toggled) {
+    if (GTK_IS_TOGGLE_BUTTON(d->object) && d->signal_id == signal_id_toggle_button_toggled) {
 
-
-        if (!is_child_of_combo_box(GTK_WIDGET(object))) {
+        if (!is_child_of_combo_box(GTK_WIDGET(d->object))) {
 
             /* We don't want to play this sound if this is a toggle
              * button belonging to combo box. */
 
-            if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(object)))
-                ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+            if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->object)))
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "button-toggle-on",
                                              CA_PROP_EVENT_DESCRIPTION, "Toggle button checked",
                                              CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                              NULL);
             else
-                ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "button-toggle-off",
                                              CA_PROP_EVENT_DESCRIPTION, "Toggle button unchecked",
                                              CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                              NULL);
         }
 
-    } else if (GTK_IS_BUTTON(object) && !GTK_IS_TOGGLE_BUTTON(object) && hint->signal_id == signal_id_button_clicked) {
+    } else if (GTK_IS_BUTTON(d->object) && !GTK_IS_TOGGLE_BUTTON(d->object) && d->signal_id == signal_id_button_clicked) {
         GtkDialog *dialog;
         gboolean dont_play = FALSE;
 
-        if ((dialog = find_parent_dialog(GTK_WIDGET(object)))) {
+        if ((dialog = find_parent_dialog(GTK_WIDGET(d->object)))) {
             int response;
 
             /* Don't play the click sound if this is a response widget
              * we will generate a dialog-xxx event sound anyway. */
 
-            response = gtk_dialog_get_response_for_widget(dialog, GTK_WIDGET(object));
+            response = gtk_dialog_get_response_for_widget(dialog, GTK_WIDGET(d->object));
             dont_play = !!translate_response(response);
         }
 
         if (!dont_play)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(object), 0,
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "button-click",
                                          CA_PROP_EVENT_DESCRIPTION, "Button clicked",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
@@ -248,28 +271,61 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     if (ret != CA_SUCCESS)
         g_warning("Failed to play event sound: %s", ca_strerror(ret));
 
+    return FALSE;
+ }
+
+static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_values, const GValue *param_values, gpointer data) {
+    static SoundEventData *d = NULL;
+    GdkEvent *e;
+    GObject *object;
+
+    object = g_value_get_object(&param_values[0]);
+
+    g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object)));
+
+    if ((hint->signal_id == signal_id_widget_hide ||
+         hint->signal_id == signal_id_widget_show) &&
+        !GTK_IS_WINDOW(object))
+        return TRUE;
+
+    d = g_slice_new0(SoundEventData, 1);
+
+    d->object = g_object_ref(object);
+
+    d->signal_id = hint->signal_id;
+
+    if ((e = gtk_get_current_event()))
+        d->event = gdk_event_copy(e);
+
+    if (n_param_values > 1) {
+        g_value_init(&d->arg1, G_VALUE_TYPE(&param_values[1]));
+        g_value_copy(&param_values[1], &d->arg1);
+        d->arg1_is_set = TRUE;
+    }
+
+    idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, d, (GDestroyNotify) destroy_cb);
+
     return TRUE;
 }
 
-
 static void install_hook(GType type, const char *signal, guint *sn) {
+    GTypeClass *type_class;
 
-    /* I've no idea what this is for. libgnomeui does it, and thus we
-     * do it too. Someone with more gobject-fu should say something
-     * about this */
-    g_type_class_unref(g_type_class_ref(type));
+    type_class = g_type_class_ref(type);
 
     *sn = g_signal_lookup(signal, type);
     g_signal_add_emission_hook(*sn, 0, emission_hook_cb, NULL, NULL);
+
+    g_type_class_unref(type_class);
 }
 
-void gtk_module_init(gint *argc, gchar ***argv[]);
-
 void gtk_module_init(gint *argc, gchar ***argv[]) {
-    install_hook(GTK_TYPE_MESSAGE_DIALOG, "show", &signal_id_message_dialog_show);
+    /* This is the same quark libgnomeui uses! */
+    disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
+
+    install_hook(GTK_TYPE_WINDOW, "show", &signal_id_widget_show);
+    install_hook(GTK_TYPE_WINDOW, "hide", &signal_id_widget_hide);
     install_hook(GTK_TYPE_DIALOG, "response", &signal_id_dialog_response);
-    install_hook(GTK_TYPE_MENU, "show", &signal_id_menu_show);
-    install_hook(GTK_TYPE_MENU, "hide", &signal_id_menu_hide);
     install_hook(GTK_TYPE_MENU_ITEM, "activate", &signal_id_menu_item_activate);
     install_hook(GTK_TYPE_CHECK_MENU_ITEM, "toggled", &signal_id_check_menu_item_toggled);
     install_hook(GTK_TYPE_TOGGLE_BUTTON, "toggled", &signal_id_toggle_button_toggled);
