@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=${prefix}/include
 
 Name: libcanberra
-Description: Event Sound Interface
+Description: Event Sound API
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lcanberra @PTHREAD_LIBS@
 Cflags: -D_REENTRANT -I${includedir}
