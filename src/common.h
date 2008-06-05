@@ -37,6 +37,9 @@ struct ca_context {
     char *device;
 
     void *private;
+#ifdef HAVE_DSO
+    void *private_dso;
+#endif
 };
 
 typedef enum ca_cache_control {
