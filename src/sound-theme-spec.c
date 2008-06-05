@@ -509,7 +509,7 @@ static int find_sound_for_profile(ca_sound_file **f, ca_theme_data *t, const cha
     return CA_ERROR_NOTFOUND;
 }
 
-static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *profile) {
+static int find_sound_for_subname(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *profile) {
     int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -531,12 +531,59 @@ static int find_sound_in_locale(ca_sound_file **f, ca_theme_data *t, const char 
     return find_sound_in_subdir(f, t, name, locale, NULL);
 }
 
-static int find_sound_for_locale(ca_sound_file **f, ca_theme_data *theme, const char *name, const char *locale, const char *profile) {
+static int find_sound_in_locale(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *locale,
+        const char *profile) {
+
+    int ret;
+    const char *k;
+
+    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
+    ca_return_val_if_fail(profile, CA_ERROR_INVALID);
+
+    if ((ret = find_sound_for_subname(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
+        return ret;
+
+    k = strchr(name, 0);
+    for (;;) {
+        char *n;
+
+        do {
+            k--;
+
+            if (k <= name)
+                return CA_ERROR_NOTFOUND;
+
+        } while (*k != '-');
+
+        if (!(n = ca_strndup(name, k-name)))
+            return CA_ERROR_OOM;
+
+        if ((ret = find_sound_for_subname(f, t, n, locale, profile)) != CA_ERROR_NOTFOUND) {
+            ca_free(n);
+            return ret;
+        }
+
+        ca_free(n);
+    }
+}
+
+static int find_sound_for_locale(
+        ca_sound_file **f,
+        ca_theme_data *theme,
+        const char *name,
+        const char *locale,
+        const char *profile) {
+
     const char *e;
     int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
-    ca_return_val_if_fail(name, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
     ca_return_val_if_fail(locale, CA_ERROR_INVALID);
     ca_return_val_if_fail(profile, CA_ERROR_INVALID);
 
@@ -587,7 +634,7 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(t, CA_ERROR_INVALID);
     ca_return_val_if_fail(theme, CA_ERROR_INVALID);
-    ca_return_val_if_fail(name, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
     ca_return_val_if_fail(locale, CA_ERROR_INVALID);
     ca_return_val_if_fail(profile, CA_ERROR_INVALID);
 
