@@ -147,7 +147,8 @@ enum {
     CA_ERROR_NOTAVAILABLE = -12,
     CA_ERROR_ACCESS = -13,
     CA_ERROR_IO = -14,
-    _CA_ERROR_MAX = -15
+    CA_ERROR_INTERNAL = -15,
+    _CA_ERROR_MAX = -16
 };
 
 typedef struct ca_proplist ca_proplist;
