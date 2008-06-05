@@ -27,12 +27,12 @@ run_versioned() {
     local V
 
     V=$(echo "$2" | sed -e 's,\.,,g')
-    
+
     if [ -e "`which $1$V 2> /dev/null`" ] ; then
-    	P="$1$V" 
+    	P="$1$V"
     else
 	if [ -e "`which $1-$2 2> /dev/null`" ] ; then
-	    P="$1-$2" 
+	    P="$1-$2"
 	else
 	    P="$1"
 	fi
@@ -47,21 +47,21 @@ set -ex
 if [ "x$1" = "xam" ] ; then
     run_versioned automake "$VERSION" -a -c --foreign
     ./config.status
-else 
+else
     rm -rf autom4te.cache
     rm -f config.cache
 
     touch config.rpath
     test "x$LIBTOOLIZE" = "x" && LIBTOOLIZE=libtoolize
 
-    "$LIBTOOLIZE" -c --force
+    "$LIBTOOLIZE" -c --force --ltdl
     run_versioned aclocal "$VERSION"
     run_versioned autoconf 2.59 -Wall
     run_versioned autoheader 2.59
     run_versioned automake "$VERSION" --copy --foreign --add-missing
 
     if test "x$NOCONFIGURE" = "x"; then
-        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var "$@" 
+        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var "$@"
         make clean
     fi
 fi

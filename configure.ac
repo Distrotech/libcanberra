@@ -83,19 +83,25 @@ fi
 
 #### libtool stuff ####
 
+AC_LTDL_ENABLE_INSTALL
+AC_LIBLTDL_INSTALLABLE
+AC_LIBTOOL_DLOPEN
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
+AC_SUBST(LTDLINCL)
+AC_SUBST(LIBLTDL)
+AC_CONFIG_SUBDIRS(libltdl)
 
 #### Determine build environment ####
 
 os_is_win32=0
 
 case "$host_os" in
-	mingw*)
+     mingw*)
         AC_DEFINE([OS_IS_WIN32], 1, [Build target is Windows.])
         os_is_win32=1
-		;;
-	esac
+     ;;
+esac
 
 AM_CONDITIONAL(OS_IS_WIN32, test "x$os_is_win32" = "x1")
 
@@ -156,28 +162,9 @@ AC_CHECK_FUNCS([lstat])
 
 ACX_PTHREAD
 
-AC_MSG_CHECKING([for PTHREAD_PRIO_INHERIT])
-AC_LANG_CONFTEST([AC_LANG_SOURCE([[
-#include <pthread.h>
-int main() { int i = PTHREAD_PRIO_INHERIT; }]])])
-$PTHREAD_CC conftest.c $PTHREAD_CFLAGS $CFLAGS $PTHREAD_LIBS -o conftest > /dev/null 2> /dev/null
-ret=$?
-rm -f conftest.o conftest
-
-if test $ret -eq 0 ; then
-    AC_DEFINE([HAVE_PTHREAD_PRIO_INHERIT], 1, [Have PTHREAD_PRIO_INHERIT.])
-    AC_MSG_RESULT([yes])
-else
-    AC_MSG_RESULT([no])
-fi
-
-
 #### Large File-Support (LFS) ####
 
 AC_SYS_LARGEFILE
-
-# Check for open64 to know if the current system does have open64() and similar functions
-AC_CHECK_FUNCS([open64])
 
 #### [lib]iconv ####
 
@@ -213,7 +200,7 @@ AC_ARG_ENABLE([alsa],
         [alsa=auto])
 
 if test "x${alsa}" != xno ; then
-    PKG_CHECK_MODULES(ASOUNDLIB, [ alsa >= 1.0.0 ],
+    PKG_CHECK_MODULES(ALSA, [ alsa >= 1.0.0 ],
         [
             HAVE_ALSA=1
             AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?])
@@ -221,17 +208,15 @@ if test "x${alsa}" != xno ; then
         [
             HAVE_ALSA=0
             if test "x$alsa" = xyes ; then
-                AC_MSG_ERROR([*** ALSA support not found])
+                AC_MSG_ERROR([*** ALSA not found ***])
             fi
         ])
 else
     HAVE_ALSA=0
 fi
 
-AC_SUBST(ASOUNDLIB_CFLAGS)
-AC_SUBST(ASOUNDLIB_LIBS)
-AC_SUBST(HAVE_ALSA)
-AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
+AC_SUBST(ALSA_CFLAGS)
+AC_SUBST(ALSA_LIBS)
 
 ### PulseAudio (optional) ####
 
@@ -251,14 +236,18 @@ if test "x${pulse}" != xno ; then
     if test -d ../pulseaudio ; then
         PULSE_CFLAGS='-I$(top_srcdir)/../pulseaudio/src'
         PULSE_LIBS='-L$(top_srcdir)/../pulseaudio/src/.libs -lpulse -lpulse-mainloop-glib'
+        HAVE_PULSE=1
         echo "*** Found pulseaudio in ../pulseaudio, using that version ***"
     else
         PKG_CHECK_MODULES(PULSE, [ libpulse >= 0.9.11 libpulse-mainloop-glib >= 0.9.11 ],
-        HAVE_PULSE=1,
+        [
+            HAVE_PULSE=1,
+            AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?])
+        ],
         [
             HAVE_PULSE=0
             if test "x$pulse" = xyes ; then
-                AC_MSG_ERROR([*** PULSE support not found])
+                AC_MSG_ERROR([*** PulseAudio not found ***])
             fi
         ])
     fi
@@ -266,17 +255,107 @@ else
     HAVE_PULSE=0
 fi
 
-AC_SUBST(PULSE_LIBS)
 AC_SUBST(PULSE_CFLAGS)
-AC_SUBST(HAVE_PULSE)
-AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
+AC_SUBST(PULSE_LIBS)
+
+### GTK (optional) ####
+
+AC_ARG_ENABLE([gtk],
+    AC_HELP_STRING([--disable-gtk], [Disable optional GTK+ support]),
+        [
+            case "${enableval}" in
+                yes) gtk=yes ;;
+                no) gtk=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-gtk) ;;
+            esac
+        ],
+        [gtk=auto])
+
+if test "x${gtk}" != xno ; then
+    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 ],
+        [
+            HAVE_GTK=1
+            AC_DEFINE([HAVE_GTK], 1, [Have GTK?])
+
+            GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+            GTK_MODULES_DIR="${libdir}/gtk-2.0/modules"
+        ],
+        [
+            HAVE_GTK=0
+            if test "x$gtk" = xyes ; then
+                AC_MSG_ERROR([*** GTK not found ***])
+            fi
+        ])
+else
+    HAVE_GTK=0
+fi
+
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_MODULES_DIR)
+AC_SUBST(HAVE_GTK)
+AM_CONDITIONAL([HAVE_GTK], [test "x$HAVE_GTK" = x1])
+
+### Vorbis (mandatory) ###
 
 PKG_CHECK_MODULES(VORBIS, [ vorbisfile ])
-PKG_CHECK_MODULES(GTK, [ gtk+-2.0 ])
 
-GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
-GTK_MODULES_DIR="${libdir}/gtk-2.0/modules"
-AC_SUBST(GTK_MODULES_DIR)
+### Chose builtin driver ###
+
+ AC_ARG_WITH([builtin],
+            [AS_HELP_STRING([--with-builtin], [Choose builtin driver])],
+            [],
+            [with_builtin=dso])
+
+HAVE_DSO=0
+BUILTIN_DSO=0
+BUILTIN_PULSE=0
+BUILTIN_ALSA=0
+
+case "x$with_builtin" in
+     xpulse)
+        if test "x$HAVE_PULSE" != x1 ; then
+                AC_MSG_ERROR([*** PulseAudio selected for builtin driver, but not enabled. ***])
+        fi
+
+        BUILTIN_PULSE=1
+        HAVE_ALSA=0
+     ;;
+
+     xalsa)
+        if test "x$HAVE_ALSA" != x1 ; then
+                AC_MSG_ERROR([*** ALSA selected for builtin driver, but not enabled. ***])
+        fi
+
+        BUILTIN_ALSA=1
+        HAVE_PULSE=0
+     ;;
+
+     xdso)
+        BUILTIN_DSO=1
+        HAVE_DSO=1
+        AC_DEFINE([HAVE_DSO], 1, [Have DSO?])
+     ;;
+
+     *)
+        AC_MSG_ERROR([*** Unknown driver $with_builtin selected for builtin ***])
+esac
+
+if test "x$HAVE_PULSE" != x1 -a "x$HAVE_ALSA" != x1 ; then
+   AC_MSG_ERROR([*** No backend enabled. ***])
+fi
+
+AC_SUBST(HAVE_DSO)
+AC_SUBST(HAVE_PULSE)
+AC_SUBST(HAVE_ALSA)
+AC_SUBST(BUILTIN_DSO)
+AC_SUBST(BUILTIN_ALSA)
+AC_SUBST(BUILTIN_PULSE)
+AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
+AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
+AM_CONDITIONAL([BUILTIN_DSO], [test "x$BUILTIN_DSO" = x1])
+AM_CONDITIONAL([BUILTIN_PULSE], [test "x$BUILTIN_PULSE" = x1])
+AM_CONDITIONAL([BUILTIN_ALSA], [test "x$BUILTIN_ALSA" = x1])
 
 ###################################
 #            Output               #
@@ -286,18 +365,37 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 libcanberra.pc
+libcanberra-gtk.pc
 ])
 AC_OUTPUT
 
 # ==========================================================================
-ENABLE_ALSA=no
-if test "x$HAVE_ALSA" = "x1" ; then
-   ENABLE_ALSA=yes
+ENABLE_BUILTIN_DSO=no
+if test "x$BUILTIN_DSO" = "x1" ; then
+   ENABLE_BUILTIN_DSO=yes
 fi
 
 ENABLE_PULSE=no
 if test "x$HAVE_PULSE" = "x1" ; then
    ENABLE_PULSE=yes
+fi
+ENABLE_BUILTIN_PULSE=no
+if test "x$BUILTIN_PULSE" = "x1" ; then
+   ENABLE_BUILTIN_PULSE=yes
+fi
+
+ENABLE_ALSA=no
+if test "x$HAVE_ALSA" = "x1" ; then
+   ENABLE_ALSA=yes
+fi
+ENABLE_BUILTIN_ALSA=no
+if test "x$BUILTIN_ALSA" = "x1" ; then
+   ENABLE_BUILTIN_ALSA=yes
+fi
+
+ENABLE_GTK=no
+if test "x$HAVE_GTK" = "x1" ; then
+   ENABLE_GTK=yes
 fi
 
 echo "
@@ -310,7 +408,11 @@ echo "
     CFLAGS:                 ${CFLAGS}
     C++-Compiler:           ${CXX}
     CXXFLAGS:               ${CXXFLAGS}
-    Enable ALSA:            ${ENABLE_ALSA}
+    Builtin DSO:            ${ENABLE_BUILTIN_DSO}
     Enable PulseAudio:      ${ENABLE_PULSE}
+    Builtin PulseAudio:     ${ENABLE_BUILTIN_PULSE}
+    Enable ALSA:            ${ENABLE_ALSA}
+    Builtin ALSA:           ${ENABLE_BUILTIN_ALSA}
+    Enable GTK+:            ${ENABLE_GTK}
     GTK Modules Directory:  ${GTK_MODULES_DIR}
 "
