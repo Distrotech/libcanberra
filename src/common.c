@@ -374,7 +374,8 @@ const char *ca_strerror(int code) {
         [-CA_ERROR_CANCELED] = "Canceled",
         [-CA_ERROR_NOTAVAILABLE] = "Not available",
         [-CA_ERROR_ACCESS] = "Access forbidden",
-        [-CA_ERROR_IO] = "IO error"
+        [-CA_ERROR_IO] = "IO error",
+        [-CA_ERROR_INTERNAL] = "Internal error"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);
