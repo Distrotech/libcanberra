@@ -152,7 +152,6 @@ static int try_open(ca_context *c, const char *t) {
 int driver_open(ca_context *c) {
     int ret;
     struct private_dso *p;
-    const char *d;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(!PRIVATE_DSO(c), CA_ERROR_STATE);
@@ -168,12 +167,9 @@ int driver_open(ca_context *c) {
 
     p->ltdl_initialized = TRUE;
 
-    if (!(d = c->driver))
-        d = getenv("CANBERRA_DRIVER");
+    if (c->driver) {
 
-    if (d) {
-
-        if ((ret = try_open(c, d)) < 0) {
+        if ((ret = try_open(c, c->driver)) < 0) {
             driver_destroy(c);
             return ret;
         }

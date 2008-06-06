@@ -258,6 +258,26 @@ fi
 AC_SUBST(PULSE_CFLAGS)
 AC_SUBST(PULSE_LIBS)
 
+### Null output (optional) ####
+
+AC_ARG_ENABLE([null],
+    AC_HELP_STRING([--disable-null], [Disable optional null output]),
+        [
+            case "${enableval}" in
+                yes) null=yes ;;
+                no) null=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-null) ;;
+            esac
+        ],
+        [null=yes])
+
+if test "x${null}" != xno ; then
+    HAVE_NULL=1
+    AC_DEFINE([HAVE_NULL], 1, [Have NULL output?])
+else
+    HAVE_NULL=0
+fi
+
 ### GTK (optional) ####
 
 AC_ARG_ENABLE([gtk],
@@ -302,7 +322,7 @@ PKG_CHECK_MODULES(VORBIS, [ vorbisfile ])
 
 ### Chose builtin driver ###
 
- AC_ARG_WITH([builtin],
+AC_ARG_WITH([builtin],
             [AS_HELP_STRING([--with-builtin], [Choose builtin driver])],
             [],
             [with_builtin=dso])
@@ -311,6 +331,7 @@ HAVE_DSO=0
 BUILTIN_DSO=0
 BUILTIN_PULSE=0
 BUILTIN_ALSA=0
+BUILTIN_NULL=0
 
 case "x$with_builtin" in
      xpulse)
@@ -320,6 +341,7 @@ case "x$with_builtin" in
 
         BUILTIN_PULSE=1
         HAVE_ALSA=0
+        HAVE_NULL=0
      ;;
 
      xalsa)
@@ -329,6 +351,17 @@ case "x$with_builtin" in
 
         BUILTIN_ALSA=1
         HAVE_PULSE=0
+        HAVE_NULL=0
+     ;;
+
+     xnull)
+        if test "x$HAVE_NULL" != x1 ; then
+                AC_MSG_ERROR([*** Null output selected for builtin driver, but not enabled. ***])
+        fi
+
+        BUILTIN_NULL=1
+        HAVE_PULSE=0
+        HAVE_ALSA=0
      ;;
 
      xdso)
@@ -341,21 +374,25 @@ case "x$with_builtin" in
         AC_MSG_ERROR([*** Unknown driver $with_builtin selected for builtin ***])
 esac
 
-if test "x$HAVE_PULSE" != x1 -a "x$HAVE_ALSA" != x1 ; then
+if test "x$HAVE_PULSE" != x1 -a "x$HAVE_ALSA" != x1 -a "x$HAVE_NULL" != x1 ; then
    AC_MSG_ERROR([*** No backend enabled. ***])
 fi
 
 AC_SUBST(HAVE_DSO)
 AC_SUBST(HAVE_PULSE)
 AC_SUBST(HAVE_ALSA)
+AC_SUBST(HAVE_NULL)
 AC_SUBST(BUILTIN_DSO)
-AC_SUBST(BUILTIN_ALSA)
 AC_SUBST(BUILTIN_PULSE)
+AC_SUBST(BUILTIN_ALSA)
+AC_SUBST(BUILTIN_NULL)
 AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
 AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
+AM_CONDITIONAL([HAVE_NULL], [test "x$HAVE_NULL" = x1])
 AM_CONDITIONAL([BUILTIN_DSO], [test "x$BUILTIN_DSO" = x1])
 AM_CONDITIONAL([BUILTIN_PULSE], [test "x$BUILTIN_PULSE" = x1])
 AM_CONDITIONAL([BUILTIN_ALSA], [test "x$BUILTIN_ALSA" = x1])
+AM_CONDITIONAL([BUILTIN_NULL], [test "x$BUILTIN_NULL" = x1])
 
 ###################################
 #            Output               #
@@ -393,6 +430,15 @@ if test "x$BUILTIN_ALSA" = "x1" ; then
    ENABLE_BUILTIN_ALSA=yes
 fi
 
+ENABLE_NULL=no
+if test "x$HAVE_NULL" = "x1" ; then
+   ENABLE_NULL=yes
+fi
+ENABLE_BUILTIN_NULL=no
+if test "x$BUILTIN_NULL" = "x1" ; then
+   ENABLE_BUILTIN_NULL=yes
+fi
+
 ENABLE_GTK=no
 if test "x$HAVE_GTK" = "x1" ; then
    ENABLE_GTK=yes
@@ -413,6 +459,8 @@ echo "
     Builtin PulseAudio:     ${ENABLE_BUILTIN_PULSE}
     Enable ALSA:            ${ENABLE_ALSA}
     Builtin ALSA:           ${ENABLE_BUILTIN_ALSA}
+    Enable Null Output:     ${ENABLE_NULL}
+    Builtin Null Output:    ${ENABLE_BUILTIN_NULL}
     Enable GTK+:            ${ENABLE_GTK}
     GTK Modules Directory:  ${GTK_MODULES_DIR}
 "

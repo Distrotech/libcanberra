@@ -36,6 +36,7 @@
 int ca_context_create(ca_context **_c) {
     ca_context *c;
     int ret;
+    const char *d;
 
     ca_return_val_if_fail(_c, CA_ERROR_INVALID);
 
@@ -43,14 +44,27 @@ int ca_context_create(ca_context **_c) {
         return CA_ERROR_OOM;
 
     if (!(c->mutex = ca_mutex_new())) {
-        ca_free(c);
+        ca_context_destroy(c);
         return CA_ERROR_OOM;
     }
 
     if ((ret = ca_proplist_create(&c->props)) < 0) {
-        ca_mutex_free(c->mutex);
-        ca_free(c);
+        ca_context_destroy(c);
         return ret;
+    }
+
+    if ((d = getenv("CANBERRA_DRIVER"))) {
+        if ((ret = ca_context_set_driver(c, d)) < 0) {
+            ca_context_destroy(c);
+            return ret;
+        }
+    }
+
+    if ((d = getenv("CANBERRA_DEVICE"))) {
+        if ((ret = ca_context_change_device(c, d)) < 0) {
+            ca_context_destroy(c);
+            return ret;
+        }
     }
 
     *_c = c;
@@ -72,7 +86,9 @@ int ca_context_destroy(ca_context *c) {
     if (c->props)
         ca_assert_se(ca_proplist_destroy(c->props) == CA_SUCCESS);
 
-    ca_mutex_free(c->mutex);
+    if (c->mutex)
+        ca_mutex_free(c->mutex);
+
     ca_free(c->driver);
     ca_free(c->device);
     ca_free(c);

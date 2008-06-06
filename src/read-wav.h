@@ -1,5 +1,5 @@
-#ifndef foocareadwavhfoo
-#define foocareadwavhfoo
+#ifndef foocanberrareadwavhfoo
+#define foocanberrareadwavhfoo
 
 /* $Id$ */
 

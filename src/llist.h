@@ -1,5 +1,5 @@
-#ifndef foocallistfoo
-#define foocallistfoo
+#ifndef foocanberrallistfoo
+#define foocanberrallistfoo
 
 /* $Id$ */
 

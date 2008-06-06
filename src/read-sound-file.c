@@ -196,3 +196,13 @@ size_t ca_sound_file_get_size(ca_sound_file *f) {
     else
         return ca_vorbis_get_size(f->vorbis);
 }
+
+size_t ca_sound_file_frame_size(ca_sound_file *f) {
+    unsigned c;
+
+    ca_assert(f);
+
+    c = ca_sound_file_get_nchannels(f);
+
+    return c * (ca_sound_file_get_sample_type(f) == CA_SAMPLE_U8 ? 1 : 2);
+}

@@ -1,5 +1,5 @@
-#ifndef foocasoundthemespechfoo
-#define foocasoundthemespechfoo
+#ifndef foocanberrasoundthemespechfoo
+#define foocanberrasoundthemespechfoo
 
 /* $Id$ */
 

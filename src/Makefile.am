@@ -89,13 +89,29 @@ else
 lib_LTLIBRARIES += \
 	libcanberra-alsa.la
 
-libcanberra_alsa_la_SOURCE = \
+libcanberra_alsa_la_SOURCES = \
 	alsa.c
 libcanberra_alsa_la_CFLAGS = \
 	$(ALSA_CFLAGS)
 libcanberra_alsa_la_LIBADD = \
 	$(ALSA_LIBS)
 
+endif
+endif
+
+if HAVE_NULL
+if BUILTIN_NULL
+
+libcanberra_la_SOURCES += \
+	null.c
+
+else
+
+lib_LTLIBRARIES += \
+	libcanberra-null.la
+
+libcanberra_null_la_SOURCES = \
+	null.c
 endif
 endif
 

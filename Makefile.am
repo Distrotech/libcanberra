@@ -26,3 +26,7 @@ noinst_DATA =
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcanberra.pc
+
+if HAVE_GTK
+pkgconfig_DATA += libcanberra-gtk.pc
+endif

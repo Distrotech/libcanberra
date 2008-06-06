@@ -1,5 +1,5 @@
-#ifndef foocareadvorbishfoo
-#define foocareadvorbishfoo
+#ifndef foocanberrareadvorbishfoo
+#define foocanberrareadvorbishfoo
 
 /* $Id$ */
 

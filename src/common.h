@@ -1,5 +1,5 @@
-#ifndef foocacommonh
-#define foocacommonh
+#ifndef foocanberracommonh
+#define foocanberracommonh
 
 /* $Id$ */
 

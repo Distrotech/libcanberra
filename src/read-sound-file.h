@@ -1,5 +1,5 @@
-#ifndef foocareadsoundfilehfoo
-#define foocareadsoundfilehfoo
+#ifndef foocanberrareadsoundfilehfoo
+#define foocanberrareadsoundfilehfoo
 
 /* $Id$ */
 
@@ -47,5 +47,7 @@ int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, unsigned *n);
 int ca_sound_file_read_uint8(ca_sound_file *f, uint8_t *d, unsigned *n);
 
 int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n);
+
+size_t ca_sound_file_frame_size(ca_sound_file *f);
 
 #endif

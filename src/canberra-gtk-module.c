@@ -36,6 +36,10 @@ typedef struct {
     GdkEvent *event;
 } SoundEventData;
 
+static GQueue sound_event_queue = G_QUEUE_INIT;
+
+static int idle_id = 0;
+
 static guint
     signal_id_dialog_response,
     signal_id_widget_show,
@@ -116,7 +120,7 @@ static GtkDialog* find_parent_dialog(GtkWidget *w) {
     return NULL;
 }
 
-static void destroy_cb(SoundEventData *d) {
+static void free_sound_event(SoundEventData *d) {
 
     g_object_unref(d->object);
 
@@ -126,24 +130,28 @@ static void destroy_cb(SoundEventData *d) {
     if (d->event)
         gdk_event_free(d->event);
 
-    g_slice_free(d, sizeof(SoundEventData));
+    g_slice_free(SoundEventData, d);
 }
 
-static gboolean idle_cb(SoundEventData *d) {
+static void filter_sound_events(SoundEventData *d) {
+
+
+
+}
+
+static void dispatch_sound_event(SoundEventData *d) {
     int ret = CA_SUCCESS;
 
-    idle_id = 0;
-
     if (!GTK_WIDGET_DRAWABLE(d->object))
-        return FALSE;
+        return;
 
     if (g_object_get_qdata(d->object, disable_sound_quark))
-        return FALSE;
+        return;
 
     if (d->signal_id == signal_id_widget_show) {
         gboolean played_sound = FALSE;
 
-        /* Show signals for non-dialogs have already been filtered out
+        /* Show signals for non-windows have already been filtered out
          * by the emission hook! */
 
         if (GTK_IS_MESSAGE_DIALOG(d->object)) {
@@ -161,9 +169,45 @@ static gboolean idle_cb(SoundEventData *d) {
                 played_sound = TRUE;
             }
 
-        } else {
+        } else if (GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
 
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "menu-popup",
+                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+            played_sound = TRUE;
         }
+
+        if (!played_sound)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-new",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window shown",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+    }
+
+    if (d->signal_id == signal_id_widget_hide) {
+        gboolean played_sound = FALSE;
+
+        if (GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "menu-popdown",
+                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+
+            played_sound = TRUE;
+        }
+
+        if (!played_sound)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-close",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window closed",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+    }
 
     if (GTK_IS_DIALOG(d->object) && d->signal_id == signal_id_dialog_response) {
 
@@ -180,24 +224,6 @@ static gboolean idle_cb(SoundEventData *d) {
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
         }
-    }
-
-    if (GTK_IS_WINDOW(d->object) && GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
-
-        /* This doesn't work */
-
-        if (d->signal_id == signal_id_widget_show)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "menu-popup",
-                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
-        else if (d->signal_id == signal_id_widget_hide)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "menu-popdown",
-                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
     }
 
     if (GTK_IS_CHECK_MENU_ITEM(d->object) && d->signal_id == signal_id_check_menu_item_toggled) {
@@ -270,9 +296,21 @@ static gboolean idle_cb(SoundEventData *d) {
 
     if (ret != CA_SUCCESS)
         g_warning("Failed to play event sound: %s", ca_strerror(ret));
+}
+
+static gboolean idle_cb(void *userdata) {
+    SoundEventData *d;
+
+    idle_id = 0;
+
+    while ((d = g_queue_pop_head(&sound_event_queue))) {
+        filter_sound_events(d);
+        dispatch_sound_event(d);
+        free_sound_event(d);
+    }
 
     return FALSE;
- }
+}
 
 static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_values, const GValue *param_values, gpointer data) {
     static SoundEventData *d = NULL;
@@ -288,7 +326,7 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
         !GTK_IS_WINDOW(object))
         return TRUE;
 
-    d = g_slice_new0(SoundEventData, 1);
+    d = g_slice_new0(SoundEventData);
 
     d->object = g_object_ref(object);
 
@@ -303,7 +341,10 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
         d->arg1_is_set = TRUE;
     }
 
-    idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, d, (GDestroyNotify) destroy_cb);
+    g_queue_push_tail(&sound_event_queue, e);
+
+    if (idle_id == 0)
+        idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, NULL, NULL);
 
     return TRUE;
 }

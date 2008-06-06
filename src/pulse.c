@@ -363,6 +363,7 @@ int driver_destroy(ca_context *c) {
 
 int driver_change_device(ca_context *c, char *device) {
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(c->private, CA_ERROR_STATE);
 
     /* We're happy with any device change. We might however add code
      * here eventually to move all currently played back event sounds
