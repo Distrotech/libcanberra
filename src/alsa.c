@@ -122,6 +122,9 @@ int driver_destroy(ca_context *c) {
         /* Tell all player threads to terminate */
         for (out = p->outstanding; out; out = out->next) {
 
+            if (out->dead)
+                continue;
+
             out->dead = TRUE;
 
             if (out->callback)
@@ -157,6 +160,8 @@ int driver_destroy(ca_context *c) {
     ca_free(p);
 
     c->private = NULL;
+
+    snd_config_update_free_global();
 
     return CA_SUCCESS;
 }
@@ -194,6 +199,8 @@ static int translate_error(int error) {
         case -EBUSY:
             return CA_ERROR_NOTAVAILABLE;
         default:
+            if (ca_debug())
+                fprintf(stderr, "Got unhandled error from ALSA: %s\n", snd_strerror(error));
             return CA_ERROR_IO;
     }
 }
@@ -271,14 +278,13 @@ static void* thread_func(void *userdata) {
 
     pthread_detach(pthread_self());
 
+    fs = ca_sound_file_frame_size(out->file);
     data_size = (BUFSIZE/fs)*fs;
 
     if (!(data = ca_malloc(data_size))) {
         ret = CA_ERROR_OOM;
         goto finish;
     }
-
-    fs = ca_sound_file_frame_size(out->file);
 
     if ((ret = snd_pcm_poll_descriptors_count(out->pcm)) < 0) {
         ret = translate_error(ret);
@@ -315,7 +321,7 @@ static void* thread_func(void *userdata) {
         if (pfd[0].revents)
             break;
 
-        if ((ret = snd_pcm_poll_descriptors_revents(out->pcm, pfd, n_pfd, &revents)) < 0) {
+        if ((ret = snd_pcm_poll_descriptors_revents(out->pcm, pfd+1, n_pfd-1, &revents)) < 0) {
             ret = translate_error(ret);
             goto finish;
         }
@@ -390,10 +396,9 @@ finish:
     ca_free(data);
     ca_free(pfd);
 
-    if (!out->dead) {
+    if (!out->dead)
         if (out->callback)
             out->callback(out->context, out->id, ret, out->userdata);
-    }
 
     ca_mutex_lock(p->outstanding_mutex);
 
@@ -402,9 +407,9 @@ finish:
     if (!p->outstanding && p->signal_semaphore)
         sem_post(&p->semaphore);
 
-    ca_mutex_unlock(p->outstanding_mutex);
-
     outstanding_free(out);
+
+    ca_mutex_unlock(p->outstanding_mutex);
 
     return NULL;
 }
@@ -433,14 +438,29 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     out->userdata = userdata;
     out->pipe_fd[0] = out->pipe_fd[1] = -1;
 
+    if (pipe(out->pipe_fd) < 0) {
+        ret = CA_ERROR_SYSTEM;
+        goto finish;
+    }
+
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
     if ((ret = open_alsa(c, out)) < 0)
         goto finish;
 
+    /* OK, we're ready to go, so let's add this to our list */
+    ca_mutex_lock(p->outstanding_mutex);
+    CA_LLIST_PREPEND(struct outstanding, p->outstanding, out);
+    ca_mutex_unlock(p->outstanding_mutex);
+
     if (pthread_create(&thread, NULL, thread_func, out) < 0) {
         ret = CA_ERROR_OOM;
+
+        ca_mutex_lock(p->outstanding_mutex);
+        CA_LLIST_REMOVE(struct outstanding, p->outstanding, out);
+        ca_mutex_unlock(p->outstanding_mutex);
+
         goto finish;
     }
 
@@ -449,11 +469,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 finish:
 
     /* We keep the outstanding struct around if we need clean up later to */
-    if (ret == CA_SUCCESS) {
-        ca_mutex_lock(p->outstanding_mutex);
-        CA_LLIST_PREPEND(struct outstanding, p->outstanding, out);
-        ca_mutex_unlock(p->outstanding_mutex);
-    } else
+    if (ret != CA_SUCCESS)
         outstanding_free(out);
 
     return ret;
@@ -473,6 +489,9 @@ int driver_cancel(ca_context *c, uint32_t id) {
     for (out = p->outstanding; out; out = out->next) {
 
         if (out->id != id)
+            continue;
+
+        if (out->dead)
             continue;
 
         out->dead = TRUE;

@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
     /* Now trigger a sound event, the complex version */
     ca_proplist_create(&p);
-    ca_proplist_sets(p, CA_PROP_EVENT_ID, "email-message-new");
+    ca_proplist_sets(p, CA_PROP_EVENT_ID, "desktop-logout");
     ca_proplist_sets(p, CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/uxknkurz.wav");
     ca_proplist_sets(p, CA_PROP_MEDIA_NAME, "New email received");
     ca_proplist_setf(p, "test.foo", "%u", 4711);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 
     /* Stop one sound */
 /*     ret = ca_context_cancel(c, 0); */
-    fprintf(stderr, "cancel: %s\n", ca_strerror(ret));
+/*     fprintf(stderr, "cancel: %s\n", ca_strerror(ret)); */
 
     fprintf(stderr, "Sleep 2s ...\n");
     sleep(2);
