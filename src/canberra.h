@@ -124,10 +124,13 @@
 /* Context object */
 typedef struct ca_context ca_context;
 
-/** Playback completion event callback. This callback will be called
- * from a background thread. The code implementing this function may
- * not call any libcanberra API call from this callback -- this might
- * result in a deadlock. */
+/** Playback completion event callback. The context this callback is
+ * called in is undefined, it might or might not be called from a
+ * background thread, and from any strackframe. The code implementing
+ * this function may not call any libcanberra API call from this
+ * callback -- this might result in a deadlock. Instead it may only be
+ * used to asynchronously signal some kind of notification object
+ * (semaphore, message queue, ...). */
 typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code, void *userdata);
 
 /** Error codes */
