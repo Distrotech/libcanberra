@@ -27,6 +27,9 @@ AM_LDADD = $(PTHREAD_LIBS)
 lib_LTLIBRARIES = \
         libcanberra.la
 
+include_HEADERS = \
+	canberra.h
+
 noinst_PROGRAMS = \
 	test-canberra
 
@@ -70,6 +73,8 @@ libcanberra_pulse_la_CFLAGS = \
 	$(PULSE_CFLAGS)
 libcanberra_pulse_la_LIBADD = \
 	$(PULSE_LIBS)
+libcanberra_pulse_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
 
 endif
 endif
@@ -95,6 +100,8 @@ libcanberra_alsa_la_CFLAGS = \
 	$(ALSA_CFLAGS)
 libcanberra_alsa_la_LIBADD = \
 	$(ALSA_LIBS)
+libcanberra_alsa_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
 
 endif
 endif
@@ -112,6 +119,8 @@ lib_LTLIBRARIES += \
 
 libcanberra_null_la_SOURCES = \
 	null.c
+libcanberra_null_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
 endif
 endif
 
@@ -130,6 +139,9 @@ if HAVE_GTK
 
 lib_LTLIBRARIES += \
 	libcanberra-gtk.la
+
+include_HEADERS += \
+	canberra-gtk.h
 
 module_LTLIBRARIES = \
 	libcanberra-gtk-module.la
