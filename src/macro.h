@@ -47,7 +47,8 @@
 #define ca_return_if_fail(expr)                                         \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            if (ca_debug())                                             \
+                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             return;                                                     \
         }                                                               \
     } while(FALSE)
@@ -55,7 +56,8 @@
 #define ca_return_val_if_fail(expr, val) \
     do { \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            if (ca_debug())                                             \
+                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             return (val);                                               \
         }                                                               \
     } while(FALSE)
@@ -65,7 +67,8 @@
 #define ca_return_if_fail_unlock(expr, mutex)                           \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            if (ca_debug())                                             \
+                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             ca_mutex_unlock(mutex);                                     \
             return;                                                     \
         }                                                               \
@@ -74,7 +77,8 @@
 #define ca_return_val_if_fail_unlock(expr, val, mutex)                  \
     do {                                                                \
         if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+            if (ca_debug())                                             \
+                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
             ca_mutex_unlock(mutex);                                     \
             return (val);                                               \
         }                                                               \
@@ -158,7 +162,16 @@
 #define CA_PTR_TO_INT32(p) ((int32_t) CA_PTR_TO_UINT(p))
 #define CA_INT32_TO_PTR(u) CA_UINT_TO_PTR((int32_t) u)
 
+typedef int ca_bool_t;
 
+static inline ca_bool_t ca_debug(void) {
+    const char *d;
+
+    if ((d = getenv("CANBERRA_DEBUG")))
+        return !!*d;
+
+    return FALSE;
+}
 
 static inline size_t ca_align(size_t l) {
     return (((l + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*));
@@ -167,8 +180,6 @@ static inline size_t ca_align(size_t l) {
 #define CA_ALIGN(x) (ca_align(x))
 
 typedef void (*ca_free_cb_t)(void *);
-
-typedef int ca_bool_t;
 
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
