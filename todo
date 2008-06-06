@@ -1,6 +1,11 @@
 * alsa backend
 * dso backend
+* link GtkSettings to prop
+* git move
+* indent by 8 chars
+* gtk-doc
 
 Later:
 * lookup cache
 * ca_context_left_to_play()
+* queuing, looping, prefixing, postfixing
