@@ -1,4 +1,3 @@
-* alsa backend
 * dso backend
 * link GtkSettings to prop
 * git move
