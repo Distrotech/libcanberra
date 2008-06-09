@@ -36,6 +36,41 @@ typedef struct {
     GdkEvent *event;
 } SoundEventData;
 
+/*
+   We generate these sounds:
+
+   dialog-error
+   dialog-warning
+   dialog-information
+   dialog-question
+   window-new
+   window-close
+   window-minimized
+   window-unminimized
+   window-maximized
+   window-unmaximized
+   notebook-tab-changed
+   dialog-ok
+   dialog-cancel
+   item-selected
+   link-pressed
+   link-released
+   button-pressed
+   button-released
+   menu-click
+   button-toggle-on
+   button-toggle-off
+   menu-popup
+   menu-popdown
+   menu-replace
+
+   TODO:
+   drag-start
+   drag-accept
+   drag-fail
+
+*/
+
 static GQueue sound_event_queue = G_QUEUE_INIT;
 
 static int idle_id = 0;
@@ -47,7 +82,11 @@ static guint
     signal_id_check_menu_item_toggled,
     signal_id_menu_item_activate,
     signal_id_toggle_button_toggled,
-    signal_id_button_clicked;
+    signal_id_button_pressed,
+    signal_id_button_released,
+    signal_id_widget_window_state_event,
+    signal_id_notebook_switch_page,
+    signal_id_tree_view_move_cursor;
 
 static GQuark disable_sound_quark;
 
@@ -133,14 +172,50 @@ static void free_sound_event(SoundEventData *d) {
     g_slice_free(SoundEventData, d);
 }
 
-static void filter_sound_events(SoundEventData *d) {
+static SoundEventData* filter_sound_event(SoundEventData *d) {
+    GList *i;
+
+    do {
+
+        for (i = sound_event_queue.head; i; i = i->next) {
+            SoundEventData *j = i->data;
+
+            if (d->object == j->object) {
+
+                /* Let's drop widget hide events in favour of dialog
+                 * response */
+
+                if (d->signal_id == signal_id_widget_hide &&
+                    j->signal_id == signal_id_dialog_response) {
+
+                    free_sound_event(d);
+                    d = j;
+                    g_queue_delete_link(&sound_event_queue, i);
+                    break;
+                }
 
 
+                if (d->signal_id == signal_id_dialog_response &&
+                    j->signal_id == signal_id_widget_hide) {
 
+                    free_sound_event(j);
+                    g_queue_delete_link(&sound_event_queue, i);
+                }
+            }
+        }
+
+        /* If we exited the iteration early, let's retry. */
+
+    } while (i);
+
+    /* FIXME: Filter menu hide on menu show */
+
+    return d;
 }
 
 static void dispatch_sound_event(SoundEventData *d) {
     int ret = CA_SUCCESS;
+    static gboolean menu_is_popped_up = FALSE;
 
     if (!GTK_WIDGET_DRAWABLE(d->object))
         return;
@@ -171,40 +246,28 @@ static void dispatch_sound_event(SoundEventData *d) {
 
         } else if (GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
 
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "menu-popup",
-                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+            if (menu_is_popped_up) {
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                             CA_PROP_EVENT_ID, "menu-popup",
+                                             CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
+                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                             NULL);
+            } else {
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                             CA_PROP_EVENT_ID, "menu-replace",
+                                             CA_PROP_EVENT_DESCRIPTION, "Menu replaced",
+                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                             NULL);
+            }
+
             played_sound = TRUE;
+            menu_is_popped_up = TRUE;
         }
 
         if (!played_sound)
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-new",
                                          CA_PROP_EVENT_DESCRIPTION, "Window shown",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
-    }
-
-    if (d->signal_id == signal_id_widget_hide) {
-        gboolean played_sound = FALSE;
-
-        if (GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
-
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "menu-popdown",
-                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
-
-            played_sound = TRUE;
-        }
-
-        if (!played_sound)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "window-close",
-                                         CA_PROP_EVENT_DESCRIPTION, "Window closed",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
     }
@@ -223,75 +286,188 @@ static void dispatch_sound_event(SoundEventData *d) {
                                          CA_PROP_EVENT_DESCRIPTION, "Dialog closed",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
+        } else {
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-close",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window closed",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+        }
+
+    } else if (d->signal_id == signal_id_widget_hide) {
+        gboolean played_sound = FALSE;
+
+        if (GTK_IS_MENU(gtk_bin_get_child(GTK_BIN(d->object)))) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "menu-popdown",
+                                         CA_PROP_EVENT_DESCRIPTION, "Menu popped down",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+
+            played_sound = TRUE;
+            menu_is_popped_up = FALSE;
+        }
+
+        if (!played_sound)
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-close",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window closed",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+    }
+
+    if (GTK_IS_WINDOW(d->object) && d->signal_id == signal_id_widget_window_state_event) {
+        GdkEventWindowState *e;
+
+        e = (GdkEventWindowState*) d->event;
+
+        if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED)) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-minimized",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window minimized",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+
+        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) && (e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-maximized",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window maximized",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+
+        } else if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && !(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED)) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-unminimized",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window unminimized",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
+        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) && !(e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
+
+            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                         CA_PROP_EVENT_ID, "window-unmaximized",
+                                         CA_PROP_EVENT_DESCRIPTION, "Window unmaximized",
+                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                         NULL);
         }
     }
 
     if (GTK_IS_CHECK_MENU_ITEM(d->object) && d->signal_id == signal_id_check_menu_item_toggled) {
 
         if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(d)))
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d), 0,
-                                         CA_PROP_EVENT_ID, "button-toggle-on",
-                                         CA_PROP_EVENT_DESCRIPTION, "Check menu item checked",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "button-toggle-on",
+                                        CA_PROP_EVENT_DESCRIPTION, "Check menu item checked",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
         else
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d), 0,
-                                         CA_PROP_EVENT_ID, "button-toggle-off",
-                                         CA_PROP_EVENT_DESCRIPTION, "Check menu item unchecked",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "button-toggle-off",
+                                        CA_PROP_EVENT_DESCRIPTION, "Check menu item unchecked",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
 
     } else if (GTK_IS_MENU_ITEM(d->object) && d->signal_id == signal_id_menu_item_activate) {
 
         if (!GTK_MENU_ITEM(d->object)->submenu)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "menu-click",
-                                         CA_PROP_EVENT_DESCRIPTION, "Menu item clicked",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "menu-click",
+                                        CA_PROP_EVENT_DESCRIPTION, "Menu item clicked",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
     }
 
-    if (GTK_IS_TOGGLE_BUTTON(d->object) && d->signal_id == signal_id_toggle_button_toggled) {
+    if (GTK_IS_TOGGLE_BUTTON(d->object)) {
 
-        if (!is_child_of_combo_box(GTK_WIDGET(d->object))) {
+        if (d->signal_id == signal_id_toggle_button_toggled) {
 
-            /* We don't want to play this sound if this is a toggle
-             * button belonging to combo box. */
+            if (!is_child_of_combo_box(GTK_WIDGET(d->object))) {
 
-            if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->object)))
-                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                             CA_PROP_EVENT_ID, "button-toggle-on",
-                                             CA_PROP_EVENT_DESCRIPTION, "Toggle button checked",
-                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                             NULL);
-            else
-                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                             CA_PROP_EVENT_ID, "button-toggle-off",
-                                             CA_PROP_EVENT_DESCRIPTION, "Toggle button unchecked",
-                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                             NULL);
+                /* We don't want to play this sound if this is a toggle
+                 * button belonging to combo box. */
+
+                if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->object)))
+                    ret = ca_gtk_play_for_event(d->event, 0,
+                                                CA_PROP_EVENT_ID, "button-toggle-on",
+                                                CA_PROP_EVENT_DESCRIPTION, "Toggle button checked",
+                                                CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                                NULL);
+                else
+                    ret = ca_gtk_play_for_event(d->event, 0,
+                                                CA_PROP_EVENT_ID, "button-toggle-off",
+                                                CA_PROP_EVENT_DESCRIPTION, "Toggle button unchecked",
+                                                CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                                NULL);
+            }
         }
 
-    } else if (GTK_IS_BUTTON(d->object) && !GTK_IS_TOGGLE_BUTTON(d->object) && d->signal_id == signal_id_button_clicked) {
-        GtkDialog *dialog;
-        gboolean dont_play = FALSE;
+    } else if (GTK_IS_LINK_BUTTON(d->object)) {
 
-        if ((dialog = find_parent_dialog(GTK_WIDGET(d->object)))) {
-            int response;
+        if (d->signal_id == signal_id_button_pressed) {
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "link-pressed",
+                                        CA_PROP_EVENT_DESCRIPTION, "Link pressed",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
 
-            /* Don't play the click sound if this is a response widget
-             * we will generate a dialog-xxx event sound anyway. */
+        } else if (d->signal_id == signal_id_button_released) {
 
-            response = gtk_dialog_get_response_for_widget(dialog, GTK_WIDGET(d->object));
-            dont_play = !!translate_response(response);
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "link-released",
+                                        CA_PROP_EVENT_DESCRIPTION, "Link released",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
         }
 
-        if (!dont_play)
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "button-click",
-                                         CA_PROP_EVENT_DESCRIPTION, "Button clicked",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+    } else if (GTK_IS_BUTTON(d->object) && !GTK_IS_TOGGLE_BUTTON(d->object)) {
+
+        if (d->signal_id == signal_id_button_pressed) {
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "button-pressed",
+                                        CA_PROP_EVENT_DESCRIPTION, "Button pressed",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+
+        } else if (d->signal_id == signal_id_button_released) {
+            GtkDialog *dialog;
+            gboolean dont_play = FALSE;
+
+            if ((dialog = find_parent_dialog(GTK_WIDGET(d->object)))) {
+                int response;
+
+                /* Don't play the click sound if this is a response widget
+                 * we will generate a dialog-xxx event sound anyway. */
+
+                response = gtk_dialog_get_response_for_widget(dialog, GTK_WIDGET(d->object));
+                dont_play = !!translate_response(response);
+            }
+
+            if (!dont_play)
+                ret = ca_gtk_play_for_event(d->event, 0,
+                                            CA_PROP_EVENT_ID, "button-released",
+                                            CA_PROP_EVENT_DESCRIPTION, "Button released",
+                                            CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                            NULL);
+        }
+    }
+
+    if (GTK_IS_NOTEBOOK(d->object) && d->signal_id == signal_id_notebook_switch_page) {
+        ret = ca_gtk_play_for_event(d->event, 0,
+                                    CA_PROP_EVENT_ID, "notebook-tab-changed",
+                                    CA_PROP_EVENT_DESCRIPTION, "Tab changed",
+                                    CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                    NULL);
+    }
+
+    if (GTK_IS_TREE_VIEW(d->object) && d->signal_id == signal_id_tree_view_move_cursor) {
+        ret = ca_gtk_play_for_event(d->event, 0,
+                                    CA_PROP_EVENT_ID, "item-selected",
+                                    CA_PROP_EVENT_DESCRIPTION, "Item selected",
+                                    CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                    NULL);
     }
 
     if (ret != CA_SUCCESS)
@@ -303,8 +479,14 @@ static gboolean idle_cb(void *userdata) {
 
     idle_id = 0;
 
+    g_message("idle_cb()");
+
     while ((d = g_queue_pop_head(&sound_event_queue))) {
-        filter_sound_events(d);
+        d = filter_sound_event(d);
+
+        g_message("Dispatching signal %s on %s", g_signal_name(d->signal_id), g_type_name(G_OBJECT_TYPE(d->object)));
+
+
         dispatch_sound_event(d);
         free_sound_event(d);
     }
@@ -319,12 +501,14 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
 
     object = g_value_get_object(&param_values[0]);
 
-    g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object)));
-
+    /* Filter a few very often occuring signals as quickly as possible */
     if ((hint->signal_id == signal_id_widget_hide ||
-         hint->signal_id == signal_id_widget_show) &&
+         hint->signal_id == signal_id_widget_show ||
+         hint->signal_id == signal_id_widget_window_state_event) &&
         !GTK_IS_WINDOW(object))
         return TRUE;
+
+    g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object)));
 
     d = g_slice_new0(SoundEventData);
 
@@ -332,7 +516,9 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
 
     d->signal_id = hint->signal_id;
 
-    if ((e = gtk_get_current_event()))
+    if (d->signal_id == signal_id_widget_window_state_event) {
+        d->event = gdk_event_copy(g_value_peek_pointer(&param_values[1]));
+    } else if ((e = gtk_get_current_event()))
         d->event = gdk_event_copy(e);
 
     if (n_param_values > 1) {
@@ -342,6 +528,8 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     }
 
     g_queue_push_tail(&sound_event_queue, e);
+
+    g_message("enqueuing");
 
     if (idle_id == 0)
         idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, NULL, NULL);
@@ -370,5 +558,9 @@ void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_MENU_ITEM, "activate", &signal_id_menu_item_activate);
     install_hook(GTK_TYPE_CHECK_MENU_ITEM, "toggled", &signal_id_check_menu_item_toggled);
     install_hook(GTK_TYPE_TOGGLE_BUTTON, "toggled", &signal_id_toggle_button_toggled);
-    install_hook(GTK_TYPE_BUTTON, "clicked", &signal_id_button_clicked);
+    install_hook(GTK_TYPE_BUTTON, "pressed", &signal_id_button_pressed);
+    install_hook(GTK_TYPE_BUTTON, "released", &signal_id_button_released);
+    install_hook(GTK_TYPE_WIDGET, "window-state-event", &signal_id_widget_window_state_event);
+    install_hook(GTK_TYPE_NOTEBOOK, "switch-page", &signal_id_notebook_switch_page);
+    install_hook(GTK_TYPE_TREE_VIEW, "move-cursor", &signal_id_tree_view_move_cursor);
 }

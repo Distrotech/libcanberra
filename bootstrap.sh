@@ -54,6 +54,7 @@ else
     touch config.rpath
     test "x$LIBTOOLIZE" = "x" && LIBTOOLIZE=libtoolize
 
+    gtkdocize --copy --flavour no-tmpl
     "$LIBTOOLIZE" -c --force --ltdl
     run_versioned aclocal "$VERSION"
     run_versioned autoconf 2.59 -Wall
@@ -61,7 +62,7 @@ else
     run_versioned automake "$VERSION" --copy --foreign --add-missing
 
     if test "x$NOCONFIGURE" = "x"; then
-        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var "$@"
+        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc "$@" 
         make clean
     fi
 fi

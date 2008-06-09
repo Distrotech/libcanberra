@@ -19,7 +19,7 @@
 # <http://www.gnu.org/licenses/>.
 
 EXTRA_DIST = bootstrap.sh LGPL
-SUBDIRS = src
+SUBDIRS = src doc
 
 MAINTAINERCLEANFILES =
 noinst_DATA =
@@ -30,3 +30,5 @@ pkgconfig_DATA = libcanberra.pc
 if HAVE_GTK
 pkgconfig_DATA += libcanberra-gtk.pc
 endif
+
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc

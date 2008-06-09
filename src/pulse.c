@@ -861,7 +861,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     const char *n, *ct;
     char *name = NULL;
     pa_sample_spec ss;
-    ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
+    ca_cache_control_t cache_control = CA_CACHE_CONTROL_PERMANENT;
     struct outstanding *out;
     int ret;
 

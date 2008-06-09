@@ -26,6 +26,8 @@ AC_PREREQ(2.57)
 AC_INIT([libcanberra], 0.1, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR(m4)
+
 AM_INIT_AUTOMAKE([foreign -Wall])
 
 AC_SUBST(PACKAGE_URL, [https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/])
@@ -394,6 +396,8 @@ AM_CONDITIONAL([BUILTIN_PULSE], [test "x$BUILTIN_PULSE" = x1])
 AM_CONDITIONAL([BUILTIN_ALSA], [test "x$BUILTIN_ALSA" = x1])
 AM_CONDITIONAL([BUILTIN_NULL], [test "x$BUILTIN_NULL" = x1])
 
+GTK_DOC_CHECK(1.9)
+
 ###################################
 #            Output               #
 ###################################
@@ -403,6 +407,7 @@ Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
+doc/Makefile
 ])
 AC_OUTPUT
 

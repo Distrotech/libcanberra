@@ -27,113 +27,359 @@
 #include <sys/param.h>
 #include <inttypes.h>
 
-/*
-
-  Requirements & General observations:
-
-    - Property set extensible. To be kept in sync with PulseAudio and libsydney.
-    - Property keys need to be valid UTF-8, text values, too.
-    - Will warn if application.name or application.id not set.
-    - Will fail if event.id not set
-    - Fully thread safe, not async-signal safe
-    - Error codes are returned immediately, as negative integers
-    - If the control.cache property is set it will control whether the
-      specific sample will be cached in the server:
-
-       * permanent: install the sample permanently in the server (for usage in gnome-session)
-       * volatile:  install the sample temporarily in the server (will be expelled from cache on cache pressure or after timeout)
-       * never:     never cache the sample in the server, always stream
-
-      control.cache will default to "volatile" for ca_context_cache() and "never" for ca_context_play().
-      control.cache is only a hint, the server may ignore this value
-    - application.process.* will be filled in automatically but may be overwritten by the client.
-      They thus should not be used for authentication purposes.
-    - The property list attached to the client object in the sound
-      server will be those specified via ca_context_prop_xx().
-    - The property list attached to cached samples in the sound server
-      will be those specified via ca_context_prop_xx() at sample upload time,
-      combined with those specified directly at the _cache() function call
-      (the latter potentially overwriting the former).
-    - The property list attached to sample streams in the sound server
-      will be those attached to the cached sample (only if the event
-      sound is cached, of course) combined (i.e. potentially
-      overwritten by) those set via ca_context_prop_xx() at play time,
-      combined (i.e. potentially overwritten by) those specified
-      directly at the _play() function call.
-    - It is recommended to set application.* once before calling
-      _open(), and media.* event.* at both cache and play time.
-
-*/
-
-#ifdef __GNUC__
-#define CA_GCC_PRINTF_ATTR(a,b) __attribute__ ((format (printf, a, b)))
-#else
-/** If we're in GNU C, use some magic for detecting invalid format strings */
-#define CA_GCC_PRINTF_ATTR(a,b)
+#ifndef __GNUC__
+/* Make sure __attribute__ works on non-gcc systems. Yes, might be a bit ugly */
+#define __attribute__(x)
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ >= 4)
-#define CA_GCC_SENTINEL __attribute__ ((sentinel))
-#else
-/** Macro for usage of GCC's sentinel compilation warnings */
-#define CA_GCC_SENTINEL
-#endif
-
-/** Properties for the media that is being played, about the event
- * that caused the media to play, the window on which behalf this
- * media is being played, the application that this window belongs to
- * and finally properties for libcanberra specific usage. */
+/**
+ * CA_PROP_MEDIA_NAME:
+ *
+ * A name describing the media being played.
+ */
 #define CA_PROP_MEDIA_NAME                         "media.name"
-#define CA_PROP_MEDIA_TITLE                        "media.title"
-#define CA_PROP_MEDIA_ARTIST                       "media.artist"
-#define CA_PROP_MEDIA_LANGUAGE                     "media.language"
-#define CA_PROP_MEDIA_FILENAME                     "media.filename"
-#define CA_PROP_MEDIA_ICON                         "media.icon"
-#define CA_PROP_MEDIA_ICON_NAME                    "media.icon_name"
-#define CA_PROP_MEDIA_ROLE                         "media.role"
-#define CA_PROP_EVENT_ID                           "event.id"
-#define CA_PROP_EVENT_DESCRIPTION                  "event.description"
-#define CA_PROP_EVENT_MOUSE_X                      "event.mouse.x"
-#define CA_PROP_EVENT_MOUSE_Y                      "event.mouse.y"
-#define CA_PROP_EVENT_MOUSE_HPOS                   "event.mouse.hpos"
-#define CA_PROP_EVENT_MOUSE_VPOS                   "event.mouse.vpos"
-#define CA_PROP_EVENT_MOUSE_BUTTON                 "event.mouse.button"
-#define CA_PROP_WINDOW_NAME                        "window.name"
-#define CA_PROP_WINDOW_ID                          "window.id"
-#define CA_PROP_WINDOW_ICON                        "window.icon"
-#define CA_PROP_WINDOW_ICON_NAME                   "window.icon_name"
-#define CA_PROP_WINDOW_X11_DISPLAY                 "window.x11.display"
-#define CA_PROP_WINDOW_X11_SCREEN                  "window.x11.screen"
-#define CA_PROP_WINDOW_X11_MONITOR                 "window.x11.monitor"
-#define CA_PROP_WINDOW_X11_XID                     "window.x11.xid"
-#define CA_PROP_APPLICATION_NAME                   "application.name"
-#define CA_PROP_APPLICATION_ID                     "application.id"
-#define CA_PROP_APPLICATION_VERSION                "application.version"
-#define CA_PROP_APPLICATION_ICON                   "application.icon"
-#define CA_PROP_APPLICATION_ICON_NAME              "application.icon_name"
-#define CA_PROP_APPLICATION_LANGUAGE               "application.language"
-#define CA_PROP_APPLICATION_PROCESS_ID             "application.process.id"
-#define CA_PROP_APPLICATION_PROCESS_BINARY         "application.process.binary"
-#define CA_PROP_APPLICATION_PROCESS_USER           "application.process.user"
-#define CA_PROP_APPLICATION_PROCESS_HOST           "application.process.host"
-#define CA_PROP_CANBERRA_CACHE_CONTROL             "canberra.cache-control"             /* permanent, volatile, never */
-#define CA_PROP_CANBERRA_VOLUME                    "canberra.volume"                    /* decibel */
-#define CA_PROP_CANBERRA_XDG_THEME_NAME            "canberra.xdg-theme.name"            /* XDG theme name */
-#define CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE  "canberra.xdg-theme.output-profile"  /* XDG theme profile */
 
-/* Context object */
+/**
+ * CA_PROP_MEDIA_TITLE:
+ *
+ * A (song) title describing the media being played.
+ */
+#define CA_PROP_MEDIA_TITLE                        "media.title"
+
+/**
+ * CA_PROP_MEDIA_ARTIST:
+ *
+ * The artist of this media
+ */
+#define CA_PROP_MEDIA_ARTIST                       "media.artist"
+
+/**
+ * CA_PROP_MEDIA_LANGUAGE:
+ *
+ * The language this media is in, in some standard POSIX locale string, such as "de_DE".
+ */
+#define CA_PROP_MEDIA_LANGUAGE                     "media.language"
+
+/**
+ * CA_PROP_MEDIA_FILENAME:
+ *
+ * The file name this media was or can be loaded from.
+ */
+#define CA_PROP_MEDIA_FILENAME                     "media.filename"
+
+/**
+ * CA_PROP_MEDIA_ICON:
+ *
+ * An icon for this media in binary PNG format.
+ */
+#define CA_PROP_MEDIA_ICON                         "media.icon"
+
+/**
+ * CA_PROP_MEDIA_ICON_NAME:
+ *
+ * An icon name as defined in the XDG icon naming specifcation.
+ */
+#define CA_PROP_MEDIA_ICON_NAME                    "media.icon_name"
+
+/**
+ * CA_PROP_MEDIA_ROLE:
+ *
+ * The "role" this media is played in. For event sounds the string
+ * "event". For other cases strings like "music", "video", "game", ...
+ */
+#define CA_PROP_MEDIA_ROLE                         "media.role"
+
+/**
+ * CA_PROP_EVENT_ID:
+ *
+ * A textual id for an event sound, as mandated by the XDG sound naming specification.
+ */
+#define CA_PROP_EVENT_ID                           "event.id"
+
+/**
+ * CA_PROP_EVENT_DESCRIPTION:
+ *
+ * A descriptive string for the sound event.
+ */
+#define CA_PROP_EVENT_DESCRIPTION                  "event.description"
+
+/**
+ * CA_PROP_EVENT_MOUSE_X:
+ *
+ * If this sound event was triggered by a mouse input event, the X
+ * position of the mouse cursor on the screen, formatted as string.
+ */
+#define CA_PROP_EVENT_MOUSE_X                      "event.mouse.x"
+
+/**
+ * CA_PROP_EVENT_MOUSE_Y:
+ *
+ * If this sound event was triggered by a mouse input event, the Y
+ * position of the mouse cursor on the screen, formatted as string.
+ */
+#define CA_PROP_EVENT_MOUSE_Y                      "event.mouse.y"
+
+/**
+ * CA_PROP_EVENT_MOUSE_HPOS:
+ *
+ * If this sound event was triggered by a mouse input event, the X
+ * position of the mouse cursor as fractional value between 0 and 1,
+ * formatted as string, 0 reflecting the left side of the screen, 1
+ * the right side.
+ */
+#define CA_PROP_EVENT_MOUSE_HPOS                   "event.mouse.hpos"
+
+/**
+ * CA_PROP_EVENT_MOUSE_VPOS:
+ *
+ * If this sound event was triggered by a mouse input event, the Y
+ * position of the mouse cursor as fractional value between 0 and 1,
+ * formatted as string, 0 reflecting the top end of the screen, 1
+ * the bottom end.
+ */
+#define CA_PROP_EVENT_MOUSE_VPOS                   "event.mouse.vpos"
+
+/**
+ * CA_PROP_EVENT_MOUSE_BUTTON:
+ *
+ * If this sound event was triggered by a mouse input event, the
+ * number of the mouse button that triggered it, formatted as string. 1
+ * for left mouse button, 3 for right, 2 for middle.
+ */
+#define CA_PROP_EVENT_MOUSE_BUTTON                 "event.mouse.button"
+
+/**
+ * CA_PROP_WINDOW_NAME:
+ *
+ * If this sound event was triggered by a window on the screen, the
+ * name of this window as human readable string.
+ */
+#define CA_PROP_WINDOW_NAME                        "window.name"
+
+/**
+ * CA_PROP_WINDOW_ID:
+ *
+ * If this sound event was triggered by a window on the screen, some
+ * identification string for this window, so that the sound system can
+ * recognize specific windows.
+ */
+#define CA_PROP_WINDOW_ID                          "window.id"
+
+/**
+ * CA_PROP_WINDOW_ICON:
+ *
+ * If this sound event was triggered by a window on the screen, binary
+ * icon data in PNG format for this window.
+ */
+#define CA_PROP_WINDOW_ICON                        "window.icon"
+
+/**
+ * CA_PROP_WINDOW_ICON_NAME:
+ *
+ * If this sound event was triggered by a window on the screen, an
+ * icon name for this window, as defined in the XDG icon naming
+ * specification.
+ */
+#define CA_PROP_WINDOW_ICON_NAME                   "window.icon_name"
+
+/**
+ * CA_PROP_WINDOW_X11_DISPLAY:
+ *
+ * If this sound event was triggered by a window on the screen and the
+ * windowing system is X11, the X display name of the window (e.g. ":0").
+ */
+#define CA_PROP_WINDOW_X11_DISPLAY                 "window.x11.display"
+
+/**
+ * CA_PROP_WINDOW_X11_SCREEN:
+ *
+ * If this sound event was triggered by a window on the screen and the
+ * windowing system is X11, the X screen id of the window formatted as
+ * string (e.g. "0").
+ */
+#define CA_PROP_WINDOW_X11_SCREEN                  "window.x11.screen"
+
+/**
+ * CA_PROP_WINDOW_X11_MONITOR:
+ *
+ * If this sound event was triggered by a window on the screen and the
+ * windowing system is X11, the X monitor id of the window formatted as
+ * string (e.g. "0").
+ */
+#define CA_PROP_WINDOW_X11_MONITOR                 "window.x11.monitor"
+
+/**
+ * CA_PROP_WINDOW_X11_XID:
+ *
+ * If this sound event was triggered by a window on the screen and the
+ * windowing system is X11, the XID of the window formatted as string.
+ */
+#define CA_PROP_WINDOW_X11_XID                     "window.x11.xid"
+
+/**
+ * CA_PROP_APPLICATION_NAME:
+ *
+ * The name of the application this sound event was triggered
+ * by as human readable string. (e.g. "GNU Emacs")
+ */
+#define CA_PROP_APPLICATION_NAME                   "application.name"
+
+/**
+ * CA_PROP_APPLICATION_ID:
+ *
+ * An identifier for the program this sound event was triggered
+ * by. (e.g. "org.gnu.emacs").
+ */
+#define CA_PROP_APPLICATION_ID                     "application.id"
+
+/**
+ * CA_PROP_APPLICATION_VERSION:
+ *
+ * A version number for the program this sound event was triggered
+ * by. (e.g. "22.2")
+ */
+#define CA_PROP_APPLICATION_VERSION                "application.version"
+
+/**
+ * CA_PROP_APPLICATION_ICON:
+ *
+ * Binary icon data in PNG format for the application this sound event
+ * is triggered by.
+ */
+#define CA_PROP_APPLICATION_ICON                   "application.icon"
+
+/**
+ * CA_PROP_APPLICATION_ICON_NAME:
+ *
+ * An icon name for the application this sound event is triggered by,
+ * as defined in the XDG icon naming specification.
+ */
+#define CA_PROP_APPLICATION_ICON_NAME              "application.icon_name"
+
+/**
+ * CA_PROP_APPLICATION_LANGUAGE:
+ *
+ * The locale string the application that is triggering this sound
+ * event is running in. A POSIX locale string such as de_DE@euro.
+ */
+#define CA_PROP_APPLICATION_LANGUAGE               "application.language"
+
+/**
+ * CA_PROP_APPLICATION_PROCESS_ID:
+ *
+ * The unix PID of the process that is triggering this sound event, formatted as string.
+ */
+#define CA_PROP_APPLICATION_PROCESS_ID             "application.process.id"
+
+/**
+ * CA_PROP_APPLICATION_PROCESS_BINARY:
+ *
+ * The path to the process binary of the process that is triggering this sound event.
+ */
+#define CA_PROP_APPLICATION_PROCESS_BINARY         "application.process.binary"
+
+/**
+ * CA_PROP_APPLICATION_PROCESS_USER:
+ *
+ * The user that owns the process that is triggering this sound event.
+ */
+#define CA_PROP_APPLICATION_PROCESS_USER           "application.process.user"
+
+/**
+ * CA_PROP_APPLICATION_PROCESS_HOST:
+ *
+ * The host name of the host the process that is triggering this sound event runs on.
+ */
+#define CA_PROP_APPLICATION_PROCESS_HOST           "application.process.host"
+
+/**
+ * CA_PROP_CANBERRA_CACHE_CONTROL:
+ *
+ * A special property that can be used to control the automatic sound
+ * caching of sounds in the sound server. One of "permanent",
+ * "volatile", "never". "permanent" will cause this sample to be
+ * cached in the server permanently. This is useful for very
+ * frequently used sound events such as those used for input
+ * feedback. "volatile" may be used for cacheing sounds in the sound
+ * server temporarily. They will expire after some time or on cache
+ * pressure. Finally, "never" may be used for sounds that should never
+ * be cached, because they are only generated very seldomly or even
+ * only once at most (such as desktop login sounds).
+ *
+ * If this property is not explicitly passed to ca_context_play() it
+ * will default to "never". If it is not explicitly passed to
+ * ca_context_cache() it will default to "permanent".
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_CACHE_CONTROL             "canberra.cache-control"
+
+/**
+ * CA_PROP_CANBERRA_VOLUME:
+ *
+ * A special property that can be used to control the volume this
+ * sound event is played in if the backend supports it. A floating
+ * point value for the decibel multiplier for the sound. 0 dB relates
+ * to zero gain, and is the default volume these sounds are played in.
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_VOLUME                    "canberra.volume"
+
+/**
+ * CA_PROP_CANBERRA_XDG_THEME_NAME:
+ *
+ * A special property that can be used to control the XDG sound theme that
+ * is used for this sample.
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_XDG_THEME_NAME            "canberra.xdg-theme.name"
+
+/**
+ * CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE:
+ *
+ * A special property that can be used to control the XDG sound theme
+ * output profile that is used for this sample.
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE  "canberra.xdg-theme.output-profile"
+
+/**
+ * ca_context:
+ *
+ * A libcanberra context object.
+ */
 typedef struct ca_context ca_context;
 
-/** Playback completion event callback. The context this callback is
+/**
+ * ca_finish_callback_t:
+ * @c: The libcanberra context this callback is called for
+ * @id: The numerical id passed to the ca_context_play_full() when starting the event sound playback.
+ * @error_code: A numerical error code describing the reason this callback is called. If CA_SUCCESS is passed in the playback of the event sound was successfully completed.
+ * @userdata: Some arbitrary user data the caller of ca_context_play_full() passed in.
+ *
+ * Playback completion event callback. The context this callback is
  * called in is undefined, it might or might not be called from a
- * background thread, and from any strackframe. The code implementing
+ * background thread, and from any stack frame. The code implementing
  * this function may not call any libcanberra API call from this
  * callback -- this might result in a deadlock. Instead it may only be
  * used to asynchronously signal some kind of notification object
- * (semaphore, message queue, ...). */
+ * (semaphore, message queue, ...).
+ */
 typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code, void *userdata);
 
-/** Error codes */
+/**
+ * Error codes:
+ * @CA_SUCCESS: Success
+ *
+ * Error codes
+ */
 enum {
     CA_SUCCESS = 0,
     CA_ERROR_NOTSUPPORTED = -1,
@@ -154,68 +400,32 @@ enum {
     _CA_ERROR_MAX = -16
 };
 
+/**
+ * ca_proplist:
+ *
+ * A canberra property list object. Basically a hashtable.
+ */
 typedef struct ca_proplist ca_proplist;
 
-int ca_proplist_create(ca_proplist **c);
-int ca_proplist_destroy(ca_proplist *c);
+int ca_proplist_create(ca_proplist **p);
+int ca_proplist_destroy(ca_proplist *p);
 int ca_proplist_sets(ca_proplist *p, const char *key, const char *value);
-int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) CA_GCC_PRINTF_ATTR(3,4);
+int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) __attribute__((format(printf, 3, 4)));
 int ca_proplist_set(ca_proplist *p, const char *key, const void *data, size_t nbytes);
 
-/** Create an (unconnected) context object */
 int ca_context_create(ca_context **c);
-
 int ca_context_set_driver(ca_context *c, const char *driver);
-
 int ca_context_change_device(ca_context *c, const char *device);
-
-/** Connect the context. This call is implicitly called if necessary. It
- * is recommended to initialize the application.* properties before
- * issuing this call */
 int ca_context_open(ca_context *c);
-
-/** Destroy a (connected or unconnected) cntext object. */
 int ca_context_destroy(ca_context *c);
-
-/** Write one or more string properties to the context
- * object. Requires final NULL sentinel. Properties set like this will
- * be attached to both the client object of the sound server and to
- * all event sounds played or cached. */
-int ca_context_change_props(ca_context *c, ...) CA_GCC_SENTINEL;
-
-/** Write an arbitrary data property to the context object. */
+int ca_context_change_props(ca_context *c, ...) __attribute__((sentinel));
 int ca_context_change_props_full(ca_context *c, ca_proplist *p);
-
-/** Play one event sound. id can be any numeric value which later can
- * be used to cancel an event sound that is currently being
- * played. You may use the same id twice or more times if you want to
- * cancel multiple event sounds with a single ca_context_cancel() call
- * at once. It is recommended to pass 0 for the id if the event sound
- * shall never be canceled. If the requested sound is not cached in
- * the server yet this call might result in the sample being uploaded
- * temporarily or permanently. This function will only start playback
- * in the background. It will not wait until playback completed. */
-int ca_context_play(ca_context *c, uint32_t id, ...) CA_GCC_SENTINEL;
-
-/** Play one event sound, and call the specified callback function
-    when completed. The callback will be called from a background
-    thread. Other arguments identical to ca_context_play(). */
 int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata);
-
-/** Upload the specified sample into the server and attach the
- * specified properties to it. This function will only return after
- * the sample upload was finished. */
-int ca_context_cache(ca_context *c, ...) CA_GCC_SENTINEL;
-
-/** Upload the specified sample into the server and attach the
- * specified properties to it */
+int ca_context_play(ca_context *c, uint32_t id, ...) __attribute__((sentinel));
 int ca_context_cache_full(ca_context *c, ca_proplist *p);
-
-/** Cancel one or more event sounds that have been started via
- * ca_context_play(). */
+int ca_context_cache(ca_context *c, ...) __attribute__((sentinel));
 int ca_context_cancel(ca_context *c, uint32_t id);
 
-/** Return a human readable error string */
 const char *ca_strerror(int code);
 
 #endif

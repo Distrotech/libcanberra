@@ -33,6 +33,29 @@
 #include "common.h"
 #include "malloc.h"
 
+/**
+ * SECTION:canberra-gtk
+ * @short_description: Gtk+ libcanberra Bindings
+ *
+ * libcanberra-gtk provides a few functions that simplify libcanberra
+ * usage from Gtk+ programs. It maintains a single application-global
+ * ca_context object that is made accessible via
+ * ca_gtk_context_get(). More importantly, it provides a few functions
+ * to compile event sound property lists based on GtkWidget objects or
+ * GdkEvent events.
+ */
+
+/**
+ * ca_gtk_context_get:
+ *
+ * libcanberra-gtk maintains a single application-global ca_context
+ * object. Use this function to access it. The
+ * %CA_PROP_CANBERRA_XDG_THEME_NAME of this context property is dynamically bound to
+ * the XSETTINGS setting for the XDG theme name.
+ *
+ * Returns: a pa_context object
+ */
+
 ca_context *ca_gtk_context_get(void) {
     static GStaticPrivate context_private = G_STATIC_PRIVATE_INIT;
     ca_context *c = NULL;
@@ -60,6 +83,18 @@ static GtkWindow* get_toplevel(GtkWidget *w) {
 
     return GTK_WINDOW(w);
 }
+
+/**
+ * ca_gtk_proplist_set_for_widget:
+ * @p: The proplist to store these sound event properties in
+ * @w: The Gtk widget to base these sound event properties on
+ *
+ * Fill in a ca_proplist object for a sound event that shall originate
+ * from the specified Gtk Widget. This will fill in properties like
+ * %CA_PROP_WINDOW_NAME or %CA_PROP_WINDOW_X11_DISPLAY for you.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
 
 int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
     GtkWindow *w;
@@ -118,6 +153,20 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
     return CA_SUCCESS;
 }
 
+/**
+ * ca_gtk_proplist_set_for_event:
+ * @p: The proplist to store these sound event properties in
+ * @e: The Gdk event to base these sound event properties on
+ *
+ * Fill in a ca_proplist object for a sound event that is being
+ * triggered by the specified Gdk Event. This will fill in properties
+ * like %CA_PROP_EVENT_MOUSE_X or %CA_PROP_EVENT_MOUSE_BUTTON for
+ * you. This will internally also cal ca_gtk_proplist_set_for_widget()
+ * on the widget this event belongs to.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
+
 int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
     gdouble x, y;
     GdkWindow *gw;
@@ -169,6 +218,26 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
     return CA_SUCCESS;
 }
 
+/**
+ * ca_gtk_play_for_widget:
+ * @w: The Gtk widget to base these sound event properties on
+ * @id: The event id that can later be used to cancel this event sound
+ * using ca_context_cancel(). This can be any integer and shall be
+ * chosen be the client program. It is a good idea to pass 0 here if
+ * cancelling the sound later is not needed. If the same id is passed
+ * to multiple sounds they can be canceled with a single
+ * ca_context_cancel() call.
+ * @...: additional event properties as pairs of strings, terminated by NULL.
+ *
+ * Play a sound event for the specified widget. This will internally
+ * call ca_gtk_proplist_set_for_widget() and then merge them with the
+ * properties passed in via the NULL terminated argument
+ * list. Finally, it will call ca_context_play_full() to actually play
+ * the event sound.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
+
 int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) {
     va_list ap;
     int ret;
@@ -198,6 +267,26 @@ fail:
     return ret;
 }
 
+/**
+ * ca_gtk_play_for_event:
+ * @e: The Gdk event to base these sound event properties on
+ * @id: The event id that can later be used to cancel this event sound
+ * using ca_context_cancel(). This can be any integer and shall be
+ * chosen be the client program. It is a good idea to pass 0 here if
+ * cancelling the sound later is not needed. If the same id is passed
+ * to multiple sounds they can be canceled with a single
+ * ca_context_cancel() call.
+ * @...: additional event properties as pairs of strings, terminated by NULL.
+ *
+ * Play a sound event for the specified event. This will internally
+ * call ca_gtk_proplist_set_for_event() and then merge them with the
+ * properties passed in via the NULL terminated argument
+ * list. Finally, it will call ca_context_play_full() to actually play
+ * the event sound.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
+
 int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     va_list ap;
     int ret;
@@ -226,6 +315,17 @@ fail:
 
     return ret;
 }
+
+/**
+ * ca_gtk_widget_disable_sounds:
+ * @w: The Gtk widget to disable automatic event sounds for.
+ * @enable: Boolean specifying whether sound events shall be enabled or disabled for this widget.
+ *
+ * By default sound events are automatically generated for all kinds
+ * of input events. Use this function to disable this. This is
+ * intended to be used for widgets which directly generate sound
+ * events.
+ */
 
 void ca_gtk_widget_disable_sounds(GtkWidget *w, gboolean enable) {
     static GQuark disable_sound_quark = 0;

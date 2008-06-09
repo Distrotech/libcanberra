@@ -40,6 +40,14 @@ static unsigned calc_hash(const char *c) {
     return hash;
 }
 
+/**
+ * ca_proplist_create:
+ * @p: A pointer where to fill in a pointer for the new property list.
+ *
+ * Allocate a new empty property list.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
 int ca_proplist_create(ca_proplist **_p) {
     ca_proplist *p;
     ca_return_val_if_fail(_p, CA_ERROR_INVALID);
@@ -91,6 +99,17 @@ static int _unset(ca_proplist *p, const char *key) {
     return CA_SUCCESS;
 }
 
+/**
+ * ca_proplist_sets:
+ * @p: The property list to add this key/value pair to
+ * @key: The key for this key/value pair
+ * @value: The value for this key/value pair
+ *
+ * Add a new string key/value pair to the property list.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
+
 int ca_proplist_sets(ca_proplist *p, const char *key, const char *value) {
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(key, CA_ERROR_INVALID);
@@ -98,6 +117,20 @@ int ca_proplist_sets(ca_proplist *p, const char *key, const char *value) {
 
     return ca_proplist_set(p, key, value, strlen(value)+1);
 }
+
+/**
+ * ca_proplist_setf:
+ * @p: The property list to add this key/value pair to
+ * @key: The key for this key/value pair
+ * @format: The format string for the value for this key/value pair
+ * @...: The parameters for the format string
+ *
+ * Much like ca_proplist_sets(): add a new string key/value pair to
+ * the property list. Takes a standard C format string plus arguments
+ * and formats a string of it.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
 
 int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) {
     int ret;
@@ -167,6 +200,18 @@ finish:
 
     return ret;
 }
+
+/**
+ * ca_proplist_set:
+ * @p: The property list to add this key/value pair to
+ * @key: The key for this key/value pair
+ * @data: The binary value for this key value pair
+ * @nbytes: The size of thebinary value for this key value pair.
+ *
+ * Add a new binary key/value pair to the property list.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
 
 int ca_proplist_set(ca_proplist *p, const char *key, const void *data, size_t nbytes) {
     int ret;
@@ -246,6 +291,15 @@ const char* ca_proplist_gets_unlocked(ca_proplist *p, const char *key) {
 
     return CA_PROP_DATA(prop);
 }
+
+/**
+ * ca_proplist_destroy:
+ * @p: The property list to destroy
+ *
+ * Destroys a property list that was created with ca_proplist_create() earlier.
+ *
+ * Returns: 0 on success, negative error code on error.
+ */
 
 int ca_proplist_destroy(ca_proplist *p) {
     ca_prop *prop, *nprop;
