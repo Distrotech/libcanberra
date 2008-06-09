@@ -50,8 +50,10 @@
  *
  * libcanberra-gtk maintains a single application-global ca_context
  * object. Use this function to access it. The
- * %CA_PROP_CANBERRA_XDG_THEME_NAME of this context property is dynamically bound to
- * the XSETTINGS setting for the XDG theme name.
+ * %CA_PROP_CANBERRA_XDG_THEME_NAME of this context property is
+ * dynamically bound to the XSETTINGS setting for the XDG theme
+ * name. CA_PROP_APPLICATION_NAME is bound to
+ * g_get_application_name().
  *
  * Returns: a pa_context object
  */
@@ -60,6 +62,7 @@ ca_context *ca_gtk_context_get(void) {
     static GStaticPrivate context_private = G_STATIC_PRIVATE_INIT;
     ca_context *c = NULL;
     const char *name;
+    GValue value;
 
     if ((c = g_static_private_get(&context_private)))
         return c;
@@ -68,6 +71,28 @@ ca_context *ca_gtk_context_get(void) {
 
     if ((name = g_get_application_name()))
         ca_assert_se(ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL) == 0);
+
+    if (gdk_screen_get_setting(gdk_screen_get_default(), "xdg-sound-theme", &value)) {
+        const char *t;
+
+        /* FIXME, this needs more love, we need to subscribe to theme changes */
+
+        if ((t = g_value_get_string(&value)))
+            ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_NAME, t, NULL) == 0);
+
+        g_value_unset(&value);
+    }
+
+    if (gdk_screen_get_setting(gdk_screen_get_default(), "xdg-sound-theme-output-profile", &value)) {
+        const char *t;
+
+        /* FIXME, this needs more love, we need to subscribe to theme changes */
+
+        if ((t = g_value_get_string(&value)))
+            ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE, t, NULL) == 0);
+
+        g_value_unset(&value);
+    }
 
     g_static_private_set(&context_private, c, (GDestroyNotify) ca_context_destroy);
 
