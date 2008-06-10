@@ -627,8 +627,6 @@ static gboolean idle_cb(void *userdata) {
 
     idle_id = 0;
 
-    g_message("idle_cb()");
-
     while ((d = g_queue_pop_head(&sound_event_queue))) {
 
         if (!(d = filter_sound_event(d)))
