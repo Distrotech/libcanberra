@@ -636,8 +636,7 @@ static gboolean idle_cb(void *userdata) {
         if (!(d = filter_sound_event(d)))
             continue;
 
-        g_message("Dispatching signal %s on %s", g_signal_name(d->signal_id), g_type_name(G_OBJECT_TYPE(d->object)));
-
+/*         g_message("Dispatching signal %s on %s", g_signal_name(d->signal_id), g_type_name(G_OBJECT_TYPE(d->object))); */
 
         dispatch_sound_event(d);
         free_sound_event(d);
@@ -665,7 +664,7 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
         !GTK_WIDGET_DRAWABLE(object))
         return TRUE;
 
-    g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object)));
+/*     g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object))); */
 
     d = g_slice_new0(SoundEventData);
 
@@ -685,8 +684,6 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     }
 
     g_queue_push_tail(&sound_event_queue, d);
-
-    g_message("enqueuing");
 
     if (idle_id == 0)
         idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, NULL, NULL);
