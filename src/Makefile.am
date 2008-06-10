@@ -1,5 +1,3 @@
-# $Id$
-#
 # This file is part of libcanberra.
 #
 # Copyright 2008 Lennart Poettering

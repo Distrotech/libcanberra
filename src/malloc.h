@@ -1,8 +1,6 @@
 #ifndef foocanberramallochfoo
 #define foocanberramallochfoo
 
-/* $Id$ */
-
 /***
   This file is part of libcanberra.
 

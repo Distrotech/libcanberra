@@ -1,8 +1,6 @@
 # -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-# $Id$
-#
 # This file is part of libcanberra.
 #
 # Copyright 2008 Lennart Poettering

@@ -1,8 +1,6 @@
 #ifndef foocanberrareadsoundfilehfoo
 #define foocanberrareadsoundfilehfoo
 
-/* $Id$ */
-
 /***
   This file is part of libcanberra.
 

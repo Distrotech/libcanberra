@@ -1,8 +1,6 @@
 #ifndef foocanberradriverhfoo
 #define foocanberradriverhfoo
 
-/* $Id$ */
-
 /***
   This file is part of libcanberra.
 
