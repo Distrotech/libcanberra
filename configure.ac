@@ -237,6 +237,7 @@ if test "x${pulse}" != xno ; then
         PULSE_CFLAGS='-I$(top_srcdir)/../pulseaudio/src'
         PULSE_LIBS='-L$(top_srcdir)/../pulseaudio/src/.libs -lpulse -lpulse-mainloop-glib'
         HAVE_PULSE=1
+        AC_DEFINE([HAVE_PULSE], 1, [Have PulseAudio?])
         echo "*** Found pulseaudio in ../pulseaudio, using that version ***"
     else
         PKG_CHECK_MODULES(PULSE, [ libpulse >= 0.9.11 libpulse-mainloop-glib >= 0.9.11 ],
