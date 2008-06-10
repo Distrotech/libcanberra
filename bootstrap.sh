@@ -52,6 +52,7 @@ else
     touch config.rpath
     test "x$LIBTOOLIZE" = "x" && LIBTOOLIZE=libtoolize
 
+    mkdir -p m4
     gtkdocize --copy --flavour no-tmpl
     "$LIBTOOLIZE" -c --force --ltdl
     run_versioned aclocal "$VERSION"
