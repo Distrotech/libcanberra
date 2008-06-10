@@ -146,12 +146,42 @@ static int try_open(ca_context *c, const char *t) {
     return CA_SUCCESS;
 }
 
+static void* real_dlsym(lt_module m, const char *name, const char *symbol) {
+    char sn[256];
+    char *s;
+    void *r;
+
+    ca_return_null_if_fail(m);
+    ca_return_null_if_fail(name);
+    ca_return_null_if_fail(symbol);
+
+    snprintf(sn, sizeof(sn), "%s_%s", name, symbol);
+    sn[sizeof(sn)-1] = 0;
+
+    for (s = sn; *s; s++) {
+        if (*s >= 'a' && *s <= 'z')
+            continue;
+        if (*s >= 'A' && *s <= 'Z')
+            continue;
+        if (*s >= '0' && *s <= '9')
+            continue;
+
+        *s = '_';
+    }
+
+    if ((r = lt_dlsym(m, sn)))
+        return r;
+
+    return lt_dlsym(m, symbol);
+}
+
 #define MAKE_FUNC_PTR(ret, args, x) ((ret (*) args ) (size_t) (x))
-#define GET_FUNC_PTR(module, name, ret, args) MAKE_FUNC_PTR(ret, args, lt_dlsym((module), (name)))
+#define GET_FUNC_PTR(module, name, symbol, ret, args) MAKE_FUNC_PTR(ret, args, real_dlsym((module), (name), (symbol)))
 
 int driver_open(ca_context *c) {
     int ret;
     struct private_dso *p;
+    const char *driver;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(!PRIVATE_DSO(c), CA_ERROR_STATE);
@@ -174,6 +204,8 @@ int driver_open(ca_context *c) {
             return ret;
         }
 
+        driver = c->driver;
+
     } else {
         const char *const * e;
 
@@ -195,17 +227,19 @@ int driver_open(ca_context *c) {
             driver_destroy(c);
             return CA_ERROR_NODRIVER;
         }
+
+        driver = *e;
     }
 
     ca_assert(p->module);
 
-    if (!(p->driver_open = GET_FUNC_PTR(p->module, "driver_open", int, (ca_context*))) ||
-        !(p->driver_destroy = GET_FUNC_PTR(p->module, "driver_destroy", int, (ca_context*))) ||
-        !(p->driver_change_device = GET_FUNC_PTR(p->module, "driver_change_device", int, (ca_context*, const char *device))) ||
-        !(p->driver_change_props = GET_FUNC_PTR(p->module, "driver_change_props", int, (ca_context *, ca_proplist *changed, ca_proplist *merged))) ||
-        !(p->driver_play = GET_FUNC_PTR(p->module, "driver_play", int, (ca_context*, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata))) ||
-        !(p->driver_cancel = GET_FUNC_PTR(p->module, "driver_cancel", int, (ca_context*, uint32_t id))) ||
-        !(p->driver_cache = GET_FUNC_PTR(p->module, "driver_cache", int, (ca_context*, ca_proplist *p)))) {
+    if (!(p->driver_open = GET_FUNC_PTR(p->module, driver, "driver_open", int, (ca_context*))) ||
+        !(p->driver_destroy = GET_FUNC_PTR(p->module, driver, "driver_destroy", int, (ca_context*))) ||
+        !(p->driver_change_device = GET_FUNC_PTR(p->module, driver, "driver_change_device", int, (ca_context*, const char *device))) ||
+        !(p->driver_change_props = GET_FUNC_PTR(p->module, driver, "driver_change_props", int, (ca_context *, ca_proplist *changed, ca_proplist *merged))) ||
+        !(p->driver_play = GET_FUNC_PTR(p->module, driver, "driver_play", int, (ca_context*, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata))) ||
+        !(p->driver_cancel = GET_FUNC_PTR(p->module, driver, "driver_cancel", int, (ca_context*, uint32_t id))) ||
+        !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *p)))) {
 
         driver_destroy(c);
         return CA_ERROR_CORRUPT;
@@ -234,8 +268,10 @@ int driver_destroy(ca_context *c) {
     if (p->module)
         lt_dlclose(p->module);
 
-    if (p->ltdl_initialized)
+    if (p->ltdl_initialized) {
         lt_dlexit();
+        p->ltdl_initialized = FALSE;
+    }
 
     ca_free(p);
 

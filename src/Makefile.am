@@ -51,6 +51,8 @@ libcanberra_la_CFLAGS = \
 	$(VORBIS_CFLAGS)
 libcanberra_la_LIBADD = \
 	$(VORBIS_LIBS)
+libcanberra_la_LDFLAGS = \
+	-export-dynamic
 
 if HAVE_PULSE
 if BUILTIN_PULSE
@@ -70,9 +72,17 @@ lib_LTLIBRARIES += \
 libcanberra_pulse_la_SOURCES = \
 	pulse.c
 libcanberra_pulse_la_CFLAGS = \
-	$(PULSE_CFLAGS)
+	$(PULSE_CFLAGS) \
+	 -Ddriver_open=pulse_driver_open \
+	 -Ddriver_destroy=pulse_driver_destroy \
+	 -Ddriver_change_device=pulse_driver_change_device \
+	 -Ddriver_change_props=pulse_driver_change_props \
+	 -Ddriver_play=pulse_driver_play \
+	 -Ddriver_cancel=pulse_driver_cancel \
+	 -Ddriver_cache=pulse_driver_cache
 libcanberra_pulse_la_LIBADD = \
-	$(PULSE_LIBS)
+	$(PULSE_LIBS) \
+	libcanberra.la
 libcanberra_pulse_la_LDFLAGS = \
 	-avoid-version -module -export-dynamic
 
@@ -97,9 +107,17 @@ lib_LTLIBRARIES += \
 libcanberra_alsa_la_SOURCES = \
 	alsa.c
 libcanberra_alsa_la_CFLAGS = \
-	$(ALSA_CFLAGS)
+	$(ALSA_CFLAGS) \
+	 -Ddriver_open=alsa_driver_open \
+	 -Ddriver_destroy=alsa_driver_destroy \
+	 -Ddriver_change_device=alsa_driver_change_device \
+	 -Ddriver_change_props=alsa_driver_change_props \
+	 -Ddriver_play=alsa_driver_play \
+	 -Ddriver_cancel=alsa_driver_cancel \
+	 -Ddriver_cache=alsa_driver_cache
 libcanberra_alsa_la_LIBADD = \
-	$(ALSA_LIBS)
+	$(ALSA_LIBS) \
+	libcanberra.la
 libcanberra_alsa_la_LDFLAGS = \
 	-avoid-version -module -export-dynamic
 
@@ -119,6 +137,16 @@ lib_LTLIBRARIES += \
 
 libcanberra_null_la_SOURCES = \
 	null.c
+libcanberra_null_la_CFLAGS = \
+	 -Ddriver_open=null_driver_open \
+	 -Ddriver_destroy=null_driver_destroy \
+	 -Ddriver_change_device=null_driver_change_device \
+	 -Ddriver_change_props=null_driver_change_props \
+	 -Ddriver_play=null_driver_play \
+	 -Ddriver_cancel=null_driver_cancel \
+	 -Ddriver_cache=null_driver_cache
+libcanberra_null_la_LIBADD = \
+	libcanberra.la
 libcanberra_null_la_LDFLAGS = \
 	-avoid-version -module -export-dynamic
 endif
