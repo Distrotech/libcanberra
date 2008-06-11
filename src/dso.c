@@ -24,6 +24,7 @@
 
 #include <ltdl.h>
 #include <string.h>
+#include <errno.h>
 
 #include "driver.h"
 #include "common.h"
@@ -126,14 +127,20 @@ static int try_open(ca_context *c, const char *t) {
 
     p = PRIVATE_DSO(c);
 
-    if (!(mn = ca_sprintf_malloc("libcanberra-%s", c->driver)))
+    if (!(mn = ca_sprintf_malloc("libcanberra-%s", t)))
         return CA_ERROR_OOM;
 
+    errno = 0;
     p->module = lt_dlopenext(mn);
     ca_free(mn);
 
     if (!p->module) {
-        int ret = ca_error_from_string(lt_dlerror());
+        int ret;
+
+        if (errno == ENOENT)
+            ret = CA_ERROR_NOTFOUND;
+        else
+            ret = ca_error_from_string(lt_dlerror());
 
         if (ret == CA_ERROR_NOTFOUND)
             ret = CA_ERROR_NODRIVER;
