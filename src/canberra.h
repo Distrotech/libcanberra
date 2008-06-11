@@ -25,6 +25,10 @@
 #include <sys/param.h>
 #include <inttypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __GNUC__
 /* Make sure __attribute__ works on non-gcc systems. Yes, might be a bit ugly */
 #define __attribute__(x)
@@ -425,5 +429,9 @@ int ca_context_cache(ca_context *c, ...) __attribute__((sentinel));
 int ca_context_cancel(ca_context *c, uint32_t id);
 
 const char *ca_strerror(int code);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
