@@ -21,7 +21,7 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT([libcanberra], 0.1, [mzyvopnaoreen (at) 0pointer (dot) de])
+AC_INIT([libcanberra], 0.2, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
