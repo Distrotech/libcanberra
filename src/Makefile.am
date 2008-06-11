@@ -50,7 +50,7 @@ libcanberra_la_CFLAGS = \
 libcanberra_la_LIBADD = \
 	$(VORBIS_LIBS)
 libcanberra_la_LDFLAGS = \
-	-export-dynamic
+	-export-dynamic -version-info 0:1:0
 
 if HAVE_PULSE
 if BUILTIN_PULSE
@@ -180,6 +180,8 @@ libcanberra_gtk_la_CFLAGS = \
 libcanberra_gtk_la_LIBADD = \
 	$(GTK_LIBS) \
 	libcanberra.la
+libcanberra_gtk_la_LDFLAGS = \
+ 	-export-dynamic -version-info 0:1:0
 
 libcanberra_gtk_module_la_SOURCES = \
 	canberra-gtk-module.c
