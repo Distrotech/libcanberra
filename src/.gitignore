@@ -1,2 +1,6 @@
 .libs
+*.o
+*.lo
 .deps
+*.la
+test-canberra

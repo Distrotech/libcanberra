@@ -1,0 +1,13 @@
+html
+xml
+*.stamp
+libcanberra-decl-list.txt
+libcanberra-decl.txt
+libcanberra-overrides.txt
+libcanberra-undeclared.txt
+libcanberra-undocumented.txt
+libcanberra.args
+libcanberra.hierarchy
+libcanberra.interfaces
+libcanberra.prerequisites
+libcanberra.signals

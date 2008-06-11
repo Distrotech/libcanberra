@@ -19,6 +19,8 @@ libcanberra.pc
 libltdl
 libtool
 ltmain.sh
+*~
 m4
 missing
 stamp-h1
+*.tar.gz
