@@ -221,10 +221,14 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
             width = gdk_screen_get_width(gtk_widget_get_screen(w));
             height = gdk_screen_get_height(gtk_widget_get_screen(w));
 
-            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_HPOS, "%0.0f", x/width)) < 0)
+            /* We use these strange format strings here to avoid that
+             * libc applies locale information on the formatting of
+             * floating numbers. */
+
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_HPOS, "%i.%03i", (int) (x/width), (int) (1000.0*x/width) % 1000)) < 0)
                 return ret;
 
-            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_VPOS, "%0.0f", y/height)) < 0)
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_VPOS, "%i.%03i", (int) (y/height), (int) (1000.0*y/height) % 1000)) < 0)
                 return ret;
         }
     }
