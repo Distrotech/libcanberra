@@ -242,7 +242,7 @@ if test "x${pulse}" != xno ; then
     else
         PKG_CHECK_MODULES(PULSE, [ libpulse >= 0.9.11 libpulse-mainloop-glib >= 0.9.11 ],
         [
-            HAVE_PULSE=1,
+            HAVE_PULSE=1
             AC_DEFINE([HAVE_PULSE], 1, [Have PulseAudio?])
         ],
         [
