@@ -16,9 +16,11 @@
 # License along with libcanberra. If not, If not, see
 # <http://www.gnu.org/licenses/>.
 
-moduledir = @GTK_MODULES_DIR@
+gtkmoduledir = @GTK_MODULES_DIR@
 
-AM_CFLAGS = $(PTHREAD_CFLAGS)
+plugindir = $(libdir)/libcanberra
+
+AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
 AM_LDADD = $(PTHREAD_LIBS)
 
@@ -52,6 +54,18 @@ libcanberra_la_LIBADD = \
 libcanberra_la_LDFLAGS = \
 	-export-dynamic -version-info 0:1:0
 
+plugin_LTLIBRARIES =
+
+if BUILTIN_DSO
+
+libcanberra_la_SOURCES += \
+	dso.c
+libcanberra_la_CFLAGS += \
+	$(LTDLINCL)
+libcanberra_la_LIBADD += \
+	$(LIBLTDL)
+endif
+
 if HAVE_PULSE
 if BUILTIN_PULSE
 
@@ -64,7 +78,7 @@ libcanberra_la_LIBADD += \
 
 else
 
-lib_LTLIBRARIES += \
+plugin_LTLIBRARIES += \
 	libcanberra-pulse.la
 
 libcanberra_pulse_la_SOURCES = \
@@ -99,7 +113,7 @@ libcanberra_la_LIBADD += \
 
 else
 
-lib_LTLIBRARIES += \
+plugin_LTLIBRARIES += \
 	libcanberra-alsa.la
 
 libcanberra_alsa_la_SOURCES = \
@@ -130,7 +144,7 @@ libcanberra_la_SOURCES += \
 
 else
 
-lib_LTLIBRARIES += \
+plugin_LTLIBRARIES += \
 	libcanberra-null.la
 
 libcanberra_null_la_SOURCES = \
@@ -150,17 +164,6 @@ libcanberra_null_la_LDFLAGS = \
 endif
 endif
 
-if BUILTIN_DSO
-
-libcanberra_la_SOURCES += \
-	dso.c
-libcanberra_la_CFLAGS += \
-	$(LTDLINCL)
-libcanberra_la_LIBADD += \
-	$(LIBLTDL)
-
-endif
-
 if HAVE_GTK
 
 lib_LTLIBRARIES += \
@@ -169,7 +172,7 @@ lib_LTLIBRARIES += \
 include_HEADERS += \
 	canberra-gtk.h
 
-module_LTLIBRARIES = \
+gtkmodule_LTLIBRARIES = \
 	libcanberra-gtk-module.la
 
 libcanberra_gtk_la_SOURCES = \
@@ -181,7 +184,7 @@ libcanberra_gtk_la_LIBADD = \
 	$(GTK_LIBS) \
 	libcanberra.la
 libcanberra_gtk_la_LDFLAGS = \
- 	-export-dynamic -version-info 0:1:0
+	-export-dynamic -version-info 0:1:0
 
 libcanberra_gtk_module_la_SOURCES = \
 	canberra-gtk-module.c

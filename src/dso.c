@@ -127,7 +127,7 @@ static int try_open(ca_context *c, const char *t) {
 
     p = PRIVATE_DSO(c);
 
-    if (!(mn = ca_sprintf_malloc("libcanberra-%s", t)))
+    if (!(mn = ca_sprintf_malloc(CA_PLUGIN_PATH "/libcanberra-%s", t)))
         return CA_ERROR_OOM;
 
     errno = 0;
