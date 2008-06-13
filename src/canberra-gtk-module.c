@@ -72,6 +72,7 @@ typedef struct {
    drag-fail
    expander-toggle-on
    expander-toggle-off
+   scroll-xxx
 
 */
 
