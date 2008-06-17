@@ -8,4 +8,4 @@ Description: Gtk Event Sound API
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lcanberra-gtk @PTHREAD_LIBS@
 Cflags: -D_REENTRANT -I${includedir}
-Requires: libcanberra
+Requires: libcanberra gtk+-2.0
