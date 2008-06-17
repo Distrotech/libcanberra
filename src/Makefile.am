@@ -52,7 +52,9 @@ libcanberra_la_CFLAGS = \
 libcanberra_la_LIBADD = \
 	$(VORBIS_LIBS)
 libcanberra_la_LDFLAGS = \
-	-export-dynamic -version-info 0:2:0
+	-export-dynamic \
+	-version-info 0:2:0 \
+	-Wl,-version-script=$(srcdir)/map-file
 
 plugin_LTLIBRARIES =
 

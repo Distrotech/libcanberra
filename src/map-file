@@ -1,0 +1,10 @@
+CANBERRA_0 {
+local:
+driver_cache;
+driver_cancel;
+driver_change_device;
+driver_change_props;
+driver_destroy;
+driver_open;
+driver_play;
+};
