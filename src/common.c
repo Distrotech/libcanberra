@@ -533,8 +533,6 @@ int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_c
 
     ca_assert(c->opened);
 
-    fprintf(stderr, "Playing %s\n", ca_proplist_gets_unlocked(p, CA_PROP_EVENT_ID));
-
     ret = driver_play(c, id, p, cb, userdata);
 
 finish:
