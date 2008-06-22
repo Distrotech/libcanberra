@@ -180,6 +180,9 @@ include_HEADERS += \
 gtkmodule_LTLIBRARIES = \
 	libcanberra-gtk-module.la
 
+bin_PROGRAMS = \
+	canberra-gtk-play
+
 libcanberra_gtk_la_SOURCES = \
 	canberra-gtk.h \
 	canberra-gtk.c
@@ -201,6 +204,15 @@ libcanberra_gtk_module_la_LIBADD = \
 	libcanberra-gtk.la
 libcanberra_gtk_module_la_LDFLAGS = \
 	-avoid-version -module -export-dynamic
+
+canberra_gtk_play_SOURCES = \
+	canberra-gtk-play.c
+canberra_gtk_play_LDADD = \
+	$(GTK_LIBS) \
+	libcanberra.la \
+	libcanberra-gtk.la
+canberra_gtk_play_CFLAGS = \
+	$(GTK_CFLAGS)
 
 endif
 
