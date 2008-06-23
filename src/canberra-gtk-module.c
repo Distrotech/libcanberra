@@ -76,6 +76,8 @@ typedef struct {
 
 */
 
+static gboolean disabled = FALSE;
+
 static GQueue sound_event_queue = G_QUEUE_INIT;
 
 static int idle_id = 0;
@@ -647,6 +649,9 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     GdkEvent *e;
     GObject *object;
 
+    if (disabled)
+        return TRUE;
+
     object = g_value_get_object(&param_values[0]);
 
     /* Filter a few very often occuring signals as quickly as possible */
@@ -699,10 +704,33 @@ static void install_hook(GType type, const char *signal, guint *sn) {
     g_type_class_unref(type_class);
 }
 
+static void read_enable_input_feedback_sounds(GtkSettings *s) {
+    gboolean enabled = !disabled;
+
+    g_object_get(G_OBJECT(s), "gtk-enable-input-feedback-sounds", &enabled, NULL);
+
+    disabled = !enabled;
+}
+
+static void enable_input_feedback_sounds_changed(GtkSettings *s, GParamSpec *arg1, gpointer userdata) {
+    read_enable_input_feedback_sounds(s);
+}
+
 void gtk_module_init(gint *argc, gchar ***argv[]) {
+    GtkSettings *s;
+
     /* This is the same quark libgnomeui uses! */
     disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
     was_hidden_quark = g_quark_from_string("canberra_was_hidden");
+
+    /* Hook up the gtk setting */
+    s = gtk_settings_get_default();
+
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(s), "gtk-enable-input-feedback-sounds")) {
+        g_signal_connect(G_OBJECT(s), "notify::gtk-enable-input-feedback-sounds", G_CALLBACK(enable_input_feedback_sounds_changed), NULL);
+        read_enable_input_feedback_sounds(s);
+    } else
+        g_debug("This Gtk+ version doesn't have the GtkSettings::gtk-enable-input-feedback-sounds property.");
 
     install_hook(GTK_TYPE_WINDOW, "show", &signal_id_widget_show);
     install_hook(GTK_TYPE_WINDOW, "hide", &signal_id_widget_hide);
