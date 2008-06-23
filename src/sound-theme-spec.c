@@ -636,8 +636,12 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
     ca_return_val_if_fail(locale, CA_ERROR_INVALID);
     ca_return_val_if_fail(profile, CA_ERROR_INVALID);
 
-    /* First, try in the theme itself */
-    if ((ret = load_theme_data(t, theme)) == CA_SUCCESS)
+    /* First, try in the theme itself, and if that fails the fallback theme */
+    if ((ret = load_theme_data(t, theme)) == CA_ERROR_NOTFOUND)
+        if (!streq(theme, FALLBACK_THEME))
+            ret = load_theme_data(t, FALLBACK_THEME);
+
+    if (ret == CA_SUCCESS)
         if ((ret = find_sound_for_locale(f, *t, name, locale, profile)) != CA_ERROR_NOTFOUND)
             return ret;
 
