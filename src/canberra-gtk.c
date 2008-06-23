@@ -43,6 +43,33 @@
  * GdkEvent events.
  */
 
+static void read_sound_theme_name(ca_context *c, GtkSettings *s) {
+    gchar *theme_name = NULL;
+
+    g_object_get(G_OBJECT(s), "gtk-sound-theme-name", &theme_name, NULL);
+
+    if (theme_name) {
+        ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_NAME, theme_name, NULL) == 0);
+        g_free(theme_name);
+    }
+}
+
+static void read_enable_event_sounds(ca_context *c, GtkSettings *s) {
+    gboolean enable_event_sounds = TRUE;
+
+    g_object_get(G_OBJECT(s), "gtk-enable-event-sounds", &enable_event_sounds, NULL);
+
+    ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_ENABLE, enable_event_sounds ? "1" : "0", NULL) == 0);
+}
+
+static void sound_theme_name_changed(GtkSettings *s, GParamSpec *arg1, ca_context *c) {
+    read_sound_theme_name(c, s);
+}
+
+static void enable_event_sounds_changed(GtkSettings *s, GParamSpec *arg1, ca_context *c) {
+    read_enable_event_sounds(c, s);
+}
+
 /**
  * ca_gtk_context_get:
  *
@@ -60,7 +87,7 @@ ca_context *ca_gtk_context_get(void) {
     static GStaticPrivate context_private = G_STATIC_PRIVATE_INIT;
     ca_context *c = NULL;
     const char *name;
-    GValue value;
+    GtkSettings *s;
 
     if ((c = g_static_private_get(&context_private)))
         return c;
@@ -70,27 +97,23 @@ ca_context *ca_gtk_context_get(void) {
     if ((name = g_get_application_name()))
         ca_assert_se(ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL) == 0);
 
-    if (gdk_screen_get_setting(gdk_screen_get_default(), "xdg-sound-theme", &value)) {
-        const char *t;
+    GDK_THREADS_ENTER();
 
-        /* FIXME, this needs more love, we need to subscribe to theme changes */
+    s = gtk_settings_get_default();
 
-        if ((t = g_value_get_string(&value)))
-            ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_NAME, t, NULL) == 0);
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(s), "gtk-sound-theme-name")) {
+        g_signal_connect(G_OBJECT(s), "notify::gtk-sound-theme-name", G_CALLBACK(sound_theme_name_changed), c);
+        read_sound_theme_name(c, s);
+    } else
+        g_debug("This Gtk+ version doesn't have the GtkSettings::gtk-sound-theme-name property.");
 
-        g_value_unset(&value);
-    }
+    if (g_object_class_find_property(G_OBJECT_GET_CLASS(s), "gtk-enable-event-sounds")) {
+        g_signal_connect(G_OBJECT(s), "notify::gtk-enable-event-sounds", G_CALLBACK(enable_event_sounds_changed), c);
+        read_enable_event_sounds(c, s);
+    } else
+        g_debug("This Gtk+ version doesn't have the GtkSettings::gtk-enable-event-sounds property.");
 
-    if (gdk_screen_get_setting(gdk_screen_get_default(), "xdg-sound-theme-output-profile", &value)) {
-        const char *t;
-
-        /* FIXME, this needs more love, we need to subscribe to theme changes */
-
-        if ((t = g_value_get_string(&value)))
-            ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE, t, NULL) == 0);
-
-        g_value_unset(&value);
-    }
+    GDK_THREADS_LEAVE();
 
     g_static_private_set(&context_private, c, (GDestroyNotify) ca_context_destroy);
 
