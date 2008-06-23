@@ -353,6 +353,19 @@ extern "C" {
 #define CA_PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE  "canberra.xdg-theme.output-profile"
 
 /**
+ * CA_PROP_CANBERRA_ENABLE:
+ *
+ * A special property that can be used to control whether any sounds
+ * are played at all. If this property is "1" or unset sounds are
+ * played as normal. However, if it is "0" all calls to
+ * ca_context_play() will fail with CA_ERROR_DISABLED.
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_ENABLE                    "canberra.enable"
+
+/**
  * ca_context:
  *
  * A libcanberra context object.
@@ -399,7 +412,8 @@ enum {
     CA_ERROR_ACCESS = -13,
     CA_ERROR_IO = -14,
     CA_ERROR_INTERNAL = -15,
-    _CA_ERROR_MAX = -16
+    CA_ERROR_DISABLED = -16,
+    _CA_ERROR_MAX = -17
 };
 
 /**

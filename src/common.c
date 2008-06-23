@@ -518,6 +518,8 @@ int ca_context_play(ca_context *c, uint32_t id, ...) {
 
 int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata) {
     int ret;
+    const char *t;
+    ca_bool_t enabled = TRUE;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
@@ -527,6 +529,18 @@ int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_c
 
     ca_return_val_if_fail_unlock(ca_proplist_contains(p, CA_PROP_EVENT_ID) ||
                                  ca_proplist_contains(c->props, CA_PROP_EVENT_ID), CA_ERROR_INVALID, c->mutex);
+
+    ca_mutex_lock(c->props->mutex);
+    if ((t = ca_proplist_gets_unlocked(c->props, CA_PROP_CANBERRA_ENABLE)))
+        enabled = !streq(t, "0");
+    ca_mutex_unlock(c->props->mutex);
+
+    ca_mutex_lock(p->mutex);
+    if ((t = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_ENABLE)))
+        enabled = !streq(t, "0");
+    ca_mutex_unlock(p->mutex);
+
+    ca_return_val_if_fail_unlock(enabled, CA_ERROR_DISABLED, c->mutex);
 
     if ((ret = context_open_unlocked(c)) < 0)
         goto finish;
@@ -674,7 +688,8 @@ const char *ca_strerror(int code) {
         [-CA_ERROR_NOTAVAILABLE] = "Not available",
         [-CA_ERROR_ACCESS] = "Access forbidden",
         [-CA_ERROR_IO] = "IO error",
-        [-CA_ERROR_INTERNAL] = "Internal error"
+        [-CA_ERROR_INTERNAL] = "Internal error",
+        [-CA_ERROR_DISABLED] = "Sounds disabled"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);
