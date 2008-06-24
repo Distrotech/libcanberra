@@ -29,6 +29,7 @@
 #include "driver.h"
 #include "common.h"
 #include "malloc.h"
+#include "driver-order.h"
 
 struct private_dso {
     lt_dlhandle module;
@@ -44,17 +45,6 @@ struct private_dso {
 };
 
 #define PRIVATE_DSO(c) ((struct private_dso *) ((c)->private_dso))
-
-static const char* const driver_order[] = {
-#ifdef HAVE_PULSE
-    "pulse",
-#endif
-#ifdef HAVE_ALSA
-    "alsa",
-#endif
-    /* ... */
-    NULL
-};
 
 static int ca_error_from_lt_error(int code) {
 
@@ -214,7 +204,7 @@ int driver_open(ca_context *c) {
     } else {
         const char *const * e;
 
-        for (e = driver_order; *e; e++) {
+        for (e = ca_driver_order; *e; e++) {
 
             if ((ret = try_open(c, *e)) == CA_SUCCESS)
                 break;
