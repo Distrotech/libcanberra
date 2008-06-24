@@ -64,11 +64,30 @@ plugin_LTLIBRARIES =
 if BUILTIN_DSO
 
 libcanberra_la_SOURCES += \
-	dso.c
+	dso.c \
+	driver-order.c driver-order.h
 libcanberra_la_CFLAGS += \
 	$(LTDLINCL)
 libcanberra_la_LIBADD += \
 	$(LIBLTDL)
+
+plugin_LTLIBRARIES += \
+	libcanberra-multi.la
+
+libcanberra_multi_la_SOURCES = \
+	multi.c
+libcanberra_multi_la_CFLAGS = \
+	 -Ddriver_open=multi_driver_open \
+	 -Ddriver_destroy=multi_driver_destroy \
+	 -Ddriver_change_device=multi_driver_change_device \
+	 -Ddriver_change_props=multi_driver_change_props \
+	 -Ddriver_play=multi_driver_play \
+	 -Ddriver_cancel=multi_driver_cancel \
+	 -Ddriver_cache=multi_driver_cache
+libcanberra_multi_la_LIBADD = \
+	libcanberra.la
+libcanberra_multi_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
 endif
 
 if HAVE_PULSE
