@@ -638,7 +638,7 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
 
     /* First, try in the theme itself, and if that fails the fallback theme */
     if ((ret = load_theme_data(t, theme)) == CA_ERROR_NOTFOUND)
-        if (!streq(theme, FALLBACK_THEME))
+        if (!ca_streq(theme, FALLBACK_THEME))
             ret = load_theme_data(t, FALLBACK_THEME);
 
     if (ret == CA_SUCCESS)
