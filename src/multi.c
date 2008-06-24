@@ -257,7 +257,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     for (b = p->backends; b; b = b->next) {
         int r;
 
-        if ((r = ca_context_play_full(b->context, id, proplist, call_closure, closure)) == CA_SUCCESS)
+        if ((r = ca_context_play_full(b->context, id, proplist, closure ? call_closure : NULL, closure)) == CA_SUCCESS)
             return r;
 
         /* We only return the first failure */
