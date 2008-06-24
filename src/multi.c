@@ -47,6 +47,13 @@ static int add_backend(struct private *p, const char *name) {
     ca_assert(p);
     ca_assert(b);
 
+    if (ca_streq(name, "multi"))
+        return CA_ERROR_NOTAVAILABLE;
+
+    for (b = p->backends; b; b = b->next)
+        if (ca_streq(b->context->driver, name))
+            return CA_ERROR_NOTAVAILABLE;
+
     if (!(b = ca_new0(struct backend, 1)))
         return CA_ERROR_OOM;
 
