@@ -703,11 +703,11 @@ int ca_parse_cache_control(ca_cache_control_t *control, const char *c) {
     ca_return_val_if_fail(control, CA_ERROR_INVALID);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
-    if (streq(c, "never"))
+    if (ca_streq(c, "never"))
         *control = CA_CACHE_CONTROL_NEVER;
-    else if (streq(c, "permanent"))
+    else if (ca_streq(c, "permanent"))
         *control = CA_CACHE_CONTROL_PERMANENT;
-    else if (streq(c, "volatile"))
+    else if (ca_streq(c, "volatile"))
         *control = CA_CACHE_CONTROL_VOLATILE;
     else
         return CA_ERROR_INVALID;

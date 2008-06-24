@@ -30,7 +30,7 @@
 
 int driver_open(ca_context *c) {
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
-    ca_return_val_if_fail(!c->driver || streq(c->driver, "null"), CA_ERROR_NODRIVER);
+    ca_return_val_if_fail(!c->driver || ca_streq(c->driver, "null"), CA_ERROR_NODRIVER);
 
     return CA_SUCCESS;
 }

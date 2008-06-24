@@ -82,7 +82,7 @@ static ca_bool_t data_dir_matches(ca_data_dir *d, const char*output_profile) {
 
     /* We might want to add more elaborate matching here eventually */
 
-    return streq(d->output_profile, output_profile);
+    return ca_streq(d->output_profile, output_profile);
 }
 
 static ca_data_dir* find_data_dir(ca_theme_data *t, const char *name) {
@@ -92,7 +92,7 @@ static ca_data_dir* find_data_dir(ca_theme_data *t, const char *name) {
     ca_assert(name);
 
     for (d = t->data_dirs; d; d = d->next)
-        if (streq(d->name, name))
+        if (ca_streq(d->name, name))
             return d;
 
     return NULL;
@@ -166,7 +166,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
         if (!ln[0])
             continue;
 
-        if (streq(ln, "[Sound Theme]")) {
+        if (ca_streq(ln, "[Sound Theme]")) {
             in_sound_theme_section = TRUE;
             current_data_dir = NULL;
             continue;
@@ -243,7 +243,7 @@ static int load_theme_path(ca_theme_data *t, const char *prefix, const char *nam
 
             if (!strncmp(ln, "OutputProfile=", 14)) {
 
-                if (current_data_dir->output_profile && !streq(current_data_dir->output_profile, ln+14)) {
+                if (current_data_dir->output_profile && !ca_streq(current_data_dir->output_profile, ln+14)) {
                     ret = CA_ERROR_CORRUPT;
                     goto fail;
                 }
@@ -309,7 +309,7 @@ static int load_theme_dir(ca_theme_data *t, const char *name) {
     if ((ret = get_data_home(&e)) < 0)
         return ret;
 
-    if (streq(name, FALLBACK_THEME))
+    if (ca_streq(name, FALLBACK_THEME))
         t->loaded_fallback_theme = TRUE;
 
     if (e) {
@@ -358,7 +358,7 @@ static int load_theme_data(ca_theme_data **_t, const char *name) {
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
 
     if (*_t)
-        if (streq((*_t)->name, name))
+        if (ca_streq((*_t)->name, name))
             return CA_SUCCESS;
 
     if (!(t = ca_new0(ca_theme_data, 1)))
@@ -520,7 +520,7 @@ static int find_sound_for_subname(ca_sound_file **f, ca_theme_data *t, const cha
             return ret;
 
         /* Then, fall back to stereo */
-        if (!streq(profile, DEFAULT_OUTPUT_PROFILE))
+        if (!ca_streq(profile, DEFAULT_OUTPUT_PROFILE))
             if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
                 return ret;
     }

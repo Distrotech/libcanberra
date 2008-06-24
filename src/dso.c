@@ -106,7 +106,7 @@ static int lt_error_from_string(const char *t) {
     const struct lt_error_code *c;
 
     for (c = lt_error_codes; c->text; c++)
-        if (streq(t, c->text))
+        if (ca_streq(t, c->text))
             return c->code;
 
     return -1;

@@ -245,6 +245,6 @@ typedef void (*ca_free_cb_t)(void *);
  #define PA_UINT32_TO_BE(x) PA_UINT32_SWAP(x)
 #endif
 
-#define streq(a, b) (strcmp((a),(b)) == 0)
+#define ca_streq(a, b) (strcmp((a),(b)) == 0)
 
 #endif

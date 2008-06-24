@@ -84,7 +84,7 @@ int driver_open(ca_context *c) {
     struct private *p;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
-    ca_return_val_if_fail(!c->driver || streq(c->driver, "alsa"), CA_ERROR_NODRIVER);
+    ca_return_val_if_fail(!c->driver || ca_streq(c->driver, "alsa"), CA_ERROR_NODRIVER);
     ca_return_val_if_fail(!PRIVATE(c), CA_ERROR_STATE);
 
     if (!(c->private = p = ca_new0(struct private, 1)))
