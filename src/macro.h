@@ -28,7 +28,7 @@
 #error "Please include config.h before including this file!"
 #endif
 
-#ifdef __GNUC__
+#if __GNUC__ >= 2
 #define CA_LIKELY(x) (__builtin_expect(!!(x),1))
 #define CA_UNLIKELY(x) (__builtin_expect((x),0))
 #else
