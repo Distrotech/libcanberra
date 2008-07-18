@@ -244,7 +244,7 @@ int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
         if (*n <= 0 && ferror(w->file))
             return CA_ERROR_SYSTEM;
 
-        ca_assert(w->data_size >= *n * sizeof(int16_t));
+        ca_assert(w->data_size >= *n * sizeof(uint8_t));
         w->data_size -= *n * sizeof(uint8_t);
     }
 
