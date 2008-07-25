@@ -21,7 +21,7 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT([libcanberra], 0.3, [mzyvopnaoreen (at) 0pointer (dot) de])
+AC_INIT([libcanberra], 0.4, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
@@ -30,7 +30,8 @@ AM_INIT_AUTOMAKE([foreign -Wall])
 
 AC_SUBST(PACKAGE_URL, [https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/])
 
-AC_SUBST(LIBCANBERRA_VERSION_INFO, [0:0:0])
+AC_SUBST(LIBCANBERRA_VERSION_INFO, [1:0:1])
+AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [0:2:0])
 
 AC_CANONICAL_HOST
 

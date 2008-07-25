@@ -56,7 +56,7 @@ libcanberra_la_LIBADD = \
 	$(VORBIS_LIBS)
 libcanberra_la_LDFLAGS = \
 	-export-dynamic \
-	-version-info 0:2:0 \
+	-version-info $(LIBCANBERRA_VERSION_INFO) \
 	-Wl,-version-script=$(srcdir)/map-file
 
 plugin_LTLIBRARIES =
@@ -211,7 +211,7 @@ libcanberra_gtk_la_LIBADD = \
 	$(GTK_LIBS) \
 	libcanberra.la
 libcanberra_gtk_la_LDFLAGS = \
-	-export-dynamic -version-info 0:1:0
+	-export-dynamic -version-info $(LIBCANBERRA_GTK_VERSION_INFO)
 
 libcanberra_gtk_module_la_SOURCES = \
 	canberra-gtk-module.c
