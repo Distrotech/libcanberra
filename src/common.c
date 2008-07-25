@@ -532,12 +532,12 @@ int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_c
 
     ca_mutex_lock(c->props->mutex);
     if ((t = ca_proplist_gets_unlocked(c->props, CA_PROP_CANBERRA_ENABLE)))
-        enabled = !streq(t, "0");
+        enabled = !ca_streq(t, "0");
     ca_mutex_unlock(c->props->mutex);
 
     ca_mutex_lock(p->mutex);
     if ((t = ca_proplist_gets_unlocked(p, CA_PROP_CANBERRA_ENABLE)))
-        enabled = !streq(t, "0");
+        enabled = !ca_streq(t, "0");
     ca_mutex_unlock(p->mutex);
 
     ca_return_val_if_fail_unlock(enabled, CA_ERROR_DISABLED, c->mutex);
@@ -703,11 +703,11 @@ int ca_parse_cache_control(ca_cache_control_t *control, const char *c) {
     ca_return_val_if_fail(control, CA_ERROR_INVALID);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
-    if (streq(c, "never"))
+    if (ca_streq(c, "never"))
         *control = CA_CACHE_CONTROL_NEVER;
-    else if (streq(c, "permanent"))
+    else if (ca_streq(c, "permanent"))
         *control = CA_CACHE_CONTROL_PERMANENT;
-    else if (streq(c, "volatile"))
+    else if (ca_streq(c, "volatile"))
         *control = CA_CACHE_CONTROL_VOLATILE;
     else
         return CA_ERROR_INVALID;
