@@ -45,7 +45,7 @@ static int add_backend(struct private *p, const char *name) {
     int ret;
 
     ca_assert(p);
-    ca_assert(b);
+    ca_assert(name);
 
     if (ca_streq(name, "multi"))
         return CA_ERROR_NOTAVAILABLE;
