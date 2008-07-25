@@ -47,7 +47,7 @@ libcanberra_la_SOURCES = \
 	read-wav.c read-wav.h \
 	sound-theme-spec.c sound-theme-spec.h \
 	llist.h \
-	macro.h \
+	macro.h macro.c \
 	malloc.c malloc.h
 libcanberra_la_CFLAGS = \
 	$(AM_CFLAGS) \

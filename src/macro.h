@@ -162,14 +162,7 @@
 
 typedef int ca_bool_t;
 
-static inline ca_bool_t ca_debug(void) {
-    const char *d;
-
-    if ((d = getenv("CANBERRA_DEBUG")))
-        return !!*d;
-
-    return FALSE;
-}
+ca_bool_t ca_debug(void);
 
 static inline size_t ca_align(size_t l) {
     return (((l + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*));
