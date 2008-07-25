@@ -23,6 +23,8 @@
 #endif
 
 #include <errno.h>
+#include <unistd.h>
+
 #include <locale.h>
 
 #include "sound-theme-spec.h"
@@ -81,6 +83,9 @@ static ca_bool_t data_dir_matches(ca_data_dir *d, const char*output_profile) {
     ca_assert(output_profile);
 
     /* We might want to add more elaborate matching here eventually */
+
+    if (!d->output_profile)
+        return TRUE;
 
     return streq(d->output_profile, output_profile);
 }
@@ -391,7 +396,15 @@ fail:
     return ret;
 }
 
-static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char *name, const char *path, const char *suffix, const char *locale, const char *subdir) {
+static int find_sound_for_suffix(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *path,
+        const char *suffix,
+        const char *locale,
+        const char *subdir) {
+
     char *fn;
     int ret;
 
@@ -399,7 +412,6 @@ static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
     ca_return_val_if_fail(path, CA_ERROR_INVALID);
     ca_return_val_if_fail(path[0] == '/', CA_ERROR_INVALID);
-    ca_return_val_if_fail(suffix, CA_ERROR_INVALID);
 
     if (!(fn = ca_sprintf_malloc("%s%s%s%s%s%s%s/%s%s",
                                  path,
@@ -412,18 +424,34 @@ static int find_sound_for_suffix(ca_sound_file **f, ca_theme_data *t, const char
                                  name, suffix)))
         return CA_ERROR_OOM;
 
-    ret = ca_sound_file_open(f, fn);
+    if (streq(suffix, ".disabled")) {
+
+        if (access(fn, F_OK) == 0)
+            ret = CA_ERROR_DISABLED;
+        else
+            ret = errno == ENOENT ? CA_ERROR_NOTFOUND : CA_ERROR_SYSTEM;
+
+    } else
+        ret = ca_sound_file_open(f, fn);
+
     ca_free(fn);
 
     return ret;
 }
 
-static int find_sound_in_path(ca_sound_file **f, ca_theme_data *t, const char *name, const char *path, const char *locale, const char *subdir) {
+static int find_sound_in_locale(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *path,
+        const char *locale,
+        const char *subdir) {
+
     int ret;
     char *p;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
-    ca_return_val_if_fail(name, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
     ca_return_val_if_fail(path, CA_ERROR_INVALID);
     ca_return_val_if_fail(path[0] == '/', CA_ERROR_INVALID);
 
@@ -432,15 +460,120 @@ static int find_sound_in_path(ca_sound_file **f, ca_theme_data *t, const char *n
 
     sprintf(p, "%s/sounds", path);
 
-    if ((ret = find_sound_for_suffix(f, t, name, p, ".ogg", locale, subdir)) == CA_ERROR_NOTFOUND)
-        ret = find_sound_for_suffix(f, t, name, p, ".wav", locale, subdir);
+    if ((ret = find_sound_for_suffix(f, t, name, p, ".disabled", locale, subdir)) == CA_ERROR_NOTFOUND)
+        if ((ret = find_sound_for_suffix(f, t, name, p, ".ogg", locale, subdir)) == CA_ERROR_NOTFOUND)
+            ret = find_sound_for_suffix(f, t, name, p, ".wav", locale, subdir);
 
     ca_free(p);
 
     return ret;
 }
 
-static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *subdir) {
+static int find_sound_for_locale(
+        ca_sound_file **f,
+        ca_theme_data *theme,
+        const char *name,
+        const char *path,
+        const char *locale,
+        const char *subdir) {
+
+    const char *e;
+    int ret;
+
+    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
+    ca_return_val_if_fail(path, CA_ERROR_INVALID);
+    ca_return_val_if_fail(locale, CA_ERROR_INVALID);
+
+    /* First, try the locale def itself */
+    if ((ret = find_sound_in_locale(f, theme, name, path, locale, subdir)) != CA_ERROR_NOTFOUND)
+        return ret;
+
+    /* Then, try to truncate at the @ */
+    if ((e = strchr(locale, '@'))) {
+        char *t;
+
+        if (!(t = ca_strndup(locale, e - locale)))
+            return CA_ERROR_OOM;
+
+        ret = find_sound_in_locale(f, theme, name, path, t, subdir);
+        ca_free(t);
+
+        if (ret != CA_ERROR_NOTFOUND)
+            return ret;
+    }
+
+    /* Followed by truncating at the _ */
+    if ((e = strchr(locale, '_'))) {
+        char *t;
+
+        if (!(t = ca_strndup(locale, e - locale)))
+            return CA_ERROR_OOM;
+
+        ret = find_sound_in_locale(f, theme, name, path, t, subdir);
+        ca_free(t);
+
+        if (ret != CA_ERROR_NOTFOUND)
+            return ret;
+    }
+
+    /* Then, try "C" as fallback locale */
+    if (strcmp(locale, "C"))
+        if ((ret = find_sound_in_locale(f, theme, name, path, "C", subdir)) != CA_ERROR_NOTFOUND)
+            return ret;
+
+    /* Try without locale */
+    return find_sound_in_locale(f, theme, name, path, NULL, subdir);
+}
+
+static int find_sound_for_name(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *path,
+        const char *locale,
+        const char *subdir) {
+
+    int ret;
+    const char *k;
+
+    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
+
+    if ((ret = find_sound_for_locale(f, t, name, path, locale, subdir)) != CA_ERROR_NOTFOUND)
+        return ret;
+
+    k = strchr(name, 0);
+    for (;;) {
+        char *n;
+
+        do {
+            k--;
+
+            if (k <= name)
+                return CA_ERROR_NOTFOUND;
+
+        } while (*k != '-');
+
+        if (!(n = ca_strndup(name, k-name)))
+            return CA_ERROR_OOM;
+
+        if ((ret = find_sound_for_locale(f, t, n, path, locale, subdir)) != CA_ERROR_NOTFOUND) {
+            ca_free(n);
+            return ret;
+        }
+
+        ca_free(n);
+    }
+}
+
+static int find_sound_in_subdir(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *locale,
+        const char *subdir) {
+
     int ret;
     char *e = NULL;
     const char *g;
@@ -452,7 +585,7 @@ static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char 
         return ret;
 
     if (e) {
-        ret = find_sound_in_path(f, t, name, e, locale, subdir);
+        ret = find_sound_for_name(f, t, name, e, locale, subdir);
         ca_free(e);
 
         if (ret != CA_ERROR_NOTFOUND)
@@ -473,7 +606,7 @@ static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char 
             if (!(p = ca_strndup(g, k)))
                 return CA_ERROR_OOM;
 
-            ret = find_sound_in_path(f, t, name, p, locale, subdir);
+            ret = find_sound_for_name(f, t, name, p, locale, subdir);
             ca_free(p);
 
             if (ret != CA_ERROR_NOTFOUND)
@@ -489,7 +622,13 @@ static int find_sound_in_subdir(ca_sound_file **f, ca_theme_data *t, const char 
     return CA_ERROR_NOTFOUND;
 }
 
-static int find_sound_for_profile(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *profile) {
+static int find_sound_in_profile(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *locale,
+        const char *profile) {
+
     ca_data_dir *d;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -507,7 +646,13 @@ static int find_sound_for_profile(ca_sound_file **f, ca_theme_data *t, const cha
     return CA_ERROR_NOTFOUND;
 }
 
-static int find_sound_for_subname(ca_sound_file **f, ca_theme_data *t, const char *name, const char *locale, const char *profile) {
+static int find_sound_in_theme(
+        ca_sound_file **f,
+        ca_theme_data *t,
+        const char *name,
+        const char *locale,
+        const char *profile) {
+
     int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -516,12 +661,12 @@ static int find_sound_for_subname(ca_sound_file **f, ca_theme_data *t, const cha
 
     if (t) {
         /* First, try the profile def itself */
-        if ((ret = find_sound_for_profile(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
+        if ((ret = find_sound_in_profile(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
             return ret;
 
         /* Then, fall back to stereo */
         if (!streq(profile, DEFAULT_OUTPUT_PROFILE))
-            if ((ret = find_sound_for_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
+            if ((ret = find_sound_in_profile(f, t, name, locale, DEFAULT_OUTPUT_PROFILE)) != CA_ERROR_NOTFOUND)
                 return ret;
     }
 
@@ -529,104 +674,14 @@ static int find_sound_for_subname(ca_sound_file **f, ca_theme_data *t, const cha
     return find_sound_in_subdir(f, t, name, locale, NULL);
 }
 
-static int find_sound_in_locale(
+static int find_sound_for_theme(
         ca_sound_file **f,
-        ca_theme_data *t,
+        ca_theme_data **t,
+        const char *theme,
         const char *name,
         const char *locale,
         const char *profile) {
 
-    int ret;
-    const char *k;
-
-    ca_return_val_if_fail(f, CA_ERROR_INVALID);
-    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
-    ca_return_val_if_fail(profile, CA_ERROR_INVALID);
-
-    if ((ret = find_sound_for_subname(f, t, name, locale, profile)) != CA_ERROR_NOTFOUND)
-        return ret;
-
-    k = strchr(name, 0);
-    for (;;) {
-        char *n;
-
-        do {
-            k--;
-
-            if (k <= name)
-                return CA_ERROR_NOTFOUND;
-
-        } while (*k != '-');
-
-        if (!(n = ca_strndup(name, k-name)))
-            return CA_ERROR_OOM;
-
-        if ((ret = find_sound_for_subname(f, t, n, locale, profile)) != CA_ERROR_NOTFOUND) {
-            ca_free(n);
-            return ret;
-        }
-
-        ca_free(n);
-    }
-}
-
-static int find_sound_for_locale(
-        ca_sound_file **f,
-        ca_theme_data *theme,
-        const char *name,
-        const char *locale,
-        const char *profile) {
-
-    const char *e;
-    int ret;
-
-    ca_return_val_if_fail(f, CA_ERROR_INVALID);
-    ca_return_val_if_fail(name && *name, CA_ERROR_INVALID);
-    ca_return_val_if_fail(locale, CA_ERROR_INVALID);
-    ca_return_val_if_fail(profile, CA_ERROR_INVALID);
-
-    /* First, try the locale def itself */
-    if ((ret = find_sound_in_locale(f, theme, name, locale, profile)) != CA_ERROR_NOTFOUND)
-        return ret;
-
-    /* Then, try to truncate at the @ */
-    if ((e = strchr(locale, '@'))) {
-        char *t;
-
-        if (!(t = ca_strndup(locale, e - locale)))
-            return CA_ERROR_OOM;
-
-        ret = find_sound_in_locale(f, theme, name, t, profile);
-        ca_free(t);
-
-        if (ret != CA_ERROR_NOTFOUND)
-            return ret;
-    }
-
-    /* Followed by truncating at the _ */
-    if ((e = strchr(locale, '_'))) {
-        char *t;
-
-        if (!(t = ca_strndup(locale, e - locale)))
-            return CA_ERROR_OOM;
-
-        ret = find_sound_in_locale(f, theme, name, t, profile);
-        ca_free(t);
-
-        if (ret != CA_ERROR_NOTFOUND)
-            return ret;
-    }
-
-    /* Then, try "C" as fallback locale */
-    if (strcmp(locale, "C"))
-        if ((ret = find_sound_in_locale(f, theme, name, "C", profile)) != CA_ERROR_NOTFOUND)
-            return ret;
-
-    /* Try without locale */
-    return find_sound_in_locale(f, theme, name, NULL, profile);
-}
-
-static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char *theme, const char *name, const char *locale, const char *profile) {
     int ret;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -642,11 +697,11 @@ static int find_sound_for_theme(ca_sound_file **f, ca_theme_data **t, const char
             ret = load_theme_data(t, FALLBACK_THEME);
 
     if (ret == CA_SUCCESS)
-        if ((ret = find_sound_for_locale(f, *t, name, locale, profile)) != CA_ERROR_NOTFOUND)
+        if ((ret = find_sound_in_theme(f, *t, name, locale, profile)) != CA_ERROR_NOTFOUND)
             return ret;
 
     /* Then, fall back to "unthemed" files */
-    return find_sound_for_locale(f, NULL, name, locale, profile);
+    return find_sound_in_theme(f, NULL, name, locale, profile);
 }
 
 int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *cp, ca_proplist *sp) {
