@@ -270,6 +270,8 @@ int driver_open(ca_context *c) {
         return ret;
     }
 
+    strip_prefix(l, "canberra.");
+
     if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
         pa_proplist_free(l);
         driver_destroy(c);
