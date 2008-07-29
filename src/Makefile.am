@@ -20,6 +20,10 @@ gtkmoduledir = @GTK_MODULES_DIR@
 
 plugindir = $(libdir)/libcanberra
 
+gnomeshutdowndir = $(datadir)/gnome/shutdown
+
+gnomeautostartdir = $(datadir)/gnome/autostart
+
 AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
 AM_LDADD = $(PTHREAD_LIBS)
@@ -232,6 +236,27 @@ canberra_gtk_play_LDADD = \
 	libcanberra-gtk.la
 canberra_gtk_play_CFLAGS = \
 	$(GTK_CFLAGS)
+
+EXTRA_DIST += \
+	libcanberra-login-sound.desktop.in \
+	libcanberra-logout-sound.sh.in
+
+gnomeautostart_DATA = \
+	libcanberra-login-sound.desktop
+
+gnomeshutdown_SCRIPTS = \
+	libcanberra-logout-sound.sh
+
+CLEANFILES = \
+	libcanberra-login-sound.desktop \
+	libcanberra-logout-sound.sh
+
+libcanberra-logout-sound.sh: libcanberra-logout-sound.sh.in Makefile
+	sed -e 's,@bindir\@,$(bindir),g' < $< > $@
+	chmod +x $@
+
+libcanberra-login-sound.desktop: libcanberra-login-sound.desktop.in Makefile
+	sed -e 's,@bindir\@,$(bindir),g' < $< > $@
 
 endif
 

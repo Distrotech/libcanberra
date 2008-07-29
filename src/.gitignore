@@ -1,3 +1,5 @@
+libcanberra-login-sound.desktop
+libcanberra-logout-sound.sh
 canberra-gtk-play
 .libs
 *.o
