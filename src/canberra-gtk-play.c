@@ -49,12 +49,13 @@ static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
 int main (int argc, char *argv[]) {
     GOptionContext *oc;
     ca_proplist *p;
-    static gchar *event_id = NULL, *event_description = NULL;
+    static gchar *event_id = NULL, *event_description = NULL, *cache_control = NULL;
     int ret = 0, r;
 
     static const GOptionEntry options[] = {
-        { "id",          0, 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
-        { "description", 0, 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
+        { "id",            0, 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
+        { "description",   0, 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
+        { "cache-control", 0, 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
         { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
 
@@ -83,6 +84,9 @@ int main (int argc, char *argv[]) {
 
     ca_proplist_create(&p);
     ca_proplist_sets(p, CA_PROP_EVENT_ID, event_id);
+
+    if (cache_control)
+        ca_proplist_sets(p, CA_PROP_CANBERRA_CACHE_CONTROL, cache_control);
 
     if (event_description)
         ca_proplist_sets(p, CA_PROP_EVENT_DESCRIPTION, event_description);
