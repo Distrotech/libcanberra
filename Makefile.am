@@ -17,7 +17,7 @@
 # <http://www.gnu.org/licenses/>.
 
 EXTRA_DIST = bootstrap.sh autogen.sh LGPL README
-SUBDIRS = src doc
+SUBDIRS = src doc libltdl
 
 MAINTAINERCLEANFILES =
 noinst_DATA =
