@@ -118,13 +118,13 @@ static int convert_proplist(pa_proplist **_l, ca_proplist *c) {
     return CA_SUCCESS;
 }
 
-static pa_proplist *strip_canberra_data(pa_proplist *l) {
+static pa_proplist *strip_prefix(pa_proplist *l, const char *prefix) {
     const char *key;
     void *state = NULL;
     ca_assert(l);
 
     while ((key = pa_proplist_iterate(l, &state)))
-        if (strncmp(key, "canberra.", 9) == 0)
+        if (strncmp(key, prefix, strlen(prefix)) == 0)
             pa_proplist_unset(l, key);
 
     return l;
@@ -389,7 +389,7 @@ int driver_change_props(ca_context *c, ca_proplist *changed, ca_proplist *merged
     if ((ret = convert_proplist(&l, changed)) < 0)
         return ret;
 
-    strip_canberra_data(l);
+    strip_prefix(l, "canberra.");
 
     pa_threaded_mainloop_lock(p->mainloop);
 
@@ -678,7 +678,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             goto finish;
         }
 
-    strip_canberra_data(l);
+    strip_prefix(l, "canberra.");
 
     if ((ret = subscribe(c)) < 0)
         goto finish;
@@ -905,7 +905,9 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         goto finish;
     }
 
-    strip_canberra_data(l);
+    strip_prefix(l, "canberra.");
+    strip_prefix(l, "event.mouse.");
+    strip_prefix(l, "window.");
 
     /* Let's stream the sample directly */
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
