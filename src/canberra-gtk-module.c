@@ -716,7 +716,7 @@ static void enable_input_feedback_sounds_changed(GtkSettings *s, GParamSpec *arg
     read_enable_input_feedback_sounds(s);
 }
 
-void gtk_module_init(gint *argc, gchar ***argv[]) {
+G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     GtkSettings *s;
 
     /* This is the same quark libgnomeui uses! */
