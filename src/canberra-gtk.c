@@ -49,7 +49,7 @@ static void read_sound_theme_name(ca_context *c, GtkSettings *s) {
     g_object_get(G_OBJECT(s), "gtk-sound-theme-name", &theme_name, NULL);
 
     if (theme_name) {
-        ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_NAME, theme_name, NULL) == 0);
+        ca_context_change_props(c, CA_PROP_CANBERRA_XDG_THEME_NAME, theme_name, NULL);
         g_free(theme_name);
     }
 }
@@ -59,7 +59,7 @@ static void read_enable_event_sounds(ca_context *c, GtkSettings *s) {
 
     g_object_get(G_OBJECT(s), "gtk-enable-event-sounds", &enable_event_sounds, NULL);
 
-    ca_assert_se(ca_context_change_props(c, CA_PROP_CANBERRA_ENABLE, enable_event_sounds ? "1" : "0", NULL) == 0);
+    ca_context_change_props(c, CA_PROP_CANBERRA_ENABLE, enable_event_sounds ? "1" : "0", NULL);
 }
 
 static void sound_theme_name_changed(GtkSettings *s, GParamSpec *arg1, ca_context *c) {
@@ -95,7 +95,7 @@ ca_context *ca_gtk_context_get(void) {
     ca_assert_se(ca_context_create(&c) == CA_SUCCESS);
 
     if ((name = g_get_application_name()))
-        ca_assert_se(ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL) == 0);
+        ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL);
 
     GDK_THREADS_ENTER();
 
