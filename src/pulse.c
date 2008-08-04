@@ -130,6 +130,20 @@ static pa_proplist *strip_prefix(pa_proplist *l, const char *prefix) {
     return l;
 }
 
+static void add_common(pa_proplist *l) {
+    ca_assert(l);
+
+    if (!pa_proplist_contains(l, CA_PROP_MEDIA_ROLE))
+        pa_proplist_sets(l, CA_PROP_MEDIA_ROLE, "event");
+
+    if (!pa_proplist_contains(l, CA_PROP_MEDIA_NAME)) {
+        const char *t;
+
+        if ((t = pa_proplist_gets(l, CA_PROP_EVENT_ID)))
+            pa_proplist_sets(l, CA_PROP_MEDIA_NAME, t);
+    }
+}
+
 static int translate_error(int error) {
     static const int table[PA_ERR_MAX] = {
         [PA_OK]                       = CA_SUCCESS,
@@ -681,6 +695,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         }
 
     strip_prefix(l, "canberra.");
+    add_common(l);
 
     if ((ret = subscribe(c)) < 0)
         goto finish;
@@ -910,6 +925,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     strip_prefix(l, "canberra.");
     strip_prefix(l, "event.mouse.");
     strip_prefix(l, "window.");
+    add_common(l);
 
     /* Let's stream the sample directly */
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
