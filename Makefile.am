@@ -16,7 +16,9 @@
 # License along with libcanberra. If not, If not, see
 # <http://www.gnu.org/licenses/>.
 
-EXTRA_DIST = bootstrap.sh autogen.sh LGPL README
+dist_doc_DATA = README
+
+EXTRA_DIST = bootstrap.sh autogen.sh LGPL
 SUBDIRS = src doc libltdl
 
 MAINTAINERCLEANFILES =
