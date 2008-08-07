@@ -32,3 +32,4 @@ pkgconfig_DATA += libcanberra-gtk.pc
 endif
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+ACLOCAL_AMFLAGS = -I m4
