@@ -19,7 +19,7 @@
 # License along with libcanberra. If not, If not, see
 # <http://www.gnu.org/licenses/>.
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.62)
 
 AC_INIT([libcanberra], 0.7, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
