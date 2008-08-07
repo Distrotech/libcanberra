@@ -621,8 +621,8 @@ static void dispatch_sound_event(SoundEventData *d) {
                                     NULL);
     }
 
-    if (ret != CA_SUCCESS)
-        g_warning("Failed to play event sound: %s", ca_strerror(ret));
+/*     if (ret != CA_SUCCESS) */
+/*         g_warning("Failed to play event sound: %s", ca_strerror(ret)); */
 }
 
 static gboolean idle_cb(void *userdata) {
