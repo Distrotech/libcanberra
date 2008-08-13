@@ -16,7 +16,9 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-EXTRA_DIST = bootstrap.sh autogen.sh LGPL README
+dist_doc_DATA = README
+
+EXTRA_DIST = bootstrap.sh autogen.sh LGPL
 SUBDIRS = src doc libltdl
 
 MAINTAINERCLEANFILES =
@@ -30,3 +32,4 @@ pkgconfig_DATA += libcanberra-gtk.pc
 endif
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+ACLOCAL_AMFLAGS = -I m4

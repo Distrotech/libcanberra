@@ -19,7 +19,7 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.62)
 
 AC_INIT([libcanberra], 0.7, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
@@ -45,6 +45,7 @@ fi
 # CC
 
 AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_GCC_TRADITIONAL
 AC_GNU_SOURCE
@@ -53,34 +54,11 @@ AC_GNU_SOURCE
 
 AC_PROG_CXX
 
-# GCC flags
+DESIRED_FLAGS="-Wall -W -Wextra -pedantic -pipe -Wformat -Wold-style-definition -Wdeclaration-after-statement -Wfloat-equal -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wendif-labels -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wno-unused-parameter -ffast-math"
 
-test_gcc_flag() {
-    AC_LANG_CONFTEST([int main(int argc, char*argv[]) {}])
-    $CC -c conftest.c $CFLAGS "$1" -o conftest.o > /dev/null 2> /dev/null
-    ret=$?
-    rm -f conftest.o
-    return $ret
-}
-
-# If using GCC specify some additional parameters
-if test "x$GCC" = "xyes" ; then
-
-    # We use gnu99 instead of c99 because many have interpreted the standard
-    # in a way that int64_t isn't defined on non-64 bit platforms.
-    DESIRED_FLAGS="-std=gnu99 -Wall -W -Wextra -pedantic -pipe -Wformat -Wold-style-definition -Wdeclaration-after-statement -Wfloat-equal -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wendif-labels -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wno-unused-parameter -ffast-math"
-
-    for flag in $DESIRED_FLAGS ; do
-        AC_MSG_CHECKING([whether $CC accepts $flag])
-        if test_gcc_flag $flag ; then
-           CFLAGS="$CFLAGS $flag"
-           CXXFLAGS="$CXXFLAGS $flag"
-           AC_MSG_RESULT([yes])
-        else
-           AC_MSG_RESULT([no])
-        fi
-    done
-fi
+for flag in $DESIRED_FLAGS ; do
+  CC_CHECK_CFLAGS([$flag], [CFLAGS="$CFLAGS $flag"])
+done
 
 #### libtool stuff ####
 
