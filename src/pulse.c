@@ -141,6 +141,8 @@ static void add_common(pa_proplist *l) {
 
         if ((t = pa_proplist_gets(l, CA_PROP_EVENT_ID)))
             pa_proplist_sets(l, CA_PROP_MEDIA_NAME, t);
+        else if ((t = pa_proplist_gets(l, CA_PROP_MEDIA_FILENAME)))
+            pa_proplist_sets(l, CA_PROP_MEDIA_NAME, t);
     }
 }
 
@@ -359,6 +361,7 @@ int driver_destroy(ca_context *c) {
 
         outstanding_free(out);
     }
+
     if (p->mainloop)
         pa_threaded_mainloop_free(p->mainloop);
 
@@ -561,7 +564,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
 
         ca_assert(rbytes <= bytes);
 
-        if ((ret = pa_stream_write(s, data, rbytes, free, 0, PA_SEEK_RELATIVE)) < 0) {
+        if ((ret = pa_stream_write(s, data, rbytes, ca_free, 0, PA_SEEK_RELATIVE)) < 0) {
             ret = translate_error(ret);
             goto finish;
         }
@@ -664,15 +667,11 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     if ((ret = convert_proplist(&l, proplist)) < 0)
         goto finish;
 
-    if (!(n = pa_proplist_gets(l, CA_PROP_EVENT_ID))) {
-        ret = CA_ERROR_INVALID;
-        goto finish;
-    }
-
-    if (!(name = ca_strdup(n))) {
-        ret = CA_ERROR_OOM;
-        goto finish;
-    }
+    if ((n = pa_proplist_gets(l, CA_PROP_EVENT_ID)))
+        if (!(name = ca_strdup(n))) {
+            ret = CA_ERROR_OOM;
+            goto finish;
+        }
 
     if ((vol = pa_proplist_gets(l, CA_PROP_CANBERRA_VOLUME))) {
         char *e = NULL;
@@ -700,38 +699,43 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     if ((ret = subscribe(c)) < 0)
         goto finish;
 
-    for (;;) {
-        pa_threaded_mainloop_lock(p->mainloop);
+    if (name) {
 
-        /* Let's try to play the sample */
-        if (!(o = pa_context_play_sample_with_proplist(p->context, name, c->device, v, l, play_sample_cb, out))) {
-            ret = translate_error(pa_context_errno(p->context));
+        /* Ok, this sample has an event id, let's try to play it from the cache */
+
+        for (;;) {
+            pa_threaded_mainloop_lock(p->mainloop);
+
+            /* Let's try to play the sample */
+            if (!(o = pa_context_play_sample_with_proplist(p->context, name, c->device, v, l, play_sample_cb, out))) {
+                ret = translate_error(pa_context_errno(p->context));
+                pa_threaded_mainloop_unlock(p->mainloop);
+                goto finish;
+            }
+
+            while (pa_operation_get_state(o) != PA_OPERATION_DONE)
+                pa_threaded_mainloop_wait(p->mainloop);
+
+            pa_operation_unref(o);
+
             pa_threaded_mainloop_unlock(p->mainloop);
-            goto finish;
+
+            /* Did we manage to play the sample or did some other error occur? */
+            if (out->error != CA_ERROR_NOTFOUND)
+                goto finish;
+
+            /* Hmm, we need to play it directly */
+            if (cache_control != CA_CACHE_CONTROL_PERMANENT)
+                break;
+
+            /* Don't loop forever */
+            if (--try <= 0)
+                break;
+
+            /* Let's upload the sample and retry playing */
+            if ((ret = driver_cache(c, proplist)) < 0)
+                goto finish;
         }
-
-        while (pa_operation_get_state(o) != PA_OPERATION_DONE)
-            pa_threaded_mainloop_wait(p->mainloop);
-
-        pa_operation_unref(o);
-
-        pa_threaded_mainloop_unlock(p->mainloop);
-
-        /* Did we manage to play the sample or did some other error occur? */
-        if (out->error != CA_ERROR_NOTFOUND)
-            goto finish;
-
-        /* Hmm, we need to play it directly */
-        if (cache_control != CA_CACHE_CONTROL_PERMANENT)
-            break;
-
-        /* Don't loop forever */
-        if (--try <= 0)
-            break;
-
-        /* Let's upload the sample and retry playing */
-        if ((ret = driver_cache(c, proplist)) < 0)
-            goto finish;
     }
 
     out->type = OUTSTANDING_STREAM;
@@ -743,6 +747,14 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
+
+    if (!name) {
+        if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
+            if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
+                n = "libcanberra";
+
+        name = ca_strdup(n);
+    }
 
     pa_threaded_mainloop_lock(p->mainloop);
 
