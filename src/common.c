@@ -528,7 +528,9 @@ int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_c
     ca_mutex_lock(c->mutex);
 
     ca_return_val_if_fail_unlock(ca_proplist_contains(p, CA_PROP_EVENT_ID) ||
-                                 ca_proplist_contains(c->props, CA_PROP_EVENT_ID), CA_ERROR_INVALID, c->mutex);
+                                 ca_proplist_contains(c->props, CA_PROP_EVENT_ID) ||
+                                 ca_proplist_contains(p, CA_PROP_MEDIA_FILENAME) ||
+                                 ca_proplist_contains(c->props, CA_PROP_MEDIA_FILENAME), CA_ERROR_INVALID, c->mutex);
 
     ca_mutex_lock(c->props->mutex);
     if ((t = ca_proplist_gets_unlocked(c->props, CA_PROP_CANBERRA_ENABLE)))
