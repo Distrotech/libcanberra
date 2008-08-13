@@ -193,7 +193,10 @@ static void context_state_cb(pa_context *pc, void *userdata) {
         struct outstanding *out;
         int ret;
 
-        ret = translate_error(pa_context_errno(pc));
+        if (state == PA_CONTEXT_TERMINATED)
+            ret = CA_ERROR_DESTROYED;
+        else
+            ret = translate_error(pa_context_errno(pc));
 
         ca_mutex_lock(p->outstanding_mutex);
 
