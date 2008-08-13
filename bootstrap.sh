@@ -55,9 +55,9 @@ else
     mkdir -p m4
     gtkdocize --copy --flavour no-tmpl
     "$LIBTOOLIZE" -c --force --ltdl
-    run_versioned aclocal "$VERSION"
-    run_versioned autoconf 2.59 -Wall
-    run_versioned autoheader 2.59
+    run_versioned aclocal "$VERSION" -I m4
+    run_versioned autoconf 2.62 -Wall
+    run_versioned autoheader 2.62
     run_versioned automake "$VERSION" --copy --foreign --add-missing
 
     if test "x$NOCONFIGURE" = "x"; then
