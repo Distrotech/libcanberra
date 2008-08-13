@@ -705,7 +705,7 @@ static int find_sound_for_theme(
 }
 
 int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *cp, ca_proplist *sp) {
-    int ret;
+    int ret = CA_ERROR_INVALID;
     const char *name, *fname;
 
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -735,11 +735,12 @@ int ca_lookup_sound(ca_sound_file **f, ca_theme_data **t, ca_proplist *cp, ca_pr
                 profile = DEFAULT_OUTPUT_PROFILE;
 
         ret = find_sound_for_theme(f, t, theme, name, locale, profile);
+    }
 
-    } else if ((fname = ca_proplist_gets_unlocked(sp, CA_PROP_MEDIA_FILENAME)))
-        ret = ca_sound_file_open(f, fname);
-    else
-        ret = CA_ERROR_INVALID;
+    if (ret == CA_ERROR_NOTFOUND || !name) {
+        if ((fname = ca_proplist_gets_unlocked(sp, CA_PROP_MEDIA_FILENAME)))
+            ret = ca_sound_file_open(f, fname);
+    }
 
     ca_mutex_unlock(cp->mutex);
     ca_mutex_unlock(sp->mutex);
