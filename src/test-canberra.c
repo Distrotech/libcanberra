@@ -77,6 +77,14 @@ int main(int argc, char *argv[]) {
     ca_proplist_destroy(p);
     fprintf(stderr, "play_full: %s\n", ca_strerror(ret));
 
+    /* Now trigger a sound event, by filename */
+    ret = ca_context_play(c, 2,
+                          CA_PROP_MEDIA_FILENAME, "/usr/share/sounds/freedesktop/stereo/audio-channel-front-left.ogg",
+                          CA_PROP_MEDIA_NAME, "Front Left",
+                          CA_PROP_MEDIA_LANGUAGE, "en_EN",
+                          NULL);
+    fprintf(stderr, "play (by filename): %s\n", ca_strerror(ret));
+
     fprintf(stderr, "Sleep half a second ...\n");
     usleep(500000);
 
