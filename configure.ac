@@ -106,6 +106,8 @@ esac
 
 AM_CONDITIONAL(OS_IS_WIN32, test "x$os_is_win32" = "x1")
 
+AM_CONDITIONAL(USE_VERSION_SCRIPT, test "x$supports_anon_versioning" = "xyes" )
+
 ###################################
 #   Basic environment checks      #
 ###################################
