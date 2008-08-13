@@ -294,7 +294,7 @@ AC_ARG_ENABLE([gtk],
         [gtk=auto])
 
 if test "x${gtk}" != xno ; then
-    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 gthread-2.0 ],
+    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 >= 2.14 gthread-2.0 ],
         [
             HAVE_GTK=1
             AC_DEFINE([HAVE_GTK], 1, [Have GTK?])
