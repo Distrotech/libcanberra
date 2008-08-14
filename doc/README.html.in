@@ -40,15 +40,17 @@ Lesser General Public License for more details.</p>
 
 <div class="news-date">Thu 14 Aug
 2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.7.tar.gz">Version
-0.7</a> released; changes include: </p>
+0.7</a> released; changes include: documentation updates; various bug
+fixes; add this web site/README; allow playback of event sounds with
+only a sound file path specified; other changes</p>
 
 <h2><a name="overview">Overview</a></h2>
 
 <p><tt>libcanberra</tt> is an implementation of
 the <a href="http://freedesktop.org/wiki/Specifications/sound-theme-spec">XDG
 Sound Theme and Name Specifications</a>, for generating event sounds
-on free desktops. It comes with several backends (ALSA, PulseAudio,
-Null) and is designed to be portable. It consists of the following
+on free desktops, such as <a href="http://www.gnome.org/">GNOME</a>. It comes with several backends (<a href="http://alsa-project.org/">ALSA</a>, <a href="http://pulseaudio.org/">PulseAudio</a>,
+null) and is designed to be portable. It consists of the following
 parts:</p>
 
 <ol>
