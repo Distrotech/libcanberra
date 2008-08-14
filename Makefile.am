@@ -19,10 +19,10 @@
 dist_doc_DATA = README
 
 EXTRA_DIST = bootstrap.sh autogen.sh LGPL
-SUBDIRS = src gtkdoc libltdl
+SUBDIRS = src gtkdoc libltdl doc
 
-MAINTAINERCLEANFILES =
-noinst_DATA =
+MAINTAINERCLEANFILES = README
+noinst_DATA = README
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcanberra.pc
@@ -33,3 +33,17 @@ endif
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 ACLOCAL_AMFLAGS = -I m4
+
+README:
+	rm -f README
+	$(MAKE) -C doc README
+	cd $(srcdir) && ln -s doc/README README
+
+homepage: all dist doxygen
+	test -d $$HOME/homepage/private
+	mkdir -p $$HOME/homepage/private/projects/libcanberra
+	cp libcanberra-@PACKAGE_VERSION@.tar.gz $$HOME/homepage/private/projects/libcanberra
+	cp doc/README.html doc/style.css $$HOME/homepage/private/projects/libcanberra
+	ln -sf README.html $$HOME/homepage/private/projects/libcanberra/index.html
+
+.PHONY: homepage
