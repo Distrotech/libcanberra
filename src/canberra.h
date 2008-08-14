@@ -37,21 +37,21 @@ extern "C" {
 /**
  * CA_PROP_MEDIA_NAME:
  *
- * A name describing the media being played.
+ * A name describing the media being played. Localized if possible and applicable.
  */
 #define CA_PROP_MEDIA_NAME                         "media.name"
 
 /**
  * CA_PROP_MEDIA_TITLE:
  *
- * A (song) title describing the media being played.
+ * A (song) title describing the media being played. Localized if possible and applicable.
  */
 #define CA_PROP_MEDIA_TITLE                        "media.title"
 
 /**
  * CA_PROP_MEDIA_ARTIST:
  *
- * The artist of this media
+ * The artist of this media. Localized if possible and applicable.
  */
 #define CA_PROP_MEDIA_ARTIST                       "media.artist"
 
@@ -101,7 +101,7 @@ extern "C" {
 /**
  * CA_PROP_EVENT_DESCRIPTION:
  *
- * A descriptive string for the sound event.
+ * A descriptive string for the sound event. Localized if possible and applicable.
  */
 #define CA_PROP_EVENT_DESCRIPTION                  "event.description"
 
@@ -221,8 +221,9 @@ extern "C" {
 /**
  * CA_PROP_APPLICATION_NAME:
  *
- * The name of the application this sound event was triggered
- * by as human readable string. (e.g. "GNU Emacs")
+ * The name of the application this sound event was triggered by as
+ * human readable string. (e.g. "GNU Emacs") Localized if possible and
+ * applicable.
  */
 #define CA_PROP_APPLICATION_NAME                   "application.name"
 
