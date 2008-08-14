@@ -112,7 +112,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <pre>git clone git://git.0pointer.de/libcanberra</pre>
 
-<p>If you want to report bugs or have questions, please use the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
+<p>If you want to report bugs, have questions or want to be notified about new releases, please join the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
 
 <hr/>
 <address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, August 2008</address>
