@@ -112,7 +112,6 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <p>If you want to report bugs or have questions, please use the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
 
-
 <hr/>
 <address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, August 2008</address>
 
