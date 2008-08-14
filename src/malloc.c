@@ -29,7 +29,7 @@
 #include "macro.h"
 
 char *ca_sprintf_malloc(const char *format, ...) {
-    int  size = 100;
+    size_t  size = 100;
     char *c = NULL;
 
     ca_assert(format);
@@ -49,11 +49,11 @@ char *ca_sprintf_malloc(const char *format, ...) {
 
         c[size-1] = 0;
 
-        if (r > -1 && r < size)
+        if (r > -1 && (size_t) r < size)
             return c;
 
         if (r > -1)    /* glibc 2.1 */
-            size = r+1;
+            size = (size_t) r+1;
         else           /* glibc 2.0 */
             size *= 2;
     }

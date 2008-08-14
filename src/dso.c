@@ -79,7 +79,7 @@ static int ca_error_from_lt_error(int code) {
 static int lt_error_from_string(const char *t) {
 
     struct lt_error_code {
-        unsigned code;
+        int code;
         const char *text;
     };
 

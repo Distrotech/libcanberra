@@ -30,9 +30,9 @@
 
 typedef struct {
     guint signal_id;
+    gboolean arg1_is_set;
     GObject *object;
     GValue arg1;
-    gboolean arg1_is_set;
     GdkEvent *event;
 } SoundEventData;
 
@@ -80,7 +80,7 @@ static gboolean disabled = FALSE;
 
 static GQueue sound_event_queue = G_QUEUE_INIT;
 
-static int idle_id = 0;
+static guint idle_id = 0;
 
 static guint
     signal_id_dialog_response,

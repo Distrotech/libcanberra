@@ -493,7 +493,7 @@ static int find_sound_for_locale(
     if ((e = strchr(locale, '@'))) {
         char *t;
 
-        if (!(t = ca_strndup(locale, e - locale)))
+        if (!(t = ca_strndup(locale, (size_t) (e - locale))))
             return CA_ERROR_OOM;
 
         ret = find_sound_in_locale(f, theme, name, path, t, subdir);
@@ -507,7 +507,7 @@ static int find_sound_for_locale(
     if ((e = strchr(locale, '_'))) {
         char *t;
 
-        if (!(t = ca_strndup(locale, e - locale)))
+        if (!(t = ca_strndup(locale, (size_t) (e - locale))))
             return CA_ERROR_OOM;
 
         ret = find_sound_in_locale(f, theme, name, path, t, subdir);
@@ -555,7 +555,7 @@ static int find_sound_for_name(
 
         } while (*k != '-');
 
-        if (!(n = ca_strndup(name, k-name)))
+        if (!(n = ca_strndup(name, (size_t) (k-name))))
             return CA_ERROR_OOM;
 
         if ((ret = find_sound_for_locale(f, t, n, path, locale, subdir)) != CA_ERROR_NOTFOUND) {

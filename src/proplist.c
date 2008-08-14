@@ -33,7 +33,7 @@ static unsigned calc_hash(const char *c) {
     unsigned hash = 0;
 
     for (; *c; c++)
-        hash = 31 * hash + *c;
+        hash = 31 * hash + (unsigned) *c;
 
     return hash;
 }
@@ -134,7 +134,7 @@ int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) {
     int ret;
     char *k;
     ca_prop *prop;
-    int size = 100;
+    size_t size = 100;
     unsigned h;
 
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
@@ -160,13 +160,13 @@ int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) {
 
         ((char*) CA_PROP_DATA(prop))[size-1] = 0;
 
-        if (r > -1 && r < size) {
-            prop->nbytes = r+1;
+        if (r > -1 && (size_t) r < size) {
+            prop->nbytes = (size_t) r+1;
             break;
         }
 
         if (r > -1)    /* glibc 2.1 */
-            size = r+1;
+            size = (size_t) r+1;
         else           /* glibc 2.0 */
             size *= 2;
 
@@ -359,8 +359,8 @@ int ca_proplist_merge(ca_proplist **_a, ca_proplist *b, ca_proplist *c) {
 ca_bool_t ca_proplist_contains(ca_proplist *p, const char *key) {
     ca_bool_t b;
 
-    ca_return_val_if_fail(p, CA_ERROR_INVALID);
-    ca_return_val_if_fail(key, CA_ERROR_INVALID);
+    ca_return_val_if_fail(p, FALSE);
+    ca_return_val_if_fail(key, FALSE);
 
     ca_mutex_lock(p->mutex);
     b = !!ca_proplist_get_unlocked(p, key);

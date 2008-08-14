@@ -32,8 +32,8 @@ void ca_vorbis_close(ca_vorbis *v);
 unsigned ca_vorbis_get_nchannels(ca_vorbis *v);
 unsigned ca_vorbis_get_rate(ca_vorbis *v);
 
-int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n);
+int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, size_t *n);
 
-size_t ca_vorbis_get_size(ca_vorbis *f);
+off_t ca_vorbis_get_size(ca_vorbis *f);
 
 #endif

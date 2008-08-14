@@ -34,9 +34,9 @@ unsigned ca_wav_get_nchannels(ca_wav *f);
 unsigned ca_wav_get_rate(ca_wav *f);
 ca_sample_type_t ca_wav_get_sample_type(ca_wav *f);
 
-int ca_wav_read_u8(ca_wav *f, uint8_t *d, unsigned *n);
-int ca_wav_read_s16le(ca_wav *f, int16_t *d, unsigned *n);
+int ca_wav_read_u8(ca_wav *f, uint8_t *d, size_t *n);
+int ca_wav_read_s16le(ca_wav *f, int16_t *d, size_t *n);
 
-size_t ca_wav_get_size(ca_wav *f);
+off_t ca_wav_get_size(ca_wav *f);
 
 #endif

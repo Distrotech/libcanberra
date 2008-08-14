@@ -30,11 +30,11 @@
 #include "macro.h"
 #include "malloc.h"
 
-#define FILE_SIZE_MAX (64U*1024U*1024U)
+#define FILE_SIZE_MAX ((off_t) (64U*1024U*1024U))
 
 struct ca_vorbis {
     OggVorbis_File ovf;
-    size_t size;
+    off_t size;
 };
 
 static int convert_error(int or) {
@@ -87,13 +87,13 @@ int ca_vorbis_open(ca_vorbis **_v, FILE *f)  {
         goto fail;
     }
 
-    if (n * sizeof(int16_t) > FILE_SIZE_MAX) {
+    if (((off_t) n * (off_t) sizeof(int16_t)) > FILE_SIZE_MAX) {
         ret = CA_ERROR_TOOBIG;
         ov_clear(&v->ovf);
         goto fail;
     }
 
-    v->size = n * sizeof(int16_t) * ca_vorbis_get_nchannels(v);
+    v->size = (off_t) n * (off_t) sizeof(int16_t) * ca_vorbis_get_nchannels(v);
 
     *_v = v;
 
@@ -118,7 +118,7 @@ unsigned ca_vorbis_get_nchannels(ca_vorbis *v) {
 
     ca_assert_se(vi = ov_info(&v->ovf, -1));
 
-    return vi->channels;
+    return (unsigned) vi->channels;
 }
 
 unsigned ca_vorbis_get_rate(ca_vorbis *v) {
@@ -130,7 +130,7 @@ unsigned ca_vorbis_get_rate(ca_vorbis *v) {
     return (unsigned) vi->rate;
 }
 
-int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
+int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, size_t *n){
     long r;
     int section;
     int length;
@@ -141,7 +141,7 @@ int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
     ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
 
-    length = *n * sizeof(int16_t);
+    length = (int) (*n * sizeof(int16_t));
 
     do {
 
@@ -154,7 +154,7 @@ int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
                     2, 1, &section);
 
         if (r < 0)
-            return convert_error(r);
+            return convert_error((int) r);
 
         if (r == 0)
             break;
@@ -163,22 +163,22 @@ int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, unsigned *n){
         if (section != 0)
             break;
 
-        length -= r;
+        length -= (int) r;
         d += r/sizeof(int16_t);
-        n_read += r;
+        n_read += (size_t) r;
 
     } while (length >= 4096);
 
-    ca_assert(v->size >= n_read);
-    v->size -= n_read;
+    ca_assert(v->size >= (off_t) n_read);
+    v->size -= (off_t) n_read;
 
-    *n = (unsigned) n_read/sizeof(int16_t);
+    *n = n_read/sizeof(int16_t);
 
     return CA_SUCCESS;
 }
 
-size_t ca_vorbis_get_size(ca_vorbis *v) {
-    ca_return_val_if_fail(v, CA_ERROR_INVALID);
+off_t ca_vorbis_get_size(ca_vorbis *v) {
+    ca_return_val_if_fail(v, (off_t) -1);
 
     return v->size;
 }

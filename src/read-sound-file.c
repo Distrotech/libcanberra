@@ -121,7 +121,7 @@ ca_sample_type_t ca_sound_file_get_sample_type(ca_sound_file *f) {
     return f->type;
 }
 
-int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, unsigned *n) {
+int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, size_t *n) {
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
@@ -135,7 +135,7 @@ int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, unsigned *n) {
         return ca_vorbis_read_s16ne(f->vorbis, d, n);
 }
 
-int ca_sound_file_read_uint8(ca_sound_file *f, uint8_t *d, unsigned *n) {
+int ca_sound_file_read_uint8(ca_sound_file *f, uint8_t *d, size_t *n) {
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
@@ -160,7 +160,7 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
     switch (f->type) {
         case CA_SAMPLE_S16NE:
         case CA_SAMPLE_S16RE: {
-            unsigned k;
+            size_t k;
 
             k = *n / sizeof(int16_t);
             if ((ret = ca_sound_file_read_int16(f, d, &k)) == CA_SUCCESS)
@@ -170,7 +170,7 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
         }
 
         case CA_SAMPLE_U8: {
-            unsigned k;
+            size_t k;
 
             k = *n;
             if ((ret = ca_sound_file_read_uint8(f, d, &k)) == CA_SUCCESS)
@@ -186,8 +186,8 @@ int ca_sound_file_read_arbitrary(ca_sound_file *f, void *d, size_t *n) {
     return ret;
 }
 
-size_t ca_sound_file_get_size(ca_sound_file *f) {
-    ca_return_val_if_fail(f, CA_ERROR_INVALID);
+off_t ca_sound_file_get_size(ca_sound_file *f) {
+    ca_return_val_if_fail(f, (off_t) -1);
 
     if (f->wav)
         return ca_wav_get_size(f->wav);
@@ -202,5 +202,5 @@ size_t ca_sound_file_frame_size(ca_sound_file *f) {
 
     c = ca_sound_file_get_nchannels(f);
 
-    return c * (ca_sound_file_get_sample_type(f) == CA_SAMPLE_U8 ? 1 : 2);
+    return c * (ca_sound_file_get_sample_type(f) == CA_SAMPLE_U8 ? 1U : 2U);
 }

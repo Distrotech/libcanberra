@@ -30,9 +30,9 @@
 #define FILE_SIZE_MAX (64U*1024U*1024U)
 
 struct ca_wav {
-    uint32_t data_size;
     FILE *file;
 
+    off_t data_size;
     unsigned nchannels;
     unsigned rate;
     unsigned depth;
@@ -45,7 +45,7 @@ static int skip_to_chunk(ca_wav *w, uint32_t id, uint32_t *size) {
 
     for (;;) {
         uint32_t chunk[2];
-        size_t s;
+        uint32_t s;
 
         if (fread(chunk, sizeof(uint32_t), CA_ELEMENTSOF(chunk), w->file) != CA_ELEMENTSOF(chunk))
             goto fail_io;
@@ -80,7 +80,7 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     uint32_t header[3], fmt_chunk[4];
     int ret;
     ca_wav *w;
-    uint32_t file_size, fmt_size;
+    uint32_t file_size, fmt_size, data_size;
 
     ca_return_val_if_fail(_w, CA_ERROR_INVALID);
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -138,8 +138,9 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     }
 
     /* Skip to the data chunk */
-    if ((ret = skip_to_chunk(w, 0x61746164U, &w->data_size)) < 0)
+    if ((ret = skip_to_chunk(w, 0x61746164U, &data_size)) < 0)
         goto fail;
+    w->data_size = (off_t) data_size;
 
     if ((w->data_size % (w->depth/8)) != 0) {
         ret = CA_ERROR_CORRUPT;
@@ -197,8 +198,8 @@ ca_sample_type_t ca_wav_get_sample_type(ca_wav *w) {
         : CA_SAMPLE_U8;
 }
 
-int ca_wav_read_s16le(ca_wav *w, int16_t *d, unsigned *n) {
-    unsigned remaining;
+int ca_wav_read_s16le(ca_wav *w, int16_t *d, size_t *n) {
+    off_t remaining;
 
     ca_return_val_if_fail(w, CA_ERROR_INVALID);
     ca_return_val_if_fail(w->depth == 16, CA_ERROR_INVALID);
@@ -206,10 +207,10 @@ int ca_wav_read_s16le(ca_wav *w, int16_t *d, unsigned *n) {
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
     ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
 
-    remaining = w->data_size / sizeof(int16_t);
+    remaining = w->data_size / (off_t) sizeof(int16_t);
 
-    if (*n > remaining)
-        *n = remaining;
+    if ((off_t) *n > remaining)
+        *n = (size_t) remaining;
 
     if (*n > 0) {
         *n = fread(d, sizeof(int16_t), *n, w->file);
@@ -217,15 +218,15 @@ int ca_wav_read_s16le(ca_wav *w, int16_t *d, unsigned *n) {
         if (*n <= 0 && ferror(w->file))
             return CA_ERROR_SYSTEM;
 
-        ca_assert(w->data_size >= *n * sizeof(int16_t));
-        w->data_size -= *n * sizeof(int16_t);
+        ca_assert(w->data_size >= (off_t) *n * (off_t) sizeof(int16_t));
+        w->data_size -= (off_t) *n * (off_t) sizeof(int16_t);
     }
 
     return CA_SUCCESS;
 }
 
-int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
-    unsigned remaining;
+int ca_wav_read_u8(ca_wav *w, uint8_t *d, size_t *n) {
+    off_t remaining;
 
     ca_return_val_if_fail(w, CA_ERROR_INVALID);
     ca_return_val_if_fail(w->depth == 8, CA_ERROR_INVALID);
@@ -233,10 +234,10 @@ int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
     ca_return_val_if_fail(n, CA_ERROR_INVALID);
     ca_return_val_if_fail(*n > 0, CA_ERROR_INVALID);
 
-    remaining = w->data_size / sizeof(uint8_t);
+    remaining = w->data_size / (off_t) sizeof(uint8_t);
 
-    if (*n > remaining)
-        *n = remaining;
+    if ((off_t) *n > remaining)
+        *n = (size_t) remaining;
 
     if (*n > 0) {
         *n = fread(d, sizeof(uint8_t), *n, w->file);
@@ -244,15 +245,15 @@ int ca_wav_read_u8(ca_wav *w, uint8_t *d, unsigned *n) {
         if (*n <= 0 && ferror(w->file))
             return CA_ERROR_SYSTEM;
 
-        ca_assert(w->data_size >= *n * sizeof(uint8_t));
-        w->data_size -= *n * sizeof(uint8_t);
+        ca_assert(w->data_size >= (off_t) *n * (off_t) sizeof(uint8_t));
+        w->data_size -= (off_t) *n * (off_t) sizeof(uint8_t);
     }
 
     return CA_SUCCESS;
 }
 
-size_t ca_wav_get_size(ca_wav *v) {
-    ca_return_val_if_fail(v, CA_ERROR_INVALID);
+off_t ca_wav_get_size(ca_wav *v) {
+    ca_return_val_if_fail(v, (off_t) -1);
 
     return v->data_size;
 }

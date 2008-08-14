@@ -522,7 +522,7 @@ static void stream_drain_cb(pa_stream *s, int success, void *userdata) {
 
     p = PRIVATE(out->context);
 
-    ca_assert(out->type = OUTSTANDING_STREAM);
+    ca_assert(out->type == OUTSTANDING_STREAM);
     ca_assert(out->clean_up);
 
     ca_mutex_lock(p->outstanding_mutex);
@@ -748,7 +748,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         goto finish;
 
     ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
-    ss.channels = ca_sound_file_get_nchannels(out->file);
+    ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
     if (!name) {
@@ -947,7 +947,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         goto finish;
 
     ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
-    ss.channels = ca_sound_file_get_nchannels(out->file);
+    ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
     pa_threaded_mainloop_lock(p->mainloop);
@@ -961,7 +961,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     pa_stream_set_state_callback(out->stream, stream_state_cb, out);
     pa_stream_set_write_callback(out->stream, stream_write_cb, out);
 
-    if (pa_stream_connect_upload(out->stream, ca_sound_file_get_size(out->file)) < 0) {
+    if (pa_stream_connect_upload(out->stream, (size_t) ca_sound_file_get_size(out->file)) < 0) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
         goto finish;

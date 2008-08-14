@@ -292,13 +292,13 @@ static void* thread_func(void *userdata) {
         goto finish;
     }
 
-    n_pfd = ret + 1;
+    n_pfd = (nfds_t) ret + 1;
     if (!(pfd = ca_new(struct pollfd, n_pfd))) {
         ret = CA_ERROR_OOM;
         goto finish;
     }
 
-    if ((ret = snd_pcm_poll_descriptors(out->pcm, pfd+1, n_pfd-1)) < 0) {
+    if ((ret = snd_pcm_poll_descriptors(out->pcm, pfd+1, (unsigned) n_pfd-1)) < 0) {
         ret = translate_error(ret);
         goto finish;
     }
@@ -309,6 +309,7 @@ static void* thread_func(void *userdata) {
 
     for (;;) {
         unsigned short revents;
+        snd_pcm_sframes_t sframes;
 
         if (out->dead)
             break;
@@ -322,7 +323,7 @@ static void* thread_func(void *userdata) {
         if (pfd[0].revents)
             break;
 
-        if ((ret = snd_pcm_poll_descriptors_revents(out->pcm, pfd+1, n_pfd-1, &revents)) < 0) {
+        if ((ret = snd_pcm_poll_descriptors_revents(out->pcm, pfd+1, (unsigned) n_pfd-1, &revents)) < 0) {
             ret = translate_error(ret);
             goto finish;
         }
@@ -376,9 +377,9 @@ static void* thread_func(void *userdata) {
             break;
         }
 
-        if ((ret = snd_pcm_writei(out->pcm, d, nbytes/fs)) < 0) {
+        if ((sframes = snd_pcm_writei(out->pcm, d, nbytes/fs)) < 0) {
 
-            if ((ret = snd_pcm_recover(out->pcm, ret, 1)) < 0) {
+            if ((ret = snd_pcm_recover(out->pcm, (int) sframes, 1)) < 0) {
                 ret = translate_error(ret);
                 goto finish;
             }
@@ -386,8 +387,8 @@ static void* thread_func(void *userdata) {
             continue;
         }
 
-        nbytes -= ret*fs;
-        d = (uint8_t*) d + ret*fs;
+        nbytes -= (size_t) sframes*fs;
+        d = (uint8_t*) d + (size_t) sframes*fs;
     }
 
     ret = CA_SUCCESS;
