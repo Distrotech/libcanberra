@@ -691,7 +691,7 @@ const char *ca_strerror(int code) {
         [-CA_ERROR_ACCESS] = "Access forbidden",
         [-CA_ERROR_IO] = "IO error",
         [-CA_ERROR_INTERNAL] = "Internal error",
-        [-CA_ERROR_DISABLED] = "Sounds disabled"
+        [-CA_ERROR_DISABLED] = "Sound disabled"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);
