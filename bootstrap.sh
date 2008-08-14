@@ -53,7 +53,7 @@ else
     test "x$LIBTOOLIZE" = "x" && LIBTOOLIZE=libtoolize
 
     mkdir -p m4
-    gtkdocize --copy --flavour no-tmpl
+    gtkdocize --copy --flavour no-tmpl --docdir gtkdoc
     "$LIBTOOLIZE" -c --force --ltdl
     run_versioned aclocal "$VERSION" -I m4
     run_versioned autoconf 2.62 -Wall

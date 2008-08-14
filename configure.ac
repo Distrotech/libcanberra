@@ -387,7 +387,7 @@ Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
-doc/Makefile
+gtkdoc/Makefile
 ])
 AC_OUTPUT
 
