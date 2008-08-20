@@ -2,6 +2,7 @@
   This file is part of libcanberra.
 
   Copyright 2008 Lennart Poettering
+                 Joe Marcus Clarke
 
   libcanberra is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
@@ -22,12 +23,29 @@
 #include <config.h>
 #endif
 
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
+#include <sys/uio.h>
+#include <math.h>
+#include <unistd.h>
+
+#ifdef HAVE_MACHINE_SOUNDCARD_H
+#  include <machine/soundcard.h>
+#else
+#  ifdef HAVE_SOUNDCARD_H
+#    include <soundcard.h>
+#  else
+#    include <sys/soundcard.h>
+#  endif
+#endif
+
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
+#include <poll.h>
 #include <pthread.h>
 #include <semaphore.h>
-
-#include <alsa/asoundlib.h>
 
 #include "canberra.h"
 #include "common.h"
@@ -46,7 +64,7 @@ struct outstanding {
     ca_finish_callback_t callback;
     void *userdata;
     ca_sound_file *file;
-    snd_pcm_t *pcm;
+    int pcm;
     int pipe_fd[2];
     ca_context *context;
 };
@@ -74,8 +92,10 @@ static void outstanding_free(struct outstanding *o) {
     if (o->file)
         ca_sound_file_close(o->file);
 
-    if (o->pcm)
-        snd_pcm_close(o->pcm);
+    if (o->pcm >= 0) {
+        close(o->pcm);
+        o->pcm = -1;
+    }
 
     ca_free(o);
 }
@@ -84,7 +104,7 @@ int driver_open(ca_context *c) {
     struct private *p;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
-    ca_return_val_if_fail(!c->driver || ca_streq(c->driver, "alsa"), CA_ERROR_NODRIVER);
+    ca_return_val_if_fail(!c->driver || ca_streq(c->driver, "oss"), CA_ERROR_NODRIVER);
     ca_return_val_if_fail(!PRIVATE(c), CA_ERROR_STATE);
 
     if (!(c->private = p = ca_new0(struct private, 1)))
@@ -159,8 +179,6 @@ int driver_destroy(ca_context *c) {
 
     c->private = NULL;
 
-    snd_config_update_free_global();
-
     return CA_SUCCESS;
 }
 
@@ -189,85 +207,104 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 static int translate_error(int error) {
 
     switch (error) {
-        case -ENODEV:
-        case -ENOENT:
+        case ENODEV:
+        case ENOENT:
             return CA_ERROR_NOTFOUND;
-        case -EACCES:
-        case -EPERM:
+        case EACCES:
+        case EPERM:
             return CA_ERROR_ACCESS;
-        case -ENOMEM:
+        case ENOMEM:
             return CA_ERROR_OOM;
-        case -EBUSY:
+        case EBUSY:
             return CA_ERROR_NOTAVAILABLE;
-        case -EINVAL:
+        case EINVAL:
             return CA_ERROR_INVALID;
-        case -ENOSYS:
+        case ENOSYS:
             return CA_ERROR_NOTSUPPORTED;
         default:
             if (ca_debug())
-                fprintf(stderr, "Got unhandled error from ALSA: %s\n", snd_strerror(error));
+                fprintf(stderr, "Got unhandled error from OSS: %s\n", strerror(error));
             return CA_ERROR_IO;
     }
 }
 
-static const snd_pcm_format_t sample_type_table[] = {
-#ifdef WORDS_BIGENDIAN
-    [CA_SAMPLE_S16NE] = SND_PCM_FORMAT_S16_BE,
-    [CA_SAMPLE_S16RE] = SND_PCM_FORMAT_S16_LE,
-#else
-    [CA_SAMPLE_S16NE] = SND_PCM_FORMAT_S16_LE,
-    [CA_SAMPLE_S16RE] = SND_PCM_FORMAT_S16_BE,
-#endif
-    [CA_SAMPLE_U8] = SND_PCM_FORMAT_U8
-};
-
-static int open_alsa(ca_context *c, struct outstanding *out) {
+static int open_oss(ca_context *c, struct outstanding *out) {
     struct private *p;
-    int ret;
-    snd_pcm_hw_params_t *hwparams;
-    unsigned rate;
-
-    snd_pcm_hw_params_alloca(&hwparams);
+    int mode, val, test, ret;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(c->private, CA_ERROR_STATE);
     ca_return_val_if_fail(out, CA_ERROR_INVALID);
+    ca_return_val_if_fail(ca_sound_file_get_nchannels(out->file) > 2, CA_ERROR_NOTSUPPORTED);
 
     p = PRIVATE(c);
 
-    if ((ret = snd_pcm_open(&out->pcm, c->device ? c->device : "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
-        goto finish;
+    if ((out->pcm = open(c->device ? c->device : "/dev/dsp", O_WRONLY | O_NONBLOCK, 0)) < 0)
+        goto finish_errno;
 
-    if ((ret = snd_pcm_hw_params_any(out->pcm, hwparams)) < 0)
-        goto finish;
+    if ((mode = fcntl(out->pcm, F_GETFL)) < 0)
+        goto finish_errno;
 
-    if ((ret = snd_pcm_hw_params_set_access(out->pcm, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
-        goto finish;
+    mode &= ~O_NONBLOCK;
 
-    if ((ret = snd_pcm_hw_params_set_format(out->pcm, hwparams, sample_type_table[ca_sound_file_get_sample_type(out->file)])) < 0)
-        goto finish;
+    if (fcntl(out->pcm, F_SETFL, mode) < 0)
+        goto finish_errno;
 
-    rate = ca_sound_file_get_rate(out->file);
-    if ((ret = snd_pcm_hw_params_set_rate_near(out->pcm, hwparams, &rate, 0)) < 0)
-        goto finish;
+    switch (ca_sound_file_get_sample_type(out->file)) {
+        case CA_SAMPLE_U8:
+            val = AFMT_U8;
+            break;
+        case CA_SAMPLE_S16NE:
+            val = AFMT_S16_NE;
+            break;
+        case CA_SAMPLE_S16RE:
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+            val = AFMT_S16_BE;
+#else
+            val = AFMT_S16_LE;
+#endif
+            break;
+    }
 
-    if ((ret = snd_pcm_hw_params_set_channels(out->pcm, hwparams, ca_sound_file_get_nchannels(out->file))) < 0)
-        goto finish;
+    test = val;
+    if (ioctl(out->pcm, SNDCTL_DSP_SETFMT, &val) < 0)
+        goto finish_errno;
 
-    if ((ret = snd_pcm_hw_params(out->pcm, hwparams)) < 0)
-        goto finish;
+    if (val != test) {
+        ret = CA_ERROR_NOTSUPPORTED;
+        goto finish_ret;
+    }
 
-    if ((ret = snd_pcm_prepare(out->pcm)) < 0)
-        goto finish;
+    test = val = (int) ca_sound_file_get_nchannels(out->file);
+    if (ioctl(out->pcm, SNDCTL_DSP_CHANNELS, &val) < 0)
+        goto finish_errno;
+
+    if (val != test) {
+        ret = CA_ERROR_NOTSUPPORTED;
+        goto finish_ret;
+    }
+
+    test = val = (int) ca_sound_file_get_rate(out->file);
+    if (ioctl(out->pcm, SNDCTL_DSP_SPEED, &val) < 0)
+        goto finish_errno;
+
+    /* Check to make sure the configured rate is close enough to the
+     * requested rate. */
+    if (fabs((double) (val - test)) > test * 0.05) {
+        ret = CA_ERROR_NOTSUPPORTED;
+        goto finish_ret;
+    }
 
     return CA_SUCCESS;
 
-finish:
+finish_errno:
+    return translate_error(errno);
 
-    return translate_error(ret);
+finish_ret:
+    return ret;
 }
 
-#define BUFSIZE (16*1024)
+#define BUFSIZE (4*1024)
 
 static void* thread_func(void *userdata) {
     struct outstanding *out = userdata;
@@ -275,8 +312,8 @@ static void* thread_func(void *userdata) {
     void *data, *d = NULL;
     size_t fs, data_size;
     size_t nbytes = 0;
-    struct pollfd *pfd = NULL;
-    nfds_t n_pfd;
+    struct pollfd pfd[2];
+    nfds_t n_pfd = 2;
     struct private *p;
 
     p = PRIVATE(out->context);
@@ -291,29 +328,15 @@ static void* thread_func(void *userdata) {
         goto finish;
     }
 
-    if ((ret = snd_pcm_poll_descriptors_count(out->pcm)) < 0) {
-        ret = translate_error(ret);
-        goto finish;
-    }
-
-    n_pfd = (nfds_t) ret + 1;
-    if (!(pfd = ca_new(struct pollfd, n_pfd))) {
-        ret = CA_ERROR_OOM;
-        goto finish;
-    }
-
-    if ((ret = snd_pcm_poll_descriptors(out->pcm, pfd+1, (unsigned) n_pfd-1)) < 0) {
-        ret = translate_error(ret);
-        goto finish;
-    }
-
     pfd[0].fd = out->pipe_fd[0];
     pfd[0].events = POLLIN;
     pfd[0].revents = 0;
+    pfd[1].fd = out->pcm;
+    pfd[1].events = POLLOUT;
+    pfd[1].revents = 0;
 
     for (;;) {
-        unsigned short revents;
-        snd_pcm_sframes_t sframes;
+        ssize_t bytes_written;
 
         if (out->dead)
             break;
@@ -327,47 +350,12 @@ static void* thread_func(void *userdata) {
         if (pfd[0].revents)
             break;
 
-        if ((ret = snd_pcm_poll_descriptors_revents(out->pcm, pfd+1, (unsigned) n_pfd-1, &revents)) < 0) {
-            ret = translate_error(ret);
+        if (pfd[1].revents != POLLOUT) {
+            ret = CA_ERROR_IO;
             goto finish;
         }
 
-        if (revents != POLLOUT) {
-
-            switch (snd_pcm_state(out->pcm)) {
-
-                case SND_PCM_STATE_XRUN:
-
-                    if ((ret = snd_pcm_recover(out->pcm, -EPIPE, 1)) != 0) {
-                        ret = translate_error(ret);
-                        goto finish;
-                    }
-                    break;
-
-                case SND_PCM_STATE_SUSPENDED:
-
-                    if ((ret = snd_pcm_recover(out->pcm, -ESTRPIPE, 1)) != 0) {
-                        ret = translate_error(ret);
-                        goto finish;
-                    }
-                    break;
-
-                default:
-
-                    snd_pcm_drop(out->pcm);
-
-                    if ((ret = snd_pcm_prepare(out->pcm)) < 0) {
-                        ret = translate_error(ret);
-                        goto finish;
-                    }
-                    break;
-            }
-
-            continue;
-        }
-
         if (nbytes <= 0) {
-
             nbytes = data_size;
 
             if ((ret = ca_sound_file_read_arbitrary(out->file, data, &nbytes)) < 0)
@@ -376,23 +364,16 @@ static void* thread_func(void *userdata) {
             d = data;
         }
 
-        if (nbytes <= 0) {
-            snd_pcm_drain(out->pcm);
+        if (nbytes <= 0)
             break;
+
+        if ((bytes_written = write(out->pcm, d, nbytes)) <= 0) {
+            ret = translate_error(errno);
+            goto finish;
         }
 
-        if ((sframes = snd_pcm_writei(out->pcm, d, nbytes/fs)) < 0) {
-
-            if ((ret = snd_pcm_recover(out->pcm, (int) sframes, 1)) < 0) {
-                ret = translate_error(ret);
-                goto finish;
-            }
-
-            continue;
-        }
-
-        nbytes -= (size_t) sframes*fs;
-        d = (uint8_t*) d + (size_t) sframes*fs;
+        nbytes -= (size_t) bytes_written;
+        d = (uint8_t*) d + (size_t) bytes_written;
     }
 
     ret = CA_SUCCESS;
@@ -400,7 +381,6 @@ static void* thread_func(void *userdata) {
 finish:
 
     ca_free(data);
-    ca_free(pfd);
 
     if (!out->dead)
         if (out->callback)
@@ -452,7 +432,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
-    if ((ret = open_alsa(c, out)) < 0)
+    if ((ret = open_oss(c, out)) < 0)
         goto finish;
 
     /* OK, we're ready to go, so let's add this to our list */

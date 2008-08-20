@@ -34,6 +34,9 @@ const char* const ca_driver_order[] = {
 #ifdef HAVE_ALSA
     "alsa",
 #endif
+#ifdef HAVE_OSS
+    "oss",
+#endif
     /* ... */
     NULL
 };
