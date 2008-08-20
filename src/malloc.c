@@ -58,3 +58,28 @@ char *ca_sprintf_malloc(const char *format, ...) {
             size *= 2;
     }
 }
+
+#ifndef HAVE_STRNDUP
+char *ca_strndup(const char *s, size_t n) {
+    size_t n_avail;
+    char *p;
+
+    if (!s)
+        return NULL;
+
+    if (memchr(s, '\0', n)) {
+        n_avail = strlen(s);
+        if (n_avail > n)
+            n_avail = n;
+    } else
+        n_avail = n;
+
+    if (!(p = ca_new(char, n_avail + 1)))
+        return NULL;
+
+    memcpy(p, s, n_avail);
+    p[n_avail] = '\0';
+
+    return p;
+}
+#endif

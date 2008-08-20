@@ -139,6 +139,9 @@ AC_CHECK_FUNCS([strerror_r])
 # BSD
 AC_CHECK_FUNCS([lstat])
 
+# GNU
+AC_CHECK_FUNCS([strndup])
+
 #### POSIX threads ####
 
 ACX_PTHREAD

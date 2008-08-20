@@ -27,11 +27,19 @@
 #include "canberra.h"
 #include "macro.h"
 
+#ifndef PACKAGE
+#error "Please include config.h before including this file!"
+#endif
+
 #define ca_malloc malloc
 #define ca_free free
 #define ca_malloc0(size) calloc(1, (size))
 #define ca_strdup strdup
+#ifdef HAVE_STRNDUP
 #define ca_strndup strndup
+#else
+char *ca_strndup(const char *s, size_t n);
+#endif
 
 void* ca_memdup(const void* p, size_t size);
 
