@@ -105,7 +105,8 @@ int driver_open(ca_context *c) {
     int ret = CA_SUCCESS;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
-    ca_return_val_if_fail(!c->driver || ca_streq(c->driver, "multi"), CA_ERROR_NODRIVER);
+    ca_return_val_if_fail(c->driver, CA_ERROR_NODRIVER);
+    ca_return_val_if_fail(!strncmp(c->driver, "multi", 5), CA_ERROR_NODRIVER);
     ca_return_val_if_fail(!PRIVATE(c), CA_ERROR_STATE);
 
     if (!(c->private = p = ca_new0(struct private, 1)))
@@ -126,7 +127,7 @@ int driver_open(ca_context *c) {
             size_t n;
             ca_bool_t last;
 
-            n = strcspn(k, ":");
+            n = strcspn(k, ",:");
             last = k[n] == 0;
             k[n] = 0;
 

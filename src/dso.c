@@ -176,7 +176,7 @@ static void* real_dlsym(lt_module m, const char *name, const char *symbol) {
 int driver_open(ca_context *c) {
     int ret;
     struct private_dso *p;
-    const char *driver;
+    char *driver;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(!PRIVATE_DSO(c), CA_ERROR_STATE);
@@ -193,13 +193,30 @@ int driver_open(ca_context *c) {
     p->ltdl_initialized = TRUE;
 
     if (c->driver) {
+        char *e;
+        size_t n;
 
-        if ((ret = try_open(c, c->driver)) < 0) {
+        if (!(e = ca_strdup(c->driver))) {
             driver_destroy(c);
+            return CA_ERROR_OOM;
+        }
+
+        n = strcspn(e, ",:");
+        e[n] = 0;
+
+        if (n == 0) {
+            driver_destroy(c);
+            ca_free(e);
+            return CA_ERROR_INVALID;
+        }
+
+        if ((ret = try_open(c, e)) < 0) {
+            driver_destroy(c);
+            ca_free(e);
             return ret;
         }
 
-        driver = c->driver;
+        driver = e;
 
     } else {
         const char *const * e;
@@ -223,7 +240,10 @@ int driver_open(ca_context *c) {
             return CA_ERROR_NODRIVER;
         }
 
-        driver = *e;
+        if (!(driver = ca_strdup(*e))) {
+            driver_destroy(c);
+            return CA_ERROR_OOM;
+        }
     }
 
     ca_assert(p->module);
@@ -236,9 +256,12 @@ int driver_open(ca_context *c) {
         !(p->driver_cancel = GET_FUNC_PTR(p->module, driver, "driver_cancel", int, (ca_context*, uint32_t id))) ||
         !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *p)))) {
 
+        ca_free(driver);
         driver_destroy(c);
         return CA_ERROR_CORRUPT;
     }
+
+    ca_free(driver);
 
     if ((ret = p->driver_open(c)) < 0) {
         driver_destroy(c);
