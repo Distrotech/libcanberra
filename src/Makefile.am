@@ -195,6 +195,41 @@ libcanberra_oss_la_LDFLAGS = \
 endif
 endif
 
+if HAVE_GSTREAMER
+if BUILTIN_GSTREAMER
+
+libcanberra_la_SOURCES += \
+	gstreamer.c
+libcanberra_la_CFLAGS += \
+	$(GST_CFLAGS)
+libcanberra_la_LIBADD += \
+	 $(GST_LIBS)
+
+else
+
+plugin_LTLIBRARIES += \
+	libcanberra-gstreamer.la
+
+libcanberra_gstreamer_la_SOURCES = \
+	gstreamer.c
+libcanberra_gstreamer_la_CFLAGS = \
+	$(GST_CFLAGS) \
+	 -Ddriver_open=gstreamer_driver_open \
+	 -Ddriver_destroy=gstreamer_driver_destroy \
+	 -Ddriver_change_device=gstreamer_driver_change_device \
+	 -Ddriver_change_props=gstreamer_driver_change_props \
+	 -Ddriver_play=gstreamer_driver_play \
+	 -Ddriver_cancel=gstreamer_driver_cancel \
+	 -Ddriver_cache=gstreamer_driver_cache
+libcanberra_gstreamer_la_LIBADD = \
+	$(GST_LIBS) \
+	libcanberra.la
+libcanberra_gstreamer_la_LDFLAGS = \
+	-avoid-version -module -export-dynamic
+
+endif
+endif
+
 if HAVE_NULL
 if BUILTIN_NULL
 

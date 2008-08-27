@@ -272,6 +272,38 @@ fi
 AC_SUBST(PULSE_CFLAGS)
 AC_SUBST(PULSE_LIBS)
 
+#### GStreamer support (optional) ####
+
+AC_ARG_ENABLE([gstreamer],
+    AC_HELP_STRING([--disable-gstreamer], [Disable optional GStreamer support]),
+        [
+            case "${enableval}" in
+                yes) gstreamer=yes ;;
+                no) gstreamer=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-gstreamer) ;;
+            esac
+        ],
+        [gstreamer=auto])
+
+if test "x${gstreamer}" != xno ; then
+    PKG_CHECK_MODULES(GST, [ gstreamer-0.10 >= 0.10.15 ],
+        [
+            HAVE_GSTREAMER=1
+            AC_DEFINE([HAVE_GSTREAMER], 1, [Have GStreamer?])
+        ],
+        [
+            HAVE_GSTREAMER=0
+            if test "x$gstreamer" = xyes ; then
+                AC_MSG_ERROR([*** GStreamer not found ***])
+            fi
+        ])
+else
+    HAVE_GSTREAMER=0
+fi
+
+AC_SUBST(GSTREAMER_CFLAGS)
+AC_SUBST(GSTREAMER_LIBS)
+
 ### Null output (optional) ####
 
 AC_ARG_ENABLE([null],
@@ -369,6 +401,7 @@ BUILTIN_DSO=0
 BUILTIN_PULSE=0
 BUILTIN_ALSA=0
 BUILTIN_OSS=0
+BUILTIN_GSTREAMER=0
 BUILTIN_NULL=0
 
 case "x$with_builtin" in
@@ -380,6 +413,7 @@ case "x$with_builtin" in
         BUILTIN_PULSE=1
         HAVE_ALSA=0
 	HAVE_OSS=0
+	HAVE_GSTREAMER=0
         HAVE_NULL=0
      ;;
 
@@ -389,6 +423,19 @@ case "x$with_builtin" in
         fi
 
         BUILTIN_ALSA=1
+	HAVE_OSS=0
+        HAVE_PULSE=0
+	HAVE_GSTREAMER=0
+        HAVE_NULL=0
+     ;;
+
+     xgstreamer)
+        if test "x$HAVE_GSTREAMER" != x1 ; then
+                AC_MSG_ERROR([*** GStremaer selected for builtin driver, but not enabled. ***])
+        fi
+
+        BUILTIN_GSTREAMER=1
+        HAVE_ALSA=0
 	HAVE_OSS=0
         HAVE_PULSE=0
         HAVE_NULL=0
@@ -402,6 +449,7 @@ case "x$with_builtin" in
 	BUILTIN_OSS=1
 	HAVE_ALSA=0
 	HAVE_PULSE=0
+	HAVE_GSTREAMER=0
 	HAVE_NULL=0
      ;;
 
@@ -414,6 +462,7 @@ case "x$with_builtin" in
         HAVE_PULSE=0
         HAVE_ALSA=0
 	HAVE_OSS=0
+	HAVE_GSTREAMER=0
      ;;
 
      xdso)
@@ -426,7 +475,7 @@ case "x$with_builtin" in
         AC_MSG_ERROR([*** Unknown driver $with_builtin selected for builtin ***])
 esac
 
-if test "x$HAVE_PULSE" != x1 -a "x$HAVE_ALSA" != x1 -a "x$HAVE_OSS" != x1 -a "x$HAVE_NULL" != x1 ; then
+if test "x$HAVE_PULSE" != x1 -a "x$HAVE_ALSA" != x1 -a "x$HAVE_OSS" != x1 -a "x$HAVE_GSTREAMER" != x1 -a "x$HAVE_NULL" != x1 ; then
    AC_MSG_ERROR([*** No backend enabled. ***])
 fi
 
@@ -434,20 +483,24 @@ AC_SUBST(HAVE_DSO)
 AC_SUBST(HAVE_PULSE)
 AC_SUBST(HAVE_ALSA)
 AC_SUBST(HAVE_OSS)
+AC_SUBST(HAVE_GSTREAMER)
 AC_SUBST(HAVE_NULL)
 AC_SUBST(BUILTIN_DSO)
 AC_SUBST(BUILTIN_PULSE)
 AC_SUBST(BUILTIN_ALSA)
 AC_SUBST(BUILTIN_OSS)
+AC_SUBST(BUILTIN_GSTREAMER)
 AC_SUBST(BUILTIN_NULL)
 AM_CONDITIONAL([HAVE_PULSE], [test "x$HAVE_PULSE" = x1])
 AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
 AM_CONDITIONAL([HAVE_OSS], [test "x$HAVE_OSS" = x1])
+AM_CONDITIONAL([HAVE_GSTREAMER], [test "x$HAVE_GSTREAMER" = x1])
 AM_CONDITIONAL([HAVE_NULL], [test "x$HAVE_NULL" = x1])
 AM_CONDITIONAL([BUILTIN_DSO], [test "x$BUILTIN_DSO" = x1])
 AM_CONDITIONAL([BUILTIN_PULSE], [test "x$BUILTIN_PULSE" = x1])
 AM_CONDITIONAL([BUILTIN_ALSA], [test "x$BUILTIN_ALSA" = x1])
 AM_CONDITIONAL([BUILTIN_OSS], [test "x$BUILTIN_OSS" = x1])
+AM_CONDITIONAL([BUILTIN_GSTREAMER], [test "x$BUILTIN_GSTREAMER" = x1])
 AM_CONDITIONAL([BUILTIN_NULL], [test "x$BUILTIN_NULL" = x1])
 
 GTK_DOC_CHECK(1.9)
@@ -500,6 +553,15 @@ if test "x$BUILTIN_OSS" = "x1" ; then
     ENABLE_BUILTIN_OSS=yes
 fi
 
+ENABLE_GSTREAMER=no
+if test "x$HAVE_GSTREAMER" = "x1" ; then
+   ENABLE_GSTREAMER=yes
+fi
+ENABLE_BUILTIN_GSTREAMER=no
+if test "x$BUILTIN_GSTREAMER" = "x1" ; then
+   ENABLE_BUILTIN_GSTREAMER=yes
+fi
+
 ENABLE_NULL=no
 if test "x$HAVE_NULL" = "x1" ; then
    ENABLE_NULL=yes
@@ -531,6 +593,8 @@ echo "
     Builtin ALSA:           ${ENABLE_BUILTIN_ALSA}
     Enable OSS:             ${ENABLE_OSS}
     Builtin OSS:            ${ENABLE_BUILTIN_OSS}
+    Enable GStreamer:       ${ENABLE_GSTREAMER}
+    Builtin GStreamer:      ${ENABLE_BUILTIN_GSTREAMER}
     Enable Null Output:     ${ENABLE_NULL}
     Builtin Null Output:    ${ENABLE_BUILTIN_NULL}
     Enable GTK+:            ${ENABLE_GTK}
