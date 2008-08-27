@@ -41,7 +41,7 @@ struct private {
 #define PRIVATE(c) ((struct private *) ((c)->private))
 
 static int add_backend(struct private *p, const char *name) {
-    struct backend *b;
+    struct backend *b, *last;
     int ret;
 
     ca_assert(p);
@@ -69,7 +69,11 @@ static int add_backend(struct private *p, const char *name) {
     if ((ret = ca_context_open(b->context)) < 0)
         goto fail;
 
-    CA_LLIST_PREPEND(struct backend, p->backends, b);
+    for (last = p->backends; last; last = last->next)
+        if (!last->next)
+            break;
+
+    CA_LLIST_INSERT_AFTER(struct backend, p->backends, last, b);
 
     return CA_SUCCESS;
 
