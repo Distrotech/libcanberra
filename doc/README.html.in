@@ -38,6 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Thu 28 Aug
+2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.8.tar.gz">Version
+0.8</a> released; changes include: new OSS and GStreamer backend;
+portability fixes for FreeBSD/Solaris; the multi backend works now</p>
+
 <div class="news-date">Thu 14 Aug
 2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.7.tar.gz">Version
 0.7</a> released; changes include: documentation updates; various bug
@@ -49,9 +54,12 @@ only a sound file path specified; other changes</p>
 <p><tt>libcanberra</tt> is an implementation of
 the <a href="http://freedesktop.org/wiki/Specifications/sound-theme-spec">XDG
 Sound Theme and Name Specifications</a>, for generating event sounds
-on free desktops, such as <a href="http://www.gnome.org/">GNOME</a>. It comes with several backends (<a href="http://alsa-project.org/">ALSA</a>, <a href="http://pulseaudio.org/">PulseAudio</a>,
-null) and is designed to be portable. It consists of the following
-parts:</p>
+on free desktops, such
+as <a href="http://www.gnome.org/">GNOME</a>. It comes with several
+backends
+(<a href="http://alsa-project.org/">ALSA</a>, <a href="http://pulseaudio.org/">PulseAudio</a>,
+OSS, <a href="http://gstreamer.org/">GStreamer</a>, null) and is
+designed to be portable. It consists of the following parts:</p>
 
 <ol>
 <li><tt>libcanberra</tt>: the main library</li>
@@ -64,11 +72,30 @@ parts:</p>
 <h2><a name="status">Current Status</a></h2>
 
 <p><tt>libcanberra</tt> is mostly feature complete. For now however it
-includes backends only for ALSA and PulseAudio.</p>
+includes backends only for ALSA, PulseAudio, OSS and GStreamer.</p>
 
 <p><tt>libcanberra</tt> has been
 declared <a href="http://mail.gnome.org/archives/devel-announce-list/2008-August/msg00001.html">a
 blessed GNOME dependency</a>.</p>
+
+<p>The OSS driver is incomplete: only sound files that are in a format
+natively understood by the sound card are supported. If the sample
+type, channel map or sampling rate of the sound file are not supported
+by the sound card no automatic conversion will take place and the file
+will not be played. Also note that the OSS backend is most likely
+incompatible with OSS4, due to subtle incompatibilities between OSS4
+and the OSS 3.x.</p>
+
+<p>It is recommended to always take the "shortest" path from
+libcanberra to the audio device. I.e. don't use the GStreamer plugin
+if libcanberra supports the final output target natively. Besides
+being more resource-friendly and less error-prone, some advanced
+functionality might get lost with each layer you add to your
+stack. For example: while you could use libcanberra's Gstreamer
+backend to output to a PulseAudio server this will not be able to make
+use of sample cacheing or will be able to attach additional meta data
+to the sounds played, which might be necessary for effects like
+positional event sounds.</p>
 
 <h2><a name="documentation">Documentation</a></h2>
 
@@ -100,7 +127,9 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <h2><a name="acks">Acknowledgements</a></h2>
 
-<p>None so far.</p>
+<p>Marc-André Lureau for the GStreamer backend.</p>
+
+<p>Joe Marcus Clarke for the OSS backend.</p>
 
 <h2><a name="download">Download</a></h2>
 
