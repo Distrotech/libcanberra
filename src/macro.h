@@ -240,4 +240,10 @@ typedef void (*ca_free_cb_t)(void *);
 
 #define ca_streq(a, b) (strcmp((a),(b)) == 0)
 
+#ifdef __GNUC__
+#define CA_GCC_DESTRUCTOR __attribute__ ((destructor))
+#else
+#undef CA_GCC_DESTRUCTOR
+#endif
+
 #endif
