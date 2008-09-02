@@ -42,8 +42,8 @@
 #define FILENAME "event-sound-cache.tdb"
 #define UPDATE_INTERVAL 10
 
-/* This part is not thread safe, should be abstracted when we port this
- * to platforms that do not have POSIX threading */
+/* This part is not portable due to pthread_once usage, should be abstracted
+ * when we port this to platforms that do not have POSIX threading */
 
 static ca_mutex *mutex = NULL;
 struct tdb_context *database = NULL;
