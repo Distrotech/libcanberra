@@ -56,7 +56,7 @@ struct ca_theme_data {
     ca_bool_t loaded_fallback_theme;
 };
 
-static int get_data_home(char **e) {
+int ca_get_data_home(char **e) {
     const char *env, *subdir;
     char *r;
     ca_return_val_if_fail(e, CA_ERROR_INVALID);
@@ -314,6 +314,15 @@ fail:
     return ret;
 }
 
+const char *ca_get_data_dirs(void) {
+    const char *g;
+
+    if (!(g = getenv("XDG_DATA_DIRS")) || *g == 0)
+        return "/usr/local/share:/usr/share";
+
+    return g;
+}
+
 static int load_theme_dir(ca_theme_data *t, const char *name) {
     int ret;
     char *e;
@@ -326,7 +335,7 @@ static int load_theme_dir(ca_theme_data *t, const char *name) {
     if (ca_streq(name, FALLBACK_THEME))
         t->loaded_fallback_theme = TRUE;
 
-    if ((ret = get_data_home(&e)) < 0)
+    if ((ret = ca_get_data_home(&e)) < 0)
         return ret;
 
     if (e) {
@@ -337,8 +346,7 @@ static int load_theme_dir(ca_theme_data *t, const char *name) {
             return ret;
     }
 
-    if (!(g = getenv("XDG_DATA_DIRS")) || *g == 0)
-        g = "/usr/local/share:/usr/share";
+    g = ca_get_data_dirs();
 
     for (;;) {
         size_t k;
@@ -603,7 +611,7 @@ static int find_sound_in_subdir(
     ca_return_val_if_fail(sfopen, CA_ERROR_INVALID);
     ca_return_val_if_fail(name, CA_ERROR_INVALID);
 
-    if ((ret = get_data_home(&e)) < 0)
+    if ((ret = ca_get_data_home(&e)) < 0)
         return ret;
 
     if (e) {
@@ -614,8 +622,7 @@ static int find_sound_in_subdir(
             return ret;
     }
 
-    if (!(g = getenv("XDG_DATA_DIRS")) || *g == 0)
-        g = "/usr/local/share:/usr/share";
+    g = ca_get_data_dirs();
 
     for (;;) {
         size_t k;
