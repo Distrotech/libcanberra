@@ -197,7 +197,9 @@ static int db_open(void) {
         goto finish;
     }
 
-    database = tdb_open(pn, 0, TDB_DEFAULT, O_RDWR|O_CREAT|O_NOCTTY
+    /* We pass TDB_NOMMAP here as long as rhbz 460851 is not fixed in
+     * tdb. */
+    database = tdb_open(pn, 0, TDB_NOMMAP, O_RDWR|O_CREAT|O_NOCTTY
 #ifdef O_CLOEXEC
                         | O_CLOEXEC
 #endif
