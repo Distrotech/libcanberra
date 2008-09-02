@@ -1,5 +1,3 @@
-Later:
-* lookup cache
 * ca_context_left_to_play()
+* ca_context_check() or DRY_RUN
 * queuing, looping, prefixing, postfixing
-* make CA_PROP_CANBERRA_XDG_xxx follow GtkSettings
