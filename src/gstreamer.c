@@ -317,7 +317,6 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     GstElement *decodebin, *sink, *audioconvert, *audioresample, *bin;
     GstBus *bus;
     GstPad *audiopad;
-    GstPad *pad;
     int ret;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
