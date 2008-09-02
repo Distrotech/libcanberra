@@ -491,8 +491,9 @@ static int find_sound_in_locale(
     sprintf(p, "%s/sounds", path);
 
     if ((ret = find_sound_for_suffix(f, sfopen, sound_path, theme_name, name, p, ".disabled", locale, subdir)) == CA_ERROR_NOTFOUND)
-        if ((ret = find_sound_for_suffix(f, sfopen, sound_path,theme_name, name, p, ".ogg", locale, subdir)) == CA_ERROR_NOTFOUND)
-            ret = find_sound_for_suffix(f, sfopen, sound_path,theme_name, name, p, ".wav", locale, subdir);
+        if ((ret = find_sound_for_suffix(f, sfopen, sound_path,theme_name, name, p, ".oga", locale, subdir)) == CA_ERROR_NOTFOUND)
+            if ((ret = find_sound_for_suffix(f, sfopen, sound_path,theme_name, name, p, ".ogg", locale, subdir)) == CA_ERROR_NOTFOUND)
+                ret = find_sound_for_suffix(f, sfopen, sound_path,theme_name, name, p, ".wav", locale, subdir);
 
     ca_free(p);
 
