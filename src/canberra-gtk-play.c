@@ -80,12 +80,13 @@ static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
 
 int main (int argc, char *argv[]) {
     GOptionContext *oc;
-    static gchar *event_id = NULL, *event_description = NULL, *cache_control = NULL;
+    static gchar *event_id = NULL, *filename = NULL, *event_description = NULL, *cache_control = NULL;
     int r;
     static gboolean version = FALSE;
 
     static const GOptionEntry options[] = {
         { "id",            'i', 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
+        { "file",          'f', 0, G_OPTION_ARG_STRING, &filename,          "Play file",  "PATH" },
         { "description",   'd', 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
         { "cache-control", 'c', 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
         { "loop",          'l', 0, G_OPTION_ARG_INT,    &n_loops,           "Loop how many times (detault: 1)", "INTEGER" },
@@ -100,6 +101,7 @@ int main (int argc, char *argv[]) {
 
     oc = g_option_context_new("- canberra-gtk-play");
     g_option_context_add_main_entries(oc, options, NULL);
+    g_option_context_add_group(oc, gtk_get_option_group(TRUE));
     g_option_context_set_help_enabled(oc, TRUE);
     g_option_context_parse(oc, &argc, &argv, NULL);
     g_option_context_free(oc);
@@ -109,10 +111,8 @@ int main (int argc, char *argv[]) {
         return 0;
     }
 
-    gtk_init(&argc, &argv);
-
-    if (!event_id) {
-        g_printerr("No event id specified.\n");
+    if (!event_id && !filename) {
+        g_printerr("No event id or file specified.\n");
         return 1;
     }
 
@@ -122,7 +122,12 @@ int main (int argc, char *argv[]) {
                             NULL);
 
     ca_proplist_create(&proplist);
-    ca_proplist_sets(proplist, CA_PROP_EVENT_ID, event_id);
+
+    if (event_id)
+        ca_proplist_sets(proplist, CA_PROP_EVENT_ID, event_id);
+
+    if (filename)
+        ca_proplist_sets(proplist, CA_PROP_MEDIA_FILENAME, filename);
 
     if (cache_control)
         ca_proplist_sets(proplist, CA_PROP_CANBERRA_CACHE_CONTROL, cache_control);
