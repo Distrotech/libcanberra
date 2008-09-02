@@ -26,17 +26,49 @@
 #include <canberra-gtk.h>
 #include <locale.h>
 
+static int ret = 0;
+static ca_proplist *proplist = NULL;
+static int n_loops = 1;
+
+static void callback(ca_context *c, uint32_t id, int error, void *userdata);
+
 static gboolean idle_quit(gpointer userdata) {
-    gtk_main_quit ();
+    gtk_main_quit();
+    return FALSE;
+}
+
+static gboolean idle_play(gpointer userdata) {
+    int r;
+
+    g_assert(n_loops > 1);
+
+    n_loops--;
+
+    r = ca_context_play_full(ca_gtk_context_get(), 1, proplist, callback, NULL);
+
+    if (r < 0) {
+        g_printerr("Failed to play sound: %s\n", ca_strerror(r));
+        ret = 1;
+        gtk_main_quit();
+    }
+
     return FALSE;
 }
 
 static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
-    int *ret = userdata;
 
     if (error < 0) {
         g_printerr("Failed to play sound: %s\n", ca_strerror(error));
-        *ret = 1;
+        ret = 1;
+
+    } else if (n_loops > 1) {
+        /* So, why don't we call ca_context_play_full() here directly?
+        -- Because the context this callback is called from is
+        explicitly documented as undefined and no libcanberra function
+        may be called from it. */
+
+        g_idle_add(idle_play, NULL);
+        return;
     }
 
     /* So, why don't we call gtk_main_quit() here directly? -- Because
@@ -48,14 +80,14 @@ static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
 
 int main (int argc, char *argv[]) {
     GOptionContext *oc;
-    ca_proplist *p;
     static gchar *event_id = NULL, *event_description = NULL, *cache_control = NULL;
-    int ret = 0, r;
+    int r;
 
     static const GOptionEntry options[] = {
         { "id",            0, 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
         { "description",   0, 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
         { "cache-control", 0, 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
+        { "loop",          0, 0, G_OPTION_ARG_INT,    &n_loops,           "Loop how many times (detault: 1)", "INTEGER" },
         { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
 
@@ -82,24 +114,28 @@ int main (int argc, char *argv[]) {
                             CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.GtkPlay",
                             NULL);
 
-    ca_proplist_create(&p);
-    ca_proplist_sets(p, CA_PROP_EVENT_ID, event_id);
+    ca_proplist_create(&proplist);
+    ca_proplist_sets(proplist, CA_PROP_EVENT_ID, event_id);
 
     if (cache_control)
-        ca_proplist_sets(p, CA_PROP_CANBERRA_CACHE_CONTROL, cache_control);
+        ca_proplist_sets(proplist, CA_PROP_CANBERRA_CACHE_CONTROL, cache_control);
 
     if (event_description)
-        ca_proplist_sets(p, CA_PROP_EVENT_DESCRIPTION, event_description);
+        ca_proplist_sets(proplist, CA_PROP_EVENT_DESCRIPTION, event_description);
 
-    r = ca_context_play_full(ca_gtk_context_get(), 1, p, callback, &ret);
-    ca_proplist_destroy(p);
+    r = ca_context_play_full(ca_gtk_context_get(), 1, proplist, callback, NULL);
 
     if (r < 0) {
         g_printerr("Failed to play sound: %s\n", ca_strerror(r));
-        return 1;
+        ret = 1;
+        goto finish;
     }
 
     gtk_main();
+
+finish:
+
+    ca_proplist_destroy(proplist);
 
     return ret;
 }
