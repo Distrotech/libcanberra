@@ -329,7 +329,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
     p = PRIVATE(c);
 
-    if ((ret = ca_lookup_sound_with_callback(&f, ca_gst_sound_file_open, &p->theme, c->props, proplist)) < 0)
+    if ((ret = ca_lookup_sound_with_callback(&f, ca_gst_sound_file_open, NULL, &p->theme, c->props, proplist)) < 0)
         goto fail;
 
     if (!(out = ca_new0(struct outstanding, 1)))

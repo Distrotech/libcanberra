@@ -429,7 +429,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         goto finish;
     }
 
-    if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
+    if ((ret = ca_lookup_sound(&out->file, NULL, &p->theme, c->props, proplist)) < 0)
         goto finish;
 
     if ((ret = open_oss(c, out)) < 0)

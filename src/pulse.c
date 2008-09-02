@@ -644,6 +644,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     int try = 3;
     int ret;
     pa_operation *o;
+    char *sp;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(proplist, CA_ERROR_INVALID);
@@ -744,8 +745,14 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     out->type = OUTSTANDING_STREAM;
 
     /* Let's stream the sample directly */
-    if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
+    if ((ret = ca_lookup_sound(&out->file, &sp, &p->theme, c->props, proplist)) < 0)
         goto finish;
+
+    if (sp)
+        if (!pa_proplist_contains(l, CA_PROP_MEDIA_FILENAME))
+            pa_proplist_sets(l, CA_PROP_MEDIA_FILENAME, sp);
+
+    ca_free(sp);
 
     ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
@@ -894,6 +901,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_PERMANENT;
     struct outstanding *out;
     int ret;
+    char *sp;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(proplist, CA_ERROR_INVALID);
@@ -943,8 +951,14 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     add_common(l);
 
     /* Let's stream the sample directly */
-    if ((ret = ca_lookup_sound(&out->file, &p->theme, c->props, proplist)) < 0)
+    if ((ret = ca_lookup_sound(&out->file, &sp, &p->theme, c->props, proplist)) < 0)
         goto finish;
+
+    if (sp)
+        if (!pa_proplist_contains(l, CA_PROP_MEDIA_FILENAME))
+            pa_proplist_sets(l, CA_PROP_MEDIA_FILENAME, sp);
+
+    ca_free(sp);
 
     ss.format = sample_type_table[ca_sound_file_get_sample_type(out->file)];
     ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);

@@ -66,6 +66,18 @@ if USE_VERSION_SCRIPT
 libcanberra_la_LDFLAGS += -Wl,-version-script=$(srcdir)/map-file
 endif
 
+if HAVE_CACHE
+
+libcanberra_la_SOURCES += \
+	cache.c cache.h
+libcanberra_la_CFLAGS += \
+	$(TDB_CLFAGS) \
+	-DCA_MACHINE_ID=\"$(localstatedir)/lib/dbus/machine-id\"
+libcanberra_la_LIBADD += \
+	$(TDB_LIBS)
+
+endif
+
 plugin_LTLIBRARIES =
 
 if BUILTIN_DSO

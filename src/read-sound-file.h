@@ -31,7 +31,6 @@ typedef enum ca_sample_type {
 } ca_sample_type_t;
 
 typedef struct ca_sound_file ca_sound_file;
-typedef int (*ca_sound_file_open_callback_t)(ca_sound_file **f, const char *fn);
 
 int ca_sound_file_open(ca_sound_file **f, const char *fn);
 void ca_sound_file_close(ca_sound_file *f);

@@ -34,6 +34,7 @@ AC_SUBST(LIBCANBERRA_VERSION_INFO, [1:1:1])
 AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [0:3:0])
 
 AC_CANONICAL_HOST
+AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
 
 if type -p stow > /dev/null && test -d /usr/local/stow ; then
    AC_MSG_NOTICE([*** Found /usr/local/stow: default install prefix set to /usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION} ***])
@@ -362,6 +363,53 @@ AC_SUBST(GTK_MODULES_DIR)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL([HAVE_GTK], [test "x$HAVE_GTK" = x1])
 
+#### TDB cache support (optional) ####
+
+AC_ARG_ENABLE([tdb],
+    AC_HELP_STRING([--disable-tdb], [Disable optional tdb support]),
+        [
+            case "${enableval}" in
+                yes) tdb=yes ;;
+                no) tdb=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-tdb) ;;
+            esac
+        ],
+        [tdb=auto])
+
+if test "x${tdb}" != xno ; then
+    PKG_CHECK_MODULES(TDB, [ tdb >= 1.1 ],
+        [
+            HAVE_TDB=1
+            AC_DEFINE([HAVE_TDB], 1, [Have TDB?])
+        ],
+        [
+            HAVE_TDB=0
+            if test "x$tdb" = xyes ; then
+                AC_MSG_ERROR([*** TDB not found ***])
+            fi
+        ])
+else
+    HAVE_TDB=0
+fi
+
+AC_SUBST(TDB_CFLAGS)
+AC_SUBST(TDB_LIBS)
+
+AC_SUBST(HAVE_TDB)
+AM_CONDITIONAL([HAVE_TDB], [test "x$HAVE_TDB" = x1])
+
+### Global cache support ###
+
+# For now, we only support tdb based caching, hence we'll shortcut this here
+
+HAVE_CACHE=$HAVE_TDB
+AC_SUBST(HAVE_CACHE)
+AM_CONDITIONAL([HAVE_CACHE], [test "x$HAVE_CACHE" = x1])
+
+if test "x${HAVE_CACHE}" = x1 ; then
+     AC_DEFINE([HAVE_CACHE], 1, [Do cacheing?])
+fi
+
 ### LYNX documentation generation ###
 
 AC_ARG_ENABLE([lynx],
@@ -576,6 +624,16 @@ if test "x$HAVE_GTK" = "x1" ; then
    ENABLE_GTK=yes
 fi
 
+ENABLE_TDB=no
+if test "x$HAVE_TDB" = "x1" ; then
+   ENABLE_TDB=yes
+fi
+
+ENABLE_CACHE=no
+if test "x$HAVE_CACHE" = "x1" ; then
+   ENABLE_CACHE=yes
+fi
+
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
 
@@ -597,6 +655,8 @@ echo "
     Builtin GStreamer:      ${ENABLE_BUILTIN_GSTREAMER}
     Enable Null Output:     ${ENABLE_NULL}
     Builtin Null Output:    ${ENABLE_BUILTIN_NULL}
+    Enable tdb:             ${ENABLE_TDB}
+    Enable lookup cache:    ${ENABLE_CACHE}
     Enable GTK+:            ${ENABLE_GTK}
     GTK Modules Directory:  ${GTK_MODULES_DIR}
 "
