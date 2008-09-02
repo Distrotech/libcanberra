@@ -230,7 +230,7 @@ static GstBusSyncReply bus_cb(GstBus *bus, GstMessage *message, gpointer data) {
             /* g_debug (gst_element_state_get_name (pending)); */
 
             if (pending == GST_STATE_NULL || pending == GST_STATE_VOID_PENDING)
-                err = CA_SUCCESS;
+                return GST_BUS_PASS;
             else
                 return GST_BUS_DROP;
             break;
