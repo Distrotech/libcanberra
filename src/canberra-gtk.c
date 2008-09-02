@@ -101,6 +101,8 @@ ca_context *ca_gtk_context_get(void) {
 
     s = gtk_settings_get_default();
 
+    ca_return_val_if_fail(s, NULL);
+
     if (g_object_class_find_property(G_OBJECT_GET_CLASS(s), "gtk-sound-theme-name")) {
         g_signal_connect(G_OBJECT(s), "notify::gtk-sound-theme-name", G_CALLBACK(sound_theme_name_changed), c);
         read_sound_theme_name(c, s);
