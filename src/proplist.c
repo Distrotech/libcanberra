@@ -91,6 +91,7 @@ static int _unset(ca_proplist *p, const char *key) {
         if (prop->next_item)
             prop->next_item->prev_item = prop->prev_item;
 
+        ca_free(prop->key);
         ca_free(prop);
     }
 
