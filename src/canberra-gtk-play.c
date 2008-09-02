@@ -82,12 +82,14 @@ int main (int argc, char *argv[]) {
     GOptionContext *oc;
     static gchar *event_id = NULL, *event_description = NULL, *cache_control = NULL;
     int r;
+    static gboolean version = FALSE;
 
     static const GOptionEntry options[] = {
-        { "id",            0, 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
-        { "description",   0, 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
-        { "cache-control", 0, 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
-        { "loop",          0, 0, G_OPTION_ARG_INT,    &n_loops,           "Loop how many times (detault: 1)", "INTEGER" },
+        { "id",            'i', 0, G_OPTION_ARG_STRING, &event_id,          "Event sound identifier",  "STRING" },
+        { "description",   'd', 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
+        { "cache-control", 'c', 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
+        { "loop",          'l', 0, G_OPTION_ARG_INT,    &n_loops,           "Loop how many times (detault: 1)", "INTEGER" },
+	{ "version",       'v', 0, G_OPTION_ARG_NONE,   &version,           "Display version number and quit", NULL },
         { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
 
@@ -96,11 +98,16 @@ int main (int argc, char *argv[]) {
     g_type_init();
     g_thread_init(NULL);
 
-    oc = g_option_context_new("- libcanberra-gtk-play");
+    oc = g_option_context_new("- canberra-gtk-play");
     g_option_context_add_main_entries(oc, options, NULL);
     g_option_context_set_help_enabled(oc, TRUE);
     g_option_context_parse(oc, &argc, &argv, NULL);
     g_option_context_free(oc);
+
+    if (version) {
+        g_print("canberra-gtk-play from %s\n", PACKAGE_STRING);
+        return 0;
+    }
 
     gtk_init(&argc, &argv);
 
