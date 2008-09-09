@@ -38,6 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Tue 9 Sep
+2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.9.tar.gz">Version
+0.9</a> released; changes include: GStreamer fixes, include (optional)
+libtdb based lookup cache.</p>
+
 <div class="news-date">Thu 28 Aug
 2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.8.tar.gz">Version
 0.8</a> released; changes include: new OSS and GStreamer backend;
@@ -144,7 +149,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p>If you want to report bugs, have questions or want to be notified about new releases, please join the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, August 2008</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, September 2008</address>
 
 </body>
 </html>
