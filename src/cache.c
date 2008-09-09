@@ -501,7 +501,7 @@ int ca_cache_lookup_sound(
 
     /* Hmm, is the entry older than the last change to our sound theme
      * dirs? Also, check for clock skews */
-    if ((time_t) timestamp < last_change || (timestamp > now)) {
+    if ((time_t) timestamp < last_change || ((time_t) timestamp > now)) {
         remove_entry = TRUE;
         ret = CA_ERROR_NOTFOUND;
         goto finish;
