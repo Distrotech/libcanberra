@@ -120,7 +120,8 @@ management.</p>
 
 <p><tt>libcanberra</tt> has no dependencies besides the OGG Vorbis
 development headers and whatever the selected backends require. Gtk+
-support is optional.</p>
+support is optional. An optional lookup cache can be used if Samba's
+tdb trivial database is available.</p>
 
 <h2><a name="installation">Installation</a></h2>
 
