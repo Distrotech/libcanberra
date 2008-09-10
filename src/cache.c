@@ -46,7 +46,7 @@
  * when we port this to platforms that do not have POSIX threading */
 
 static ca_mutex *mutex = NULL;
-struct tdb_context *database = NULL;
+static struct tdb_context *database = NULL;
 
 static void allocate_mutex_once(void) {
     mutex = ca_mutex_new();
