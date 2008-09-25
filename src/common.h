@@ -21,6 +21,8 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#include <stdarg.h>
+
 #include "canberra.h"
 #include "macro.h"
 #include "mutex.h"
