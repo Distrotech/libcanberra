@@ -72,6 +72,11 @@ AC_SUBST(LTDLINCL)
 AC_SUBST(LIBLTDL)
 AC_CONFIG_SUBDIRS(libltdl)
 
+### gconf stuff ###
+
+AC_PATH_PROG(GCONFTOOL, gconftool-2)
+AM_GCONF_SOURCE_2
+
 #### Determine build environment ####
 
 os_is_win32=0

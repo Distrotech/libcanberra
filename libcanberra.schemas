@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<gconfschemafile>
+  <schemalist>
+    <schema>
+      <key>/schemas/apps/gnome_settings_daemon/gtk-modules/canberra-gtk-module</key>
+      <applyto>/apps/gnome_settings_daemon/gtk-modules/canberra-gtk-module</applyto>
+      <owner>libcanberra</owner>
+      <type>bool</type>
+      <default>true</default>
+      <locale name="C">
+        <short>GTK+ module for event sounds</short>
+        <long>This key determines the GTK+ module to load for event sound support.</long>
+      </locale>
+    </schema>
+  </schemalist>
+</gconfschemafile>
