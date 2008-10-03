@@ -572,6 +572,8 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
             goto finish;
         }
 
+	data = NULL;
+
         bytes -= rbytes;
     }
 
@@ -603,6 +605,8 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
 
         pa_stream_set_write_callback(s, NULL, NULL);
     }
+
+    ca_free(data);
 
     return;
 
