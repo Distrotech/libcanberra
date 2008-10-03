@@ -745,3 +745,11 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_TREE_VIEW, "cursor-changed", &signal_id_tree_view_cursor_changed);
     install_hook(GTK_TYPE_ICON_VIEW, "selection-changed", &signal_id_icon_view_selection_changed);
 }
+
+
+G_MODULE_EXPORT gchar* g_module_check_init(GModule *module);
+
+G_MODULE_EXPORT gchar* g_module_check_init(GModule *module) {
+    g_module_make_resident(module);
+    return NULL;
+}
