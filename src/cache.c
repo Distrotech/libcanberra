@@ -529,7 +529,7 @@ finish:
     if (remove_entry)
         db_remove(key, klen);
 
-    if (sound_path)
+    if (sound_path && ret < 0)
         ca_free(*sound_path);
 
     ca_free(key);
