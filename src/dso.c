@@ -250,11 +250,11 @@ int driver_open(ca_context *c) {
 
     if (!(p->driver_open = GET_FUNC_PTR(p->module, driver, "driver_open", int, (ca_context*))) ||
         !(p->driver_destroy = GET_FUNC_PTR(p->module, driver, "driver_destroy", int, (ca_context*))) ||
-        !(p->driver_change_device = GET_FUNC_PTR(p->module, driver, "driver_change_device", int, (ca_context*, const char *device))) ||
-        !(p->driver_change_props = GET_FUNC_PTR(p->module, driver, "driver_change_props", int, (ca_context *, ca_proplist *changed, ca_proplist *merged))) ||
-        !(p->driver_play = GET_FUNC_PTR(p->module, driver, "driver_play", int, (ca_context*, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata))) ||
-        !(p->driver_cancel = GET_FUNC_PTR(p->module, driver, "driver_cancel", int, (ca_context*, uint32_t id))) ||
-        !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *p)))) {
+        !(p->driver_change_device = GET_FUNC_PTR(p->module, driver, "driver_change_device", int, (ca_context*, const char *))) ||
+        !(p->driver_change_props = GET_FUNC_PTR(p->module, driver, "driver_change_props", int, (ca_context *, ca_proplist *, ca_proplist *))) ||
+        !(p->driver_play = GET_FUNC_PTR(p->module, driver, "driver_play", int, (ca_context*, uint32_t, ca_proplist *, ca_finish_callback_t, void *))) ||
+        !(p->driver_cancel = GET_FUNC_PTR(p->module, driver, "driver_cancel", int, (ca_context*, uint32_t))) ||
+        !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *)))) {
 
         ca_free(driver);
         driver_destroy(c);
