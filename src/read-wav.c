@@ -60,7 +60,7 @@ static int skip_to_chunk(ca_wav *w, uint32_t id, uint32_t *size) {
             break;
         }
 
-        if (fseek(w->file, s, SEEK_CUR) < 0)
+        if (fseek(w->file, (long) s, SEEK_CUR) < 0)
             return CA_ERROR_SYSTEM;
     }
 
