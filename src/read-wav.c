@@ -50,12 +50,12 @@ static int skip_to_chunk(ca_wav *w, uint32_t id, uint32_t *size) {
         if (fread(chunk, sizeof(uint32_t), CA_ELEMENTSOF(chunk), w->file) != CA_ELEMENTSOF(chunk))
             goto fail_io;
 
-        s = PA_UINT32_FROM_LE(chunk[1]);
+        s = CA_UINT32_FROM_LE(chunk[1]);
 
         if (s <= 0 || s >= FILE_SIZE_MAX)
             return CA_ERROR_TOOBIG;
 
-        if (PA_UINT32_FROM_LE(chunk[0]) == id) {
+        if (CA_UINT32_FROM_LE(chunk[0]) == id) {
             *size = s;
             break;
         }
@@ -93,13 +93,13 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     if (fread(header, sizeof(uint32_t), CA_ELEMENTSOF(header), f) != CA_ELEMENTSOF(header))
         goto fail_io;
 
-    if (PA_UINT32_FROM_LE(header[0]) != 0x46464952U ||
-        PA_UINT32_FROM_LE(header[2]) != 0x45564157U) {
+    if (CA_UINT32_FROM_LE(header[0]) != 0x46464952U ||
+        CA_UINT32_FROM_LE(header[2]) != 0x45564157U) {
         ret = CA_ERROR_CORRUPT;
         goto fail;
     }
 
-    file_size = PA_UINT32_FROM_LE(header[1]);
+    file_size = CA_UINT32_FROM_LE(header[1]);
 
     if (file_size <= 0 || file_size >= FILE_SIZE_MAX) {
         ret = CA_ERROR_TOOBIG;
@@ -118,14 +118,14 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     if (fread(fmt_chunk, sizeof(uint32_t), CA_ELEMENTSOF(fmt_chunk), f) != CA_ELEMENTSOF(fmt_chunk))
         goto fail_io;
 
-    if ((PA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF) != 1) {
+    if ((CA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF) != 1) {
         ret = CA_ERROR_NOTSUPPORTED;
         goto fail;
     }
 
-    w->nchannels = PA_UINT32_FROM_LE(fmt_chunk[0]) >> 16;
-    w->rate = PA_UINT32_FROM_LE(fmt_chunk[1]);
-    w->depth = PA_UINT32_FROM_LE(fmt_chunk[3]) >> 16;
+    w->nchannels = CA_UINT32_FROM_LE(fmt_chunk[0]) >> 16;
+    w->rate = CA_UINT32_FROM_LE(fmt_chunk[1]);
+    w->depth = CA_UINT32_FROM_LE(fmt_chunk[3]) >> 16;
 
     if (w->nchannels <= 0 || w->rate <= 0) {
         ret = CA_ERROR_CORRUPT;

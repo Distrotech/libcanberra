@@ -177,65 +177,65 @@ typedef void (*ca_free_cb_t)(void *);
 #endif
 
 #ifdef HAVE_BYTESWAP_H
-#define PA_INT16_SWAP(x) ((int16_t) bswap_16((uint16_t) x))
-#define PA_UINT16_SWAP(x) ((uint16_t) bswap_16((uint16_t) x))
-#define PA_INT32_SWAP(x) ((int32_t) bswap_32((uint32_t) x))
-#define PA_UINT32_SWAP(x) ((uint32_t) bswap_32((uint32_t) x))
+#define CA_INT16_SWAP(x) ((int16_t) bswap_16((uint16_t) x))
+#define CA_UINT16_SWAP(x) ((uint16_t) bswap_16((uint16_t) x))
+#define CA_INT32_SWAP(x) ((int32_t) bswap_32((uint32_t) x))
+#define CA_UINT32_SWAP(x) ((uint32_t) bswap_32((uint32_t) x))
 #else
-#define PA_INT16_SWAP(x) ( (int16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
-#define PA_UINT16_SWAP(x) ( (uint16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
-#define PA_INT32_SWAP(x) ( (int32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
-#define PA_UINT32_SWAP(x) ( (uint32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
+#define CA_INT16_SWAP(x) ( (int16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
+#define CA_UINT16_SWAP(x) ( (uint16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
+#define CA_INT32_SWAP(x) ( (int32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
+#define CA_UINT32_SWAP(x) ( (uint32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
 #endif
 
 #ifdef WORDS_BIGENDIAN
- #define PA_INT16_FROM_LE(x) PA_INT16_SWAP(x)
- #define PA_INT16_FROM_BE(x) ((int16_t)(x))
+ #define CA_INT16_FROM_LE(x) CA_INT16_SWAP(x)
+ #define CA_INT16_FROM_BE(x) ((int16_t)(x))
 
- #define PA_INT16_TO_LE(x) PA_INT16_SWAP(x)
- #define PA_INT16_TO_BE(x) ((int16_t)(x))
+ #define CA_INT16_TO_LE(x) CA_INT16_SWAP(x)
+ #define CA_INT16_TO_BE(x) ((int16_t)(x))
 
- #define PA_UINT16_FROM_LE(x) PA_UINT16_SWAP(x)
- #define PA_UINT16_FROM_BE(x) ((uint16_t)(x))
+ #define CA_UINT16_FROM_LE(x) CA_UINT16_SWAP(x)
+ #define CA_UINT16_FROM_BE(x) ((uint16_t)(x))
 
- #define PA_UINT16_TO_LE(x) PA_UINT16_SWAP(x)
- #define PA_UINT16_TO_BE(x) ((uint16_t)(x))
+ #define CA_UINT16_TO_LE(x) CA_UINT16_SWAP(x)
+ #define CA_UINT16_TO_BE(x) ((uint16_t)(x))
 
- #define PA_INT32_FROM_LE(x) PA_INT32_SWAP(x)
- #define PA_INT32_FROM_BE(x) ((int32_t)(x))
+ #define CA_INT32_FROM_LE(x) CA_INT32_SWAP(x)
+ #define CA_INT32_FROM_BE(x) ((int32_t)(x))
 
- #define PA_INT32_TO_LE(x) PA_INT32_SWAP(x)
- #define PA_INT32_TO_BE(x) ((int32_t)(x))
+ #define CA_INT32_TO_LE(x) CA_INT32_SWAP(x)
+ #define CA_INT32_TO_BE(x) ((int32_t)(x))
 
- #define PA_UINT32_FROM_LE(x) PA_UINT32_SWAP(x)
- #define PA_UINT32_FROM_BE(x) ((uint32_t)(x))
+ #define CA_UINT32_FROM_LE(x) CA_UINT32_SWAP(x)
+ #define CA_UINT32_FROM_BE(x) ((uint32_t)(x))
 
- #define PA_UINT32_TO_LE(x) PA_UINT32_SWAP(x)
- #define PA_UINT32_TO_BE(x) ((uint32_t)(x))
+ #define CA_UINT32_TO_LE(x) CA_UINT32_SWAP(x)
+ #define CA_UINT32_TO_BE(x) ((uint32_t)(x))
 #else
- #define PA_INT16_FROM_LE(x) ((int16_t)(x))
- #define PA_INT16_FROM_BE(x) PA_INT16_SWAP(x)
+ #define CA_INT16_FROM_LE(x) ((int16_t)(x))
+ #define CA_INT16_FROM_BE(x) CA_INT16_SWAP(x)
 
- #define PA_INT16_TO_LE(x) ((int16_t)(x))
- #define PA_INT16_TO_BE(x) PA_INT16_SWAP(x)
+ #define CA_INT16_TO_LE(x) ((int16_t)(x))
+ #define CA_INT16_TO_BE(x) CA_INT16_SWAP(x)
 
- #define PA_UINT16_FROM_LE(x) ((uint16_t)(x))
- #define PA_UINT16_FROM_BE(x) PA_UINT16_SWAP(x)
+ #define CA_UINT16_FROM_LE(x) ((uint16_t)(x))
+ #define CA_UINT16_FROM_BE(x) CA_UINT16_SWAP(x)
 
- #define PA_UINT16_TO_LE(x) ((uint16_t)(x))
- #define PA_UINT16_TO_BE(x) PA_UINT16_SWAP(x)
+ #define CA_UINT16_TO_LE(x) ((uint16_t)(x))
+ #define CA_UINT16_TO_BE(x) CA_UINT16_SWAP(x)
 
- #define PA_INT32_FROM_LE(x) ((int32_t)(x))
- #define PA_INT32_FROM_BE(x) PA_INT32_SWAP(x)
+ #define CA_INT32_FROM_LE(x) ((int32_t)(x))
+ #define CA_INT32_FROM_BE(x) CA_INT32_SWAP(x)
 
- #define PA_INT32_TO_LE(x) ((int32_t)(x))
- #define PA_INT32_TO_BE(x) PA_INT32_SWAP(x)
+ #define CA_INT32_TO_LE(x) ((int32_t)(x))
+ #define CA_INT32_TO_BE(x) CA_INT32_SWAP(x)
 
- #define PA_UINT32_FROM_LE(x) ((uint32_t)(x))
- #define PA_UINT32_FROM_BE(x) PA_UINT32_SWAP(x)
+ #define CA_UINT32_FROM_LE(x) ((uint32_t)(x))
+ #define CA_UINT32_FROM_BE(x) CA_UINT32_SWAP(x)
 
- #define PA_UINT32_TO_LE(x) ((uint32_t)(x))
- #define PA_UINT32_TO_BE(x) PA_UINT32_SWAP(x)
+ #define CA_UINT32_TO_LE(x) ((uint32_t)(x))
+ #define CA_UINT32_TO_BE(x) CA_UINT32_SWAP(x)
 #endif
 
 #define ca_streq(a, b) (strcmp((a),(b)) == 0)
