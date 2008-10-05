@@ -21,6 +21,8 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
+#include <stdarg.h>
+
 #include "canberra.h"
 #include "mutex.h"
 
@@ -47,5 +49,8 @@ ca_bool_t ca_proplist_contains(ca_proplist *p, const char *key);
 /* Both of the following two functions are not locked! Need manual locking! */
 ca_prop* ca_proplist_get_unlocked(ca_proplist *p, const char *key);
 const char* ca_proplist_gets_unlocked(ca_proplist *p, const char *key);
+
+int ca_proplist_merge_ap(ca_proplist *p, va_list ap);
+int ca_proplist_from_ap(ca_proplist **_p, va_list ap);
 
 #endif

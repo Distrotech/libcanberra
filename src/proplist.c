@@ -369,3 +369,46 @@ ca_bool_t ca_proplist_contains(ca_proplist *p, const char *key) {
 
     return b;
 }
+
+int ca_proplist_merge_ap(ca_proplist *p, va_list ap) {
+    int ret;
+
+    ca_return_val_if_fail(p, CA_ERROR_INVALID);
+
+    for (;;) {
+        const char *key, *value;
+
+        if (!(key = va_arg(ap, const char*)))
+            break;
+
+        if (!(value = va_arg(ap, const char*)))
+            return CA_ERROR_INVALID;
+
+        if ((ret = ca_proplist_sets(p, key, value)) < 0)
+            return ret;
+    }
+
+    return CA_SUCCESS;
+}
+
+int ca_proplist_from_ap(ca_proplist **_p, va_list ap) {
+    int ret;
+    ca_proplist *p;
+
+    ca_return_val_if_fail(_p, CA_ERROR_INVALID);
+
+    if ((ret = ca_proplist_create(&p)) < 0)
+        return ret;
+
+    if ((ret = ca_proplist_merge_ap(p, ap)) < 0)
+        goto fail;
+
+    *_p = p;
+
+    return CA_SUCCESS;
+
+fail:
+    ca_assert_se(ca_proplist_destroy(p) == CA_SUCCESS);
+
+    return ret;
+}

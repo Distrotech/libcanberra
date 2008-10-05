@@ -30,6 +30,7 @@
 #include "canberra-gtk.h"
 #include "common.h"
 #include "malloc.h"
+#include "proplist.h"
 
 /**
  * SECTION:canberra-gtk
