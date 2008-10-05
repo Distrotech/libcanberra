@@ -22,11 +22,24 @@
 #include <config.h>
 #endif
 
+#include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 
 #include "malloc.h"
 #include "macro.h"
+
+void* ca_memdup(const void* p, size_t size) {
+    void *r;
+
+    ca_assert(p);
+
+    if (!(r = ca_malloc(size)))
+        return NULL;
+
+    memcpy(r, p, size);
+    return r;
+}
 
 char *ca_sprintf_malloc(const char *format, ...) {
     size_t  size = 100;
