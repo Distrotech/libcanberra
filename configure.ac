@@ -204,6 +204,7 @@ AC_SUBST(ALSA_CFLAGS)
 AC_SUBST(ALSA_LIBS)
 
 ### OSS support (optional) ###
+
 AC_ARG_ENABLE([oss],
     AC_HELP_STRING([--disable-oss], [Disable optional OSS support]),
         [
