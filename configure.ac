@@ -346,7 +346,6 @@ if test "x${gtk}" != xno ; then
             AC_DEFINE([HAVE_GTK], 1, [Have GTK?])
 
             AC_PATH_PROG(GCONFTOOL, gconftool-2)
-            AM_GCONF_SOURCE_2
 
             GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
             GTK_MODULES_DIR="${libdir}/gtk-2.0/modules"
@@ -360,6 +359,8 @@ if test "x${gtk}" != xno ; then
 else
     HAVE_GTK=0
 fi
+
+AM_GCONF_SOURCE_2
 
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
