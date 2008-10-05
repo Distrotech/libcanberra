@@ -26,7 +26,6 @@ gnomeautostartdir = $(datadir)/gnome/autostart
 
 AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
 AM_CXXFLAGS = $(PTHREAD_CFLAGS)
-AM_LIBADD = $(PTHREAD_LIBS)
 AM_LDADD = $(PTHREAD_LIBS)
 
 EXTRA_DIST = \
