@@ -18,7 +18,7 @@
 
 gtkmoduledir = @GTK_MODULES_DIR@
 
-plugindir = $(libdir)/libcanberra
+plugindir = $(libdir)/libcanberra-@PACKAGE_VERSION@
 
 gnomeshutdowndir = $(datadir)/gnome/shutdown
 
