@@ -29,6 +29,12 @@
 #include <sys/uio.h>
 #include <math.h>
 #include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <poll.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #ifdef HAVE_MACHINE_SOUNDCARD_H
 #  include <machine/soundcard.h>
@@ -39,13 +45,6 @@
 #    include <sys/soundcard.h>
 #  endif
 #endif
-
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
 
 #include "canberra.h"
 #include "common.h"
