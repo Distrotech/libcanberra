@@ -495,7 +495,7 @@ case "x$with_builtin" in
      ;;
 
      xoss)
-        if test "x$HAV_OSS" != x1 ; then
+        if test "x$HAVE_OSS" != x1 ; then
 	        AC_MSG_ERROR([*** OSS selected for builtin driver, but not enabled. ***])
 	fi
 
