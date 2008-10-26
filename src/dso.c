@@ -264,6 +264,7 @@ int driver_open(ca_context *c) {
     ca_free(driver);
 
     if ((ret = p->driver_open(c)) < 0) {
+        p->driver_destroy = NULL;
         driver_destroy(c);
         return ret;
     }
