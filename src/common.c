@@ -623,9 +623,9 @@ finish:
 
 /**
  * ca_strerror:
- * @code: Numerical error code as returned by a canberra API function
+ * @code: Numerical error code as returned by a libcanberra API function
  *
- * Converts a numerical error code as returned by most canberra API functions into a human readable error string.
+ * Converts a numerical error code as returned by most libcanberra API functions into a human readable error string.
  *
  * Returns: a human readable error string.
  */
