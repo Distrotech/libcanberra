@@ -73,6 +73,9 @@ typedef struct {
    expander-toggle-on
    expander-toggle-off
    scroll-xxx
+   window-switch
+   window-resize-xxx
+   window-move-xxx
 
 */
 
