@@ -299,7 +299,7 @@ int driver_destroy(ca_context *c) {
     return ret;
 }
 
-int driver_change_device(ca_context *c, char *device) {
+int driver_change_device(ca_context *c, const char *device) {
     struct private_dso *p;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
