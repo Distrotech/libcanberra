@@ -696,12 +696,12 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     return TRUE;
 }
 
-static void install_hook(GType type, const char *signal, guint *sn) {
+static void install_hook(GType type, const char *sig, guint *sn) {
     GTypeClass *type_class;
 
     type_class = g_type_class_ref(type);
 
-    *sn = g_signal_lookup(signal, type);
+    *sn = g_signal_lookup(sig, type);
     g_signal_add_emission_hook(*sn, 0, emission_hook_cb, NULL, NULL);
 
     g_type_class_unref(type_class);
