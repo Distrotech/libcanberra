@@ -4,6 +4,6 @@ Name=GNOME Login Sound
 Exec=@bindir@/canberra-gtk-play --id="desktop-login" --description="GNOME Login"
 OnlyShowIn=GNOME;
 AutostartCondition=GNOME /desktop/gnome/sound/event_sounds
-X-GNOME-Autostart-Phase=Desktop
+X-GNOME-Autostart-Phase=Application
 X-GNOME-Provides=login-sound
 X-GNOME-Autostart-Notify=true
