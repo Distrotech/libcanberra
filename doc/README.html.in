@@ -148,6 +148,8 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <p>If you want to report bugs, have questions or want to be notified about new releases, please join the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
 
+<p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
+
 <hr/>
 <address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, October 2008</address>
 
