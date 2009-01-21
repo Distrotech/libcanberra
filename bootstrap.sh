@@ -54,14 +54,14 @@ else
 
     mkdir -p m4
     gtkdocize --copy --flavour no-tmpl --docdir gtkdoc
-    "$LIBTOOLIZE" -c --force --ltdl
+    "$LIBTOOLIZE" -c --force --ltdl --recursive
     run_versioned aclocal "$VERSION" -I m4
-    run_versioned autoconf 2.62 -Wall
-    run_versioned autoheader 2.62
+    run_versioned autoconf 2.63 -Wall
+    run_versioned autoheader 2.63
     run_versioned automake "$VERSION" --copy --foreign --add-missing
 
     if test "x$NOCONFIGURE" = "x"; then
-        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc "$@" 
+        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc "$@"
         make clean
     fi
 fi

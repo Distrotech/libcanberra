@@ -19,14 +19,14 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-AC_PREREQ(2.62)
+AC_PREREQ(2.63)
 
 AC_INIT([libcanberra], 0.10, [mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
 
-AM_INIT_AUTOMAKE([foreign 1.9 -Wall])
+AM_INIT_AUTOMAKE([foreign 1.10 -Wall])
 
 AC_SUBST(PACKAGE_URL, [http://0pointer.de/lennart/projects/libcanberra/])
 
@@ -43,34 +43,31 @@ fi
 
 #### Checks for programs. ####
 
+AC_PROG_MKDIR_P
+
 # CC
 
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_GCC_TRADITIONAL
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 # C++
 
 AC_PROG_CXX
 
-DESIRED_FLAGS="-Wall -W -Wextra -pedantic -pipe -Wno-long-long -Wvla -Wno-overlength-strings -Wconversion -Wundef -Wformat -Wlogical-op -Wpacked -Wformat-security -Wmissing-include-dirs -Wformat-nonliteral -Wold-style-definition -Wdeclaration-after-statement -Wfloat-equal -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wendif-labels -Wpointer-arith -Wcast-align -Wwrite-strings -Winline -Wno-unused-parameter -ffast-math"
+DESIRED_FLAGS="-Wall -W -Wextra -pedantic -pipe -Wno-long-long -Winline -Wvla -Wno-overlength-strings -Wunsafe-loop-optimizations -Wundef -Wformat=2 -Wlogical-op -Wsign-compare -Wpacked -Wformat-security -Wmissing-include-dirs -Wformat-nonliteral -Wold-style-definition -Wpointer-arith -Winit-self -Wdeclaration-after-statement -Wfloat-equal -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wendif-labels -Wstrict-aliasing=2 -Wcast-align -Wwrite-strings -Winline -Wno-unused-parameter -ffast-math -Wp,-D_FORTIFY_SOURCE=2 -fno-common -fdiagnostics-show-option"
 
 for flag in $DESIRED_FLAGS ; do
   CC_CHECK_CFLAGS([$flag], [CFLAGS="$CFLAGS $flag"])
 done
 
 #### libtool stuff ####
-
-AC_LTDL_ENABLE_INSTALL
-AC_LIBLTDL_INSTALLABLE
-AC_LIBTOOL_DLOPEN
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-AC_SUBST(LTDLINCL)
-AC_SUBST(LIBLTDL)
-AC_CONFIG_SUBDIRS(libltdl)
+LT_PREREQ(2.2)
+LT_CONFIG_LTDL_DIR([libltdl])
+LT_INIT([dlopen win32-dll disable-static])
+LTDL_INIT([convenience recursive])
 
 #### Determine build environment ####
 
@@ -564,6 +561,7 @@ GTK_DOC_CHECK(1.9)
 
 AC_CONFIG_FILES([
 Makefile
+libltdl/Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
