@@ -7,4 +7,7 @@ driver_change_props;
 driver_destroy;
 driver_open;
 driver_play;
+lt_*;
+dlopen_*;
+preopen_*;
 };
