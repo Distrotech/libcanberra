@@ -18,7 +18,7 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-VERSION=1.9
+VERSION=1.10
 
 run_versioned() {
     local P
