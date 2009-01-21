@@ -38,9 +38,18 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Wed 21 Jan
+2009: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.11.tar.gz">Version
+0.11</a> released; changes include: major GStreamer backend fixes; update to libtool 2.2; a few other fixes</p>
+
 <div class="news-date">Mon 6 Oct
 2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.10.tar.gz">Version
 0.10</a> released; changes include: install Gtk+ module using GConf; a few other fixes</p>
+
+<div class="news-date">Tue 9 Sep
+2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.9.tar.gz">Version
+0.9</a> released; changes include: GStreamer fixes, include (optional)
+libtdb based lookup cache.</p>
 
 <div class="news-date">Thu 28 Aug
 2008: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.8.tar.gz">Version
@@ -132,7 +141,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <h2><a name="acks">Acknowledgements</a></h2>
 
-<p>Marc-André Lureau for the GStreamer backend.</p>
+<p>Marc-André Lureau and Brian Cameron for the GStreamer backend.</p>
 
 <p>Joe Marcus Clarke for the OSS backend.</p>
 
@@ -151,7 +160,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, October 2008</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, January 2009</address>
 
 </body>
 </html>
