@@ -641,7 +641,11 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     pa_proplist *l = NULL;
     const char *n, *vol, *ct;
     char *name = NULL;
+#if defined(PA_MAJOR) && ((PA_MAJOR > 0) || (PA_MAJOR == 0 && PA_MINOR > 9) || (PA_MAJOR == 0 && PA_MINOR == 9 && PA_MICRO >= 15))
+    pa_volume_t v = (pa_volume_t) -1;
+#else
     pa_volume_t v = PA_VOLUME_NORM;
+#endif
     pa_sample_spec ss;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
     struct outstanding *out = NULL;
