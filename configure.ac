@@ -163,7 +163,7 @@ PKG_PROG_PKG_CONFIG
 #### ALSA support (optional) ####
 
 AC_ARG_ENABLE([alsa],
-    AC_HELP_STRING([--disable-alsa], [Disable optional ALSA support]),
+    AS_HELP_STRING([--disable-alsa], [Disable optional ALSA support]),
         [
             case "${enableval}" in
                 yes) alsa=yes ;;
@@ -195,7 +195,7 @@ AC_SUBST(ALSA_LIBS)
 ### OSS support (optional) ###
 
 AC_ARG_ENABLE([oss],
-    AC_HELP_STRING([--disable-oss], [Disable optional OSS support]),
+    AS_HELP_STRING([--disable-oss], [Disable optional OSS support]),
         [
             case "${enableval}" in
                 yes) oss=yes ;;
@@ -225,7 +225,7 @@ fi
 ### PulseAudio (optional) ####
 
 AC_ARG_ENABLE([pulse],
-    AC_HELP_STRING([--disable-pulse], [Disable optional PulseAudio support]),
+    AS_HELP_STRING([--disable-pulse], [Disable optional PulseAudio support]),
         [
             case "${enableval}" in
                 yes) pulse=yes ;;
@@ -266,7 +266,7 @@ AC_SUBST(PULSE_LIBS)
 #### GStreamer support (optional) ####
 
 AC_ARG_ENABLE([gstreamer],
-    AC_HELP_STRING([--disable-gstreamer], [Disable optional GStreamer support]),
+    AS_HELP_STRING([--disable-gstreamer], [Disable optional GStreamer support]),
         [
             case "${enableval}" in
                 yes) gstreamer=yes ;;
@@ -298,7 +298,7 @@ AC_SUBST(GSTREAMER_LIBS)
 ### Null output (optional) ####
 
 AC_ARG_ENABLE([null],
-    AC_HELP_STRING([--disable-null], [Disable optional null output]),
+    AS_HELP_STRING([--disable-null], [Disable optional null output]),
         [
             case "${enableval}" in
                 yes) null=yes ;;
@@ -318,7 +318,7 @@ fi
 ### GTK (optional) ####
 
 AC_ARG_ENABLE([gtk],
-    AC_HELP_STRING([--disable-gtk], [Disable optional GTK+ support]),
+    AS_HELP_STRING([--disable-gtk], [Disable optional GTK+ support]),
         [
             case "${enableval}" in
                 yes) gtk=yes ;;
@@ -360,7 +360,7 @@ AM_CONDITIONAL([HAVE_GTK], [test "x$HAVE_GTK" = x1])
 #### TDB cache support (optional) ####
 
 AC_ARG_ENABLE([tdb],
-    AC_HELP_STRING([--disable-tdb], [Disable optional tdb support]),
+    AS_HELP_STRING([--disable-tdb], [Disable optional tdb support]),
         [
             case "${enableval}" in
                 yes) tdb=yes ;;
@@ -407,7 +407,7 @@ fi
 ### LYNX documentation generation ###
 
 AC_ARG_ENABLE([lynx],
-        AC_HELP_STRING([--disable-lynx], [Turn off lynx usage for documentation generation]),
+        AS_HELP_STRING([--disable-lynx], [Turn off lynx usage for documentation generation]),
                 [
                         case "${enableval}" in
                                 yes) lynx=yes ;;
