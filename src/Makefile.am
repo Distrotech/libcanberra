@@ -85,8 +85,6 @@ if BUILTIN_DSO
 libcanberra_la_SOURCES += \
 	dso.c \
 	driver-order.c driver-order.h
-libcanberra_la_CFLAGS += \
-	$(LTDLINCL)
 libcanberra_la_LIBADD += \
 	$(LIBLTDL)
 

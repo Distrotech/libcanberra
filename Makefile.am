@@ -19,7 +19,7 @@
 dist_doc_DATA = README
 
 EXTRA_DIST = bootstrap.sh autogen.sh LGPL libcanberra.schemas
-SUBDIRS = libltdl src gtkdoc doc
+SUBDIRS = src gtkdoc doc
 
 MAINTAINERCLEANFILES = README
 noinst_DATA = README

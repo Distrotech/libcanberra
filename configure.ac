@@ -65,9 +65,32 @@ done
 
 #### libtool stuff ####
 LT_PREREQ(2.2)
-LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen win32-dll disable-static])
-LTDL_INIT([convenience recursive])
+
+dnl Unfortunately, even up to libtool 2.2.6a there is no way to know
+dnl exactly which version of libltdl is present in the system, so we
+dnl just assume that it's a working version as long as we have the
+dnl library and the header files.
+dnl
+dnl As an extra safety device, check for lt_dladvise_init() which is
+dnl only implemented in libtool 2.x, and refine as we go if we have
+dnl refined requirements.
+dnl
+dnl Check the header files first since the system may have a
+dnl libltdl.so for runtime, but no headers, and we want to bail out as
+dnl soon as possible.
+dnl
+dnl We don't need any special variable for this though, since the user
+dnl can give the proper place to find libltdl through the standard
+dnl variables like LDFLAGS and CPPFLAGS.
+
+AC_CHECK_HEADER([ltdl.h],
+    [AC_CHECK_LIB([ltdl], [lt_dladvise_init], [LIBLTDL=-lltdl], [LIBLTDL=])],
+    [LIBLTDL=])
+
+AS_IF([test "x$LIBLTDL" = "x"],
+    [AC_MSG_ERROR([Unable to find libltdl.])])
+AC_SUBST([LIBLTDL])
 
 #### Determine build environment ####
 
@@ -552,7 +575,6 @@ GTK_DOC_CHECK(1.9)
 
 AC_CONFIG_FILES([
 Makefile
-libltdl/Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
