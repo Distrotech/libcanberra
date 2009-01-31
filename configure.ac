@@ -109,7 +109,6 @@ AC_TYPE_SIZE_T
 AC_CHECK_TYPES(ssize_t, , [AC_DEFINE([ssize_t], [signed long],
     [Define ssize_t if it is not done by the standard libs.])])
 AC_TYPE_OFF_T
-AC_TYPE_SIGNAL
 AC_TYPE_UID_T
 
 #### Check for libs ####
