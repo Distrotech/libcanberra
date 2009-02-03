@@ -166,12 +166,27 @@ static int translate_error(int error) {
         [PA_ERR_BADSTATE]             = CA_ERROR_STATE,
         [PA_ERR_NODATA]               = CA_ERROR_IO,
         [PA_ERR_VERSION]              = CA_ERROR_NOTSUPPORTED,
-        [PA_ERR_TOOLARGE]             = CA_ERROR_TOOBIG
+        [PA_ERR_TOOLARGE]             = CA_ERROR_TOOBIG,
+#ifdef PA_ERR_NOTSUPPORTED
+        [PA_ERR_NOTSUPPORTED]         = CA_ERROR_NOTSUPPORTED,
+#endif
+#ifdef PA_ERR_UNKNOWN
+        [PA_ERR_UNKNOWN]              = CA_ERROR_IO,
+#endif
+#ifdef PA_ERR_NOEXTENSION
+        [PA_ERR_NOEXTENSION]          = CA_ERROR_NOTSUPPORTED,
+#endif
+#ifdef PA_ERR_OBSOLETE
+        [PA_ERR_OBSOLETE]             = CA_ERROR_NOTSUPPORTED,
+#endif
+#ifdef PA_ERR_NOTIMPLEMENTED
+        [PA_ERR_NOTIMPLEMENTED]       = CA_ERROR_NOTSUPPORTED
+#endif
     };
 
     ca_assert(error >= 0);
 
-    if (error >= PA_ERR_MAX)
+    if (error >= PA_ERR_MAX || !table[error])
         return CA_ERROR_IO;
 
     return table[error];
@@ -572,7 +587,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
             goto finish;
         }
 
-	data = NULL;
+        data = NULL;
 
         bytes -= rbytes;
     }
