@@ -800,7 +800,13 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     pa_stream_set_state_callback(out->stream, stream_state_cb, out);
     pa_stream_set_write_callback(out->stream, stream_write_cb, out);
 
-    if (pa_stream_connect_playback(out->stream, NULL, NULL, 0, NULL, NULL) < 0) {
+    if (pa_stream_connect_playback(out->stream, NULL, NULL,
+#ifdef PA_STREAM_FAIL_ON_SUSPEND
+                                   PA_STREAM_FAIL_ON_SUSPEND
+#else
+                                   0
+#endif
+                                   , NULL, NULL) < 0) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
         goto finish;
