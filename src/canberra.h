@@ -414,7 +414,8 @@ enum {
     CA_ERROR_IO = -14,
     CA_ERROR_INTERNAL = -15,
     CA_ERROR_DISABLED = -16,
-    _CA_ERROR_MAX = -17
+    CA_ERROR_FORKED = -17,
+    _CA_ERROR_MAX = -18
 };
 
 /**

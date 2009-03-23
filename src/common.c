@@ -30,6 +30,7 @@
 #include "driver.h"
 #include "proplist.h"
 #include "macro.h"
+#include "fork-detect.h"
 
 /**
  * SECTION:canberra
@@ -127,6 +128,7 @@ int ca_context_create(ca_context **_c) {
     int ret;
     const char *d;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(_c, CA_ERROR_INVALID);
 
     if (!(c = ca_new0(ca_context, 1)))
@@ -171,6 +173,7 @@ int ca_context_create(ca_context **_c) {
 int ca_context_destroy(ca_context *c) {
     int ret = CA_SUCCESS;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
     /* There's no locking necessary here, because the application is
@@ -209,6 +212,7 @@ int ca_context_set_driver(ca_context *c, const char *driver) {
     char *n;
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_mutex_lock(c->mutex);
     ca_return_val_if_fail_unlock(!c->opened, CA_ERROR_STATE, c->mutex);
@@ -250,6 +254,7 @@ int ca_context_change_device(ca_context *c, const char *device) {
     char *n;
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_mutex_lock(c->mutex);
 
@@ -277,6 +282,7 @@ fail:
 static int context_open_unlocked(ca_context *c) {
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
     if (c->opened)
@@ -302,6 +308,7 @@ static int context_open_unlocked(ca_context *c) {
 int ca_context_open(ca_context *c) {
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_mutex_lock(c->mutex);
     ca_return_val_if_fail_unlock(!c->opened, CA_ERROR_STATE, c->mutex);
@@ -336,6 +343,7 @@ int ca_context_change_props(ca_context *c, ...)  {
     int ret;
     ca_proplist *p = NULL;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
     va_start(ap, c);
@@ -368,6 +376,7 @@ int ca_context_change_props_full(ca_context *c, ca_proplist *p) {
     int ret;
     ca_proplist *merged;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
 
@@ -438,6 +447,7 @@ int ca_context_play(ca_context *c, uint32_t id, ...) {
     va_list ap;
     ca_proplist *p = NULL;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
     va_start(ap, id);
@@ -478,6 +488,7 @@ int ca_context_play_full(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_c
     const char *t;
     ca_bool_t enabled = TRUE;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(!userdata || cb, CA_ERROR_INVALID);
@@ -532,6 +543,7 @@ finish:
 int ca_context_cancel(ca_context *c, uint32_t id)  {
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_mutex_lock(c->mutex);
     ca_return_val_if_fail_unlock(c->opened, CA_ERROR_STATE, c->mutex);
@@ -566,6 +578,7 @@ int ca_context_cache(ca_context *c, ...) {
     va_list ap;
     ca_proplist *p = NULL;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
 
     va_start(ap, c);
@@ -599,6 +612,7 @@ int ca_context_cache(ca_context *c, ...) {
 int ca_context_cache_full(ca_context *c, ca_proplist *p) {
     int ret;
 
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
 
@@ -648,7 +662,8 @@ const char *ca_strerror(int code) {
         [-CA_ERROR_ACCESS] = "Access forbidden",
         [-CA_ERROR_IO] = "IO error",
         [-CA_ERROR_INTERNAL] = "Internal error",
-        [-CA_ERROR_DISABLED] = "Sound disabled"
+        [-CA_ERROR_DISABLED] = "Sound disabled",
+        [-CA_ERROR_FORKED] = "Process forked"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);

@@ -31,6 +31,7 @@
 #include "common.h"
 #include "malloc.h"
 #include "proplist.h"
+#include "fork-detect.h"
 
 /**
  * SECTION:canberra-gtk
@@ -93,7 +94,8 @@ ca_context *ca_gtk_context_get(void) {
     if ((c = g_static_private_get(&context_private)))
         return c;
 
-    ca_assert_se(ca_context_create(&c) == CA_SUCCESS);
+    if (ca_context_create(&c) != CA_SUCCESS)
+        return NULL;
 
     if ((name = g_get_application_name()))
         ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL);
@@ -154,6 +156,7 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
 
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(widget, CA_ERROR_INVALID);
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
 
     if (!(w = get_toplevel(widget)))
         return CA_ERROR_INVALID;
@@ -224,6 +227,7 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
 
     ca_return_val_if_fail(p, CA_ERROR_INVALID);
     ca_return_val_if_fail(e, CA_ERROR_INVALID);
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
 
     if ((gw = e->any.window)) {
         gdk_window_get_user_data(gw, (gpointer*) &w);
@@ -297,6 +301,7 @@ int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) {
     ca_proplist *p;
 
     ca_return_val_if_fail(w, CA_ERROR_INVALID);
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
 
     if ((ret = ca_proplist_create(&p)) < 0)
         return ret;
@@ -346,6 +351,7 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     ca_proplist *p;
 
     ca_return_val_if_fail(e, CA_ERROR_INVALID);
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
 
     if ((ret = ca_proplist_create(&p)) < 0)
         return ret;
