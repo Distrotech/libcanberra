@@ -647,10 +647,14 @@ static gboolean idle_cb(void *userdata) {
     return FALSE;
 }
 
+static void connect_settings(void);
+
 static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_values, const GValue *param_values, gpointer data) {
     static SoundEventData *d = NULL;
     GdkEvent *e;
     GObject *object;
+
+    connect_settings();
 
     if (disabled)
         return TRUE;
@@ -719,21 +723,33 @@ static void enable_input_feedback_sounds_changed(GtkSettings *s, GParamSpec *arg
     read_enable_input_feedback_sounds(s);
 }
 
-G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
+static void connect_settings(void) {
     GtkSettings *s;
+    static gboolean connected = FALSE;
 
-    /* This is the same quark libgnomeui uses! */
-    disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
-    was_hidden_quark = g_quark_from_string("canberra_was_hidden");
+    if (connected)
+        return;
 
-    /* Hook up the gtk setting */
-    s = gtk_settings_get_default();
+    if (!(s = gtk_settings_get_default()))
+        return;
 
     if (g_object_class_find_property(G_OBJECT_GET_CLASS(s), "gtk-enable-input-feedback-sounds")) {
         g_signal_connect(G_OBJECT(s), "notify::gtk-enable-input-feedback-sounds", G_CALLBACK(enable_input_feedback_sounds_changed), NULL);
         read_enable_input_feedback_sounds(s);
     } else
         g_debug("This Gtk+ version doesn't have the GtkSettings::gtk-enable-input-feedback-sounds property.");
+
+    connected = TRUE;
+}
+
+G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
+
+    /* This is the same quark libgnomeui uses! */
+    disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
+    was_hidden_quark = g_quark_from_string("canberra_was_hidden");
+
+    /* Hook up the gtk setting */
+    connect_settings();
 
     install_hook(GTK_TYPE_WINDOW, "show", &signal_id_widget_show);
     install_hook(GTK_TYPE_WINDOW, "hide", &signal_id_widget_hide);
@@ -748,7 +764,6 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_TREE_VIEW, "cursor-changed", &signal_id_tree_view_cursor_changed);
     install_hook(GTK_TYPE_ICON_VIEW, "selection-changed", &signal_id_icon_view_selection_changed);
 }
-
 
 G_MODULE_EXPORT gchar* g_module_check_init(GModule *module);
 
