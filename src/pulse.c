@@ -76,6 +76,9 @@ struct private {
 
 #define PRIVATE(c) ((struct private *) ((c)->private))
 
+static void context_state_cb(pa_context *pc, void *userdata);
+static void context_subscribe_cb(pa_context *pc, pa_subscription_event_type_t t, uint32_t idx, void *userdata);
+
 static void outstanding_free(struct outstanding *o) {
     ca_assert(o);
 
@@ -192,6 +195,43 @@ static int translate_error(int error) {
     return table[error];
 }
 
+static int context_connect(ca_context *c) {
+    pa_proplist *l;
+    struct private *p;
+    int ret;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(p = c->private, CA_ERROR_STATE);
+    ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
+    ca_return_val_if_fail(!p->context, CA_ERROR_STATE);
+
+    if ((ret = convert_proplist(&l, c->props)) < 0) {
+        driver_destroy(c);
+        return ret;
+    }
+
+    strip_prefix(l, "canberra.");
+
+    if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
+        pa_proplist_free(l);
+        driver_destroy(c);
+        return CA_ERROR_OOM;
+    }
+
+    pa_proplist_free(l);
+
+    pa_context_set_state_callback(p->context, context_state_cb, c);
+    pa_context_set_subscribe_callback(p->context, context_subscribe_cb, c);
+
+    if (pa_context_connect(p->context, NULL, PA_CONTEXT_NOFAIL, NULL) < 0) {
+        ret = translate_error(pa_context_errno(p->context));
+        driver_destroy(c);
+        return ret;
+    }
+
+    return CA_SUCCESS;
+}
+
 static void context_state_cb(pa_context *pc, void *userdata) {
     ca_context *c = userdata;
     pa_context_state_t state;
@@ -229,6 +269,17 @@ static void context_state_cb(pa_context *pc, void *userdata) {
         }
 
         ca_mutex_unlock(p->outstanding_mutex);
+
+        if (p->context) {
+            pa_context_disconnect(p->context);
+            pa_context_unref(p->context);
+            p->subscribed = FALSE;
+            p->context = NULL;
+        }
+
+        /* FIXME: recycle previous pa_context_proplist and restore state as much as possible? */
+        if (context_connect(c) != CA_SUCCESS)
+            return;
     }
 
     pa_threaded_mainloop_signal(p->mainloop, FALSE);
@@ -277,7 +328,6 @@ static void context_subscribe_cb(pa_context *pc, pa_subscription_event_type_t t,
 }
 
 int driver_open(ca_context *c) {
-    pa_proplist *l;
     struct private *p;
     int ret;
 
@@ -299,29 +349,8 @@ int driver_open(ca_context *c) {
         return CA_ERROR_OOM;
     }
 
-    if ((ret = convert_proplist(&l, c->props)) < 0) {
-        driver_destroy(c);
+    if ((ret = context_connect(c)) != CA_SUCCESS)
         return ret;
-    }
-
-    strip_prefix(l, "canberra.");
-
-    if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
-        pa_proplist_free(l);
-        driver_destroy(c);
-        return CA_ERROR_OOM;
-    }
-
-    pa_proplist_free(l);
-
-    pa_context_set_state_callback(p->context, context_state_cb, c);
-    pa_context_set_subscribe_callback(p->context, context_subscribe_cb, c);
-
-    if (pa_context_connect(p->context, NULL, 0, NULL) < 0) {
-        ret = translate_error(pa_context_errno(p->context));
-        driver_destroy(c);
-        return ret;
-    }
 
     pa_threaded_mainloop_lock(p->mainloop);
 
@@ -421,14 +450,18 @@ int driver_change_props(ca_context *c, ca_proplist *changed, ca_proplist *merged
     p = PRIVATE(c);
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
-    ca_return_val_if_fail(p->context, CA_ERROR_STATE);
+
+    pa_threaded_mainloop_lock(p->mainloop);
+
+    if (!p->context) {
+        pa_threaded_mainloop_unlock(p->mainloop);
+        return CA_ERROR_STATE; /* can be silently ignored */
+    }
 
     if ((ret = convert_proplist(&l, changed)) < 0)
         return ret;
 
     strip_prefix(l, "canberra.");
-
-    pa_threaded_mainloop_lock(p->mainloop);
 
     /* We start these asynchronously and don't care about the return
      * value */
@@ -455,12 +488,16 @@ static int subscribe(ca_context *c) {
     p = PRIVATE(c);
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
-    ca_return_val_if_fail(p->context, CA_ERROR_STATE);
 
     if (p->subscribed)
         return CA_SUCCESS;
 
     pa_threaded_mainloop_lock(p->mainloop);
+
+    if (!p->context) {
+        pa_threaded_mainloop_unlock(p->mainloop);
+        return CA_ERROR_STATE;
+    }
 
     /* We start these asynchronously and don't care about the return
      * value */
@@ -677,7 +714,6 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     p = PRIVATE(c);
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
-    ca_return_val_if_fail(p->context, CA_ERROR_STATE);
 
     if (!(out = ca_new0(struct outstanding, 1))) {
         ret = CA_ERROR_OOM;
@@ -820,8 +856,11 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             break;
 
         /* Check for failure */
-        if (state == PA_STREAM_FAILED) {
-            ret = translate_error(pa_context_errno(p->context));
+        if (state == PA_STREAM_FAILED) { /* it means it was disconnected */
+            if (pa_context_errno(p->context) == PA_OK) /* and context reconnected immediately */
+                ret = CA_ERROR_STATE;
+            else
+                ret = translate_error(pa_context_errno(p->context));
             pa_threaded_mainloop_unlock(p->mainloop);
             goto finish;
         }
@@ -877,9 +916,13 @@ int driver_cancel(ca_context *c, uint32_t id) {
     p = PRIVATE(c);
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
-    ca_return_val_if_fail(p->context, CA_ERROR_STATE);
 
     pa_threaded_mainloop_lock(p->mainloop);
+
+    if (!p->context) {
+        pa_threaded_mainloop_unlock(p->mainloop);
+        return CA_ERROR_STATE;
+    }
 
     ca_mutex_lock(p->outstanding_mutex);
 
@@ -939,7 +982,6 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     p = PRIVATE(c);
 
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
-    ca_return_val_if_fail(p->context, CA_ERROR_STATE);
 
     if (!(out = ca_new0(struct outstanding, 1))) {
         ret = CA_ERROR_OOM;
@@ -995,8 +1037,15 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
     pa_threaded_mainloop_lock(p->mainloop);
 
+    if (!p->context) {
+        pa_threaded_mainloop_unlock(p->mainloop);
+        ret = CA_ERROR_STATE;
+        goto finish;
+    }
+
     if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, NULL, l))) {
         ret = translate_error(pa_context_errno(p->context));
+
         pa_threaded_mainloop_unlock(p->mainloop);
         goto finish;
     }
