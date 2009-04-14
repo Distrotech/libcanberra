@@ -21,7 +21,7 @@
 
 AC_PREREQ(2.63)
 
-AC_INIT([libcanberra],[0.11],[mzyvopnaoreen (at) 0pointer (dot) de])
+AC_INIT([libcanberra],[0.12],[mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
@@ -30,8 +30,8 @@ AM_INIT_AUTOMAKE([foreign 1.10 -Wall])
 
 AC_SUBST(PACKAGE_URL, [http://0pointer.de/lennart/projects/libcanberra/])
 
-AC_SUBST(LIBCANBERRA_VERSION_INFO, [1:4:1])
-AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [0:4:0])
+AC_SUBST(LIBCANBERRA_VERSION_INFO, [1:5:1])
+AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [0:5:0])
 
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
