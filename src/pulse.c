@@ -698,6 +698,8 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 #else
     pa_volume_t v = PA_VOLUME_NORM;
 #endif
+    ca_bool_t volume_set = FALSE;
+    pa_cvolume cvol;
     pa_sample_spec ss;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
     struct outstanding *out = NULL;
@@ -748,6 +750,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         }
 
         v = pa_sw_volume_from_dB(dvol);
+        volume_set = TRUE;
     }
 
     if ((ct = pa_proplist_gets(l, CA_PROP_CANBERRA_CACHE_CONTROL)))
@@ -836,13 +839,16 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     pa_stream_set_state_callback(out->stream, stream_state_cb, out);
     pa_stream_set_write_callback(out->stream, stream_write_cb, out);
 
+    if (volume_set)
+        pa_cvolume_set(&cvol, ss.channels, v);
+
     if (pa_stream_connect_playback(out->stream, NULL, NULL,
 #ifdef PA_STREAM_FAIL_ON_SUSPEND
                                    PA_STREAM_FAIL_ON_SUSPEND
 #else
                                    0
 #endif
-                                   , NULL, NULL) < 0) {
+                                   , volume_set ? &cvol : NULL, NULL) < 0) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
         goto finish;
