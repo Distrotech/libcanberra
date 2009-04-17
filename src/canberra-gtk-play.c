@@ -80,7 +80,7 @@ static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
 
 int main (int argc, char *argv[]) {
     GOptionContext *oc;
-    static gchar *event_id = NULL, *filename = NULL, *event_description = NULL, *cache_control = NULL;
+    static gchar *event_id = NULL, *filename = NULL, *event_description = NULL, *cache_control = NULL, *volume = NULL;
     int r;
     static gboolean version = FALSE;
 
@@ -90,6 +90,7 @@ int main (int argc, char *argv[]) {
         { "description",   'd', 0, G_OPTION_ARG_STRING, &event_description, "Event sound description", "STRING" },
         { "cache-control", 'c', 0, G_OPTION_ARG_STRING, &cache_control,     "Cache control (permanent, volatile, never)", "STRING" },
         { "loop",          'l', 0, G_OPTION_ARG_INT,    &n_loops,           "Loop how many times (detault: 1)", "INTEGER" },
+        { "volume",        'V', 0, G_OPTION_ARG_STRING, &volume,            "A floating point dB value for the sample volume (ex: 0.0)", "STRING" },
 	{ "version",       'v', 0, G_OPTION_ARG_NONE,   &version,           "Display version number and quit", NULL },
         { NULL, 0, 0, 0, NULL, NULL, NULL }
     };
@@ -134,6 +135,9 @@ int main (int argc, char *argv[]) {
 
     if (event_description)
         ca_proplist_sets(proplist, CA_PROP_EVENT_DESCRIPTION, event_description);
+
+    if (volume)
+        ca_proplist_sets(proplist, CA_PROP_CANBERRA_VOLUME, volume);
 
     r = ca_context_play_full(ca_gtk_context_get(), 1, proplist, callback, NULL);
 
