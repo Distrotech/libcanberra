@@ -663,7 +663,8 @@ const char *ca_strerror(int code) {
         [-CA_ERROR_IO] = "IO error",
         [-CA_ERROR_INTERNAL] = "Internal error",
         [-CA_ERROR_DISABLED] = "Sound disabled",
-        [-CA_ERROR_FORKED] = "Process forked"
+        [-CA_ERROR_FORKED] = "Process forked",
+        [-CA_ERROR_DISCONNECTED] = "Disconnected"
     };
 
     ca_return_val_if_fail(code <= 0, NULL);

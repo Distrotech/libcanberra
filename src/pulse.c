@@ -770,6 +770,8 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         /* Ok, this sample has an event id, let's try to play it from the cache */
 
         for (;;) {
+            ca_bool_t canceled;
+
             pa_threaded_mainloop_lock(p->mainloop);
 
             /* Let's try to play the sample */
@@ -779,16 +781,35 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
                 goto finish;
             }
 
-            while (pa_operation_get_state(o) != PA_OPERATION_DONE)
+            for (;;) {
+                pa_operation_state_t state = pa_operation_get_state(o);
+
+                if (state == PA_OPERATION_DONE) {
+                    canceled = FALSE;
+                    break;
+                } else if (state == PA_OPERATION_CANCELED) {
+                    canceled = TRUE;
+                    break;
+                }
+
                 pa_threaded_mainloop_wait(p->mainloop);
+            }
 
             pa_operation_unref(o);
 
             pa_threaded_mainloop_unlock(p->mainloop);
 
-            /* Did we manage to play the sample or did some other error occur? */
-            if (out->error != CA_ERROR_NOTFOUND)
+            /* The operation might have been canceled due to connection termination */
+            if (canceled) {
+                ret = CA_ERROR_DISCONNECTED;
                 goto finish;
+            }
+
+            /* Did we manage to play the sample or did some other error occur? */
+            if (out->error != CA_ERROR_NOTFOUND) {
+                ret = out->error;
+                goto finish;
+            }
 
             /* Hmm, we need to play it directly */
             if (cache_control != CA_CACHE_CONTROL_PERMANENT)
