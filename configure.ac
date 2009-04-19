@@ -170,10 +170,6 @@ ACX_PTHREAD
 
 AC_SYS_LARGEFILE
 
-#### [lib]iconv ####
-
-AM_ICONV
-
 ###################################
 #      External libraries         #
 ###################################
