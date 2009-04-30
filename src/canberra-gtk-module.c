@@ -695,7 +695,7 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
     g_queue_push_tail(&sound_event_queue, d);
 
     if (idle_id == 0)
-        idle_id = g_idle_add_full(GTK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, NULL, NULL);
+        idle_id = g_idle_add_full(GDK_PRIORITY_REDRAW-1, (GSourceFunc) idle_cb, NULL, NULL);
 
     return TRUE;
 }
