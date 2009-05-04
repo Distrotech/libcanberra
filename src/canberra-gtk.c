@@ -38,9 +38,11 @@
  * @short_description: Gtk+ libcanberra Bindings
  *
  * libcanberra-gtk provides a few functions that simplify libcanberra
- * usage from Gtk+ programs. It maintains a single application-global
- * ca_context object that is made accessible via
- * ca_gtk_context_get(). More importantly, it provides a few functions
+ * usage from Gtk+ programs. It maintains a single ca_context object
+ * per #GdkScreen that is made accessible via
+ * ca_gtk_context_get_for_screen(), with a shortcut ca_gtk_context_get()
+ * to get the context for the default screen. More importantly, it provides
+ * a few functions
  * to compile event sound property lists based on GtkWidget objects or
  * GdkEvent events.
  */
@@ -75,34 +77,67 @@ static void enable_event_sounds_changed(GtkSettings *s, GParamSpec *arg1, ca_con
 /**
  * ca_gtk_context_get:
  *
- * libcanberra-gtk maintains a single application-global ca_context
- * object. Use this function to access it. The
+ * Gets the single ca_context object for the default screen. See
+ * ca_gtk_context_get_for_screen().
+ *
+ * Returns: a ca_context object. The object is owned by libcanberra-gtk
+ *   and must not be destroyed
+ */
+ca_context *ca_gtk_context_get(void) {
+    return ca_gtk_context_get_for_screen(NULL);
+}
+
+/**
+ * ca_gtk_context_get_for_screen:
+ * @screen: the #GdkScreen to get the context for, or %NULL to use
+ *   the default screen
+ *
+ * libcanberra-gtk maintains a single ca_context object for each
+ * #GdkScreen. Use this function to access it. The
  * %CA_PROP_CANBERRA_XDG_THEME_NAME of this context property is
  * dynamically bound to the XSETTINGS setting for the XDG theme
  * name. CA_PROP_APPLICATION_NAME is bound to
  * g_get_application_name().
  *
- * Returns: a pa_context object
+ * Returns: a ca_context object. The object is owned by libcanberra-gtk
+ *   and must not be destroyed
+ *
+ * Since: 0.13
  */
-
-ca_context *ca_gtk_context_get(void) {
-    static GStaticPrivate context_private = G_STATIC_PRIVATE_INIT;
+ca_context *ca_gtk_context_get_for_screen(GdkScreen *screen) {
     ca_context *c = NULL;
+    ca_proplist *p = NULL;
     const char *name;
     GtkSettings *s;
 
-    if ((c = g_static_private_get(&context_private)))
+    if (!screen)
+        screen = gdk_screen_get_default();
+
+    if ((c = g_object_get_data(G_OBJECT(screen), "canberra::gtk::context")))
         return c;
 
     if (ca_context_create(&c) != CA_SUCCESS)
         return NULL;
 
+    if (ca_proplist_create(&p) != CA_SUCCESS) {
+        ca_context_destroy(c);
+        return NULL;
+    }
+
     if ((name = g_get_application_name()))
-        ca_context_change_props(c, CA_PROP_APPLICATION_NAME, name, NULL);
+        ca_proplist_sets(p, CA_PROP_APPLICATION_NAME, name);
+
+    if ((name = gdk_display_get_name(gdk_screen_get_display(screen))))
+        ca_proplist_sets(p, CA_PROP_WINDOW_X11_DISPLAY, name);
+
+    ca_proplist_setf(p, CA_PROP_WINDOW_X11_SCREEN, "%i", gdk_screen_get_number(screen));
+
+    ca_context_change_props_full(c, p);
+    ca_proplist_destroy(p);
 
     GDK_THREADS_ENTER();
 
-    s = gtk_settings_get_default();
+    s = gtk_settings_get_for_screen(screen);
 
     ca_return_val_if_fail(s, NULL);
 
@@ -120,7 +155,7 @@ ca_context *ca_gtk_context_get(void) {
 
     GDK_THREADS_LEAVE();
 
-    g_static_private_set(&context_private, c, (GDestroyNotify) ca_context_destroy);
+    g_object_set_data_full(G_OBJECT(screen), "canberra::gtk::context", c, (GDestroyNotify) ca_context_destroy);
 
     return c;
 }
@@ -299,6 +334,7 @@ int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) {
     va_list ap;
     int ret;
     ca_proplist *p;
+    GdkScreen *s;
 
     ca_return_val_if_fail(w, CA_ERROR_INVALID);
     ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
@@ -316,7 +352,8 @@ int ca_gtk_play_for_widget(GtkWidget *w, uint32_t id, ...) {
     if (ret < 0)
         goto fail;
 
-    ret = ca_context_play_full(ca_gtk_context_get(), id, p, NULL, NULL);
+    s = gtk_widget_get_screen(w);
+    ret = ca_context_play_full(ca_gtk_context_get_for_screen(s), id, p, NULL, NULL);
 
 fail:
 
@@ -349,6 +386,7 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     va_list ap;
     int ret;
     ca_proplist *p;
+    GdkScreen *s;
 
     ca_return_val_if_fail(e, CA_ERROR_INVALID);
     ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
@@ -366,7 +404,8 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     if (ret < 0)
         goto fail;
 
-    ret = ca_context_play_full(ca_gtk_context_get(), id, p, NULL, NULL);
+    s = gdk_drawable_get_screen(GDK_DRAWABLE(e->any.window));
+    ret = ca_context_play_full(ca_gtk_context_get_for_screen(s), id, p, NULL, NULL);
 
 fail:
 

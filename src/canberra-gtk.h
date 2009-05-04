@@ -26,7 +26,11 @@
 
 G_BEGIN_DECLS
 
+#ifndef GDK_MULTIHEAD_SAFE
 ca_context *ca_gtk_context_get(void);
+#endif
+
+ca_context *ca_gtk_context_get_for_screen(GdkScreen *screen);
 
 int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *w);
 
