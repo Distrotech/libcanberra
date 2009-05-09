@@ -422,6 +422,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     out->callback = cb;
     out->userdata = userdata;
     out->pipe_fd[0] = out->pipe_fd[1] = -1;
+    out->pcm = -1;
 
     if (pipe(out->pipe_fd) < 0) {
         ret = CA_ERROR_SYSTEM;
