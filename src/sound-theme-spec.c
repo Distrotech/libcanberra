@@ -398,9 +398,9 @@ static int load_theme_data(ca_theme_data **_t, const char *name) {
     if ((ret = load_theme_dir(t, name)) < 0)
         goto fail;
 
+    /* The fallback theme may intentionally not exist so ignore failure */
     if (!t->loaded_fallback_theme)
-        if ((ret = load_theme_dir(t, FALLBACK_THEME)) < 0)
-            goto fail;
+        load_theme_dir(t, FALLBACK_THEME);
 
     if (*_t)
         ca_theme_data_free(*_t);
