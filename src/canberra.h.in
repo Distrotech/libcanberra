@@ -55,7 +55,7 @@ extern "C" {
  * specified parameters.
  */
 #define CA_CHECK_VERSION(major,minor)                           \
-    (CA_MAJOR > (major) ||                                      \
+    ((CA_MAJOR > (major)) ||                                    \
      (CA_MAJOR == (major) && CA_MINOR >= (minor)))
 
 /**
