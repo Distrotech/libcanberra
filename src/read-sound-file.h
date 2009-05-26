@@ -30,6 +30,29 @@ typedef enum ca_sample_type {
     CA_SAMPLE_U8
 } ca_sample_type_t;
 
+typedef enum ca_channel_position {
+    CA_CHANNEL_MONO,
+    CA_CHANNEL_FRONT_LEFT,
+    CA_CHANNEL_FRONT_RIGHT,
+    CA_CHANNEL_FRONT_CENTER,
+    CA_CHANNEL_REAR_LEFT,
+    CA_CHANNEL_REAR_RIGHT,
+    CA_CHANNEL_REAR_CENTER,
+    CA_CHANNEL_LFE,
+    CA_CHANNEL_FRONT_LEFT_OF_CENTER,
+    CA_CHANNEL_FRONT_RIGHT_OF_CENTER,
+    CA_CHANNEL_SIDE_LEFT,
+    CA_CHANNEL_SIDE_RIGHT,
+    CA_CHANNEL_TOP_CENTER,
+    CA_CHANNEL_TOP_FRONT_LEFT,
+    CA_CHANNEL_TOP_FRONT_RIGHT,
+    CA_CHANNEL_TOP_FRONT_CENTER,
+    CA_CHANNEL_TOP_REAR_LEFT,
+    CA_CHANNEL_TOP_REAR_RIGHT,
+    CA_CHANNEL_TOP_REAR_CENTER,
+    _CA_CHANNEL_POSITION_MAX
+} ca_channel_position_t;
+
 typedef struct ca_sound_file ca_sound_file;
 
 int ca_sound_file_open(ca_sound_file **f, const char *fn);
@@ -38,6 +61,7 @@ void ca_sound_file_close(ca_sound_file *f);
 unsigned ca_sound_file_get_nchannels(ca_sound_file *f);
 unsigned ca_sound_file_get_rate(ca_sound_file *f);
 ca_sample_type_t ca_sound_file_get_sample_type(ca_sound_file *f);
+const ca_channel_position_t* ca_sound_file_get_channel_map(ca_sound_file *f);
 
 off_t ca_sound_file_get_size(ca_sound_file *f);
 

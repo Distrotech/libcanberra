@@ -29,6 +29,50 @@
 
 #define FILE_SIZE_MAX (64U*1024U*1024U)
 
+/* Stores the bit indexes in dwChannelMask */
+enum {
+    BIT_FRONT_LEFT,
+    BIT_FRONT_RIGHT,
+    BIT_FRONT_CENTER,
+    BIT_LOW_FREQUENCY,
+    BIT_BACK_LEFT,
+    BIT_BACK_RIGHT,
+    BIT_FRONT_LEFT_OF_CENTER,
+    BIT_FRONT_RIGHT_OF_CENTER,
+    BIT_BACK_CENTER,
+    BIT_SIDE_LEFT,
+    BIT_SIDE_RIGHT,
+    BIT_TOP_CENTER,
+    BIT_TOP_FRONT_LEFT,
+    BIT_TOP_FRONT_CENTER,
+    BIT_TOP_FRONT_RIGHT,
+    BIT_TOP_BACK_LEFT,
+    BIT_TOP_BACK_CENTER,
+    BIT_TOP_BACK_RIGHT,
+    _BIT_MAX
+};
+
+static const ca_channel_position_t channel_table[_BIT_MAX] = {
+    [BIT_FRONT_LEFT] = CA_CHANNEL_FRONT_LEFT,
+    [BIT_FRONT_RIGHT] = CA_CHANNEL_FRONT_RIGHT,
+    [BIT_FRONT_CENTER] = CA_CHANNEL_FRONT_CENTER,
+    [BIT_LOW_FREQUENCY] = CA_CHANNEL_LFE,
+    [BIT_BACK_LEFT] = CA_CHANNEL_REAR_LEFT,
+    [BIT_BACK_RIGHT] = CA_CHANNEL_REAR_RIGHT,
+    [BIT_FRONT_LEFT_OF_CENTER] = CA_CHANNEL_FRONT_LEFT_OF_CENTER,
+    [BIT_FRONT_RIGHT_OF_CENTER] = CA_CHANNEL_FRONT_RIGHT_OF_CENTER,
+    [BIT_BACK_CENTER] = CA_CHANNEL_REAR_CENTER,
+    [BIT_SIDE_LEFT] = CA_CHANNEL_SIDE_LEFT,
+    [BIT_SIDE_RIGHT] = CA_CHANNEL_SIDE_RIGHT,
+    [BIT_TOP_CENTER] = CA_CHANNEL_TOP_CENTER,
+    [BIT_TOP_FRONT_LEFT] = CA_CHANNEL_TOP_FRONT_LEFT,
+    [BIT_TOP_FRONT_CENTER] = CA_CHANNEL_TOP_FRONT_CENTER,
+    [BIT_TOP_FRONT_RIGHT] = CA_CHANNEL_TOP_FRONT_RIGHT,
+    [BIT_TOP_BACK_LEFT] = CA_CHANNEL_TOP_REAR_LEFT,
+    [BIT_TOP_BACK_CENTER] = CA_CHANNEL_TOP_REAR_CENTER,
+    [BIT_TOP_BACK_RIGHT] = CA_CHANNEL_TOP_REAR_RIGHT
+};
+
 struct ca_wav {
     FILE *file;
 
@@ -36,6 +80,17 @@ struct ca_wav {
     unsigned nchannels;
     unsigned rate;
     unsigned depth;
+    uint32_t channel_mask;
+
+    ca_channel_position_t channel_map[_BIT_MAX];
+};
+
+#define CHUNK_ID_DATA 0x61746164U
+#define CHUNK_ID_FMT 0x20746d66U
+
+static const uint8_t pcm_guid[16] = {
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+    0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71
 };
 
 static int skip_to_chunk(ca_wav *w, uint32_t id, uint32_t *size) {
@@ -77,10 +132,12 @@ fail_io:
 }
 
 int ca_wav_open(ca_wav **_w, FILE *f)  {
-    uint32_t header[3], fmt_chunk[4];
+    uint32_t header[3], fmt_chunk[10];
     int ret;
     ca_wav *w;
     uint32_t file_size, fmt_size, data_size;
+    ca_bool_t extensible;
+    uint32_t format;
 
     ca_return_val_if_fail(_w, CA_ERROR_INVALID);
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
@@ -107,21 +164,46 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     }
 
     /* Skip to the fmt chunk */
-    if ((ret = skip_to_chunk(w, 0x20746d66U, &fmt_size)) < 0)
+    if ((ret = skip_to_chunk(w, CHUNK_ID_FMT, &fmt_size)) < 0)
         goto fail;
 
-    if (fmt_size != 16) {
-        ret = CA_ERROR_NOTSUPPORTED;
-        goto fail;
+    switch (fmt_size) {
+
+        case 14: /* WAVEFORMAT */
+        case 16:
+        case 18: /* WAVEFORMATEX */
+            extensible = FALSE;
+            break;
+
+        case 40: /* WAVEFORMATEXTENSIBLE */
+            extensible = TRUE;
+            break;
+
+        default:
+            ret = CA_ERROR_NOTSUPPORTED;
+            goto fail;
     }
 
-    if (fread(fmt_chunk, sizeof(uint32_t), CA_ELEMENTSOF(fmt_chunk), f) != CA_ELEMENTSOF(fmt_chunk))
+    if (fread(fmt_chunk, 1, fmt_size, f) != fmt_size)
         goto fail_io;
 
-    if ((CA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF) != 1) {
+    /* PCM? or WAVEX? */
+    format = (CA_UINT32_FROM_LE(fmt_chunk[0]) & 0xFFFF);
+    if ((!extensible && format != 0x0001) ||
+        (extensible && format != 0xFFFE)) {
         ret = CA_ERROR_NOTSUPPORTED;
         goto fail;
     }
+
+    if (extensible) {
+        if (memcmp(fmt_chunk + 6, pcm_guid, 16) != 0) {
+            ret = CA_ERROR_NOTSUPPORTED;
+            goto fail;
+        }
+
+        w->channel_mask = CA_UINT32_FROM_LE(fmt_chunk[5]);
+    } else
+        w->channel_mask = 0;
 
     w->nchannels = CA_UINT32_FROM_LE(fmt_chunk[0]) >> 16;
     w->rate = CA_UINT32_FROM_LE(fmt_chunk[1]);
@@ -138,7 +220,7 @@ int ca_wav_open(ca_wav **_w, FILE *f)  {
     }
 
     /* Skip to the data chunk */
-    if ((ret = skip_to_chunk(w, 0x61746164U, &data_size)) < 0)
+    if ((ret = skip_to_chunk(w, CHUNK_ID_DATA, &data_size)) < 0)
         goto fail;
     w->data_size = (off_t) data_size;
 
@@ -184,6 +266,29 @@ unsigned ca_wav_get_rate(ca_wav *w) {
     ca_assert(w);
 
     return w->rate;
+}
+
+const ca_channel_position_t* ca_wav_get_channel_map(ca_wav *w) {
+    unsigned c;
+    ca_channel_position_t *p;
+
+    ca_assert(w);
+
+    if (!w->channel_mask)
+        return NULL;
+
+    p = w->channel_map;
+
+    for (c = 0; c < _BIT_MAX; c++)
+        if ((w->channel_mask & (1 << c)))
+            *(p++) = channel_table[c];
+
+    ca_assert(p <= w->channel_map + _BIT_MAX);
+
+    if (p != w->channel_map + w->nchannels)
+        return NULL;
+
+    return w->channel_map;
 }
 
 ca_sample_type_t ca_wav_get_sample_type(ca_wav *w) {

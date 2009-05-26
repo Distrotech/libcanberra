@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+#include "read-sound-file.h"
+
 typedef struct ca_vorbis ca_vorbis;
 
 int ca_vorbis_open(ca_vorbis **v, FILE *f);
@@ -31,6 +33,7 @@ void ca_vorbis_close(ca_vorbis *v);
 
 unsigned ca_vorbis_get_nchannels(ca_vorbis *v);
 unsigned ca_vorbis_get_rate(ca_vorbis *v);
+const ca_channel_position_t* ca_vorbis_get_channel_map(ca_vorbis *v);
 
 int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, size_t *n);
 

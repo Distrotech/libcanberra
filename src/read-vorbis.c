@@ -35,6 +35,7 @@
 struct ca_vorbis {
     OggVorbis_File ovf;
     off_t size;
+    ca_channel_position_t channel_map[6];
 };
 
 static int convert_error(int or) {
@@ -128,6 +129,42 @@ unsigned ca_vorbis_get_rate(ca_vorbis *v) {
     ca_assert_se(vi = ov_info(&v->ovf, -1));
 
     return (unsigned) vi->rate;
+}
+
+const ca_channel_position_t* ca_vorbis_get_channel_map(ca_vorbis *v) {
+
+    /* See http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9 */
+
+    switch (ca_vorbis_get_nchannels(v)) {
+
+        case 6:
+            v->channel_map[5] = CA_CHANNEL_LFE;
+            /* fall through */
+
+        case 5:
+            v->channel_map[3] = CA_CHANNEL_REAR_LEFT;
+            v->channel_map[4] = CA_CHANNEL_REAR_RIGHT;
+            /* fall through */
+
+        case 3:
+            v->channel_map[0] = CA_CHANNEL_FRONT_LEFT;
+            v->channel_map[1] = CA_CHANNEL_FRONT_CENTER;
+            v->channel_map[2] = CA_CHANNEL_FRONT_RIGHT;
+            return v->channel_map;
+
+        case 4:
+            v->channel_map[2] = CA_CHANNEL_REAR_LEFT;
+            v->channel_map[3] = CA_CHANNEL_REAR_RIGHT;
+            /* fall through */
+
+        case 1:
+            v->channel_map[0] = CA_CHANNEL_FRONT_LEFT;
+            v->channel_map[1] = CA_CHANNEL_FRONT_RIGHT;
+            return v->channel_map;
+
+    }
+
+    return NULL;
 }
 
 int ca_vorbis_read_s16ne(ca_vorbis *v, int16_t *d, size_t *n){

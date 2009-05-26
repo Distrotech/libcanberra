@@ -688,6 +688,45 @@ static const pa_sample_format_t sample_type_table[] = {
     [CA_SAMPLE_U8] = PA_SAMPLE_U8
 };
 
+static const pa_channel_position_t channel_table[_CA_CHANNEL_POSITION_MAX] = {
+    [CA_CHANNEL_MONO] = PA_CHANNEL_POSITION_MONO,
+    [CA_CHANNEL_FRONT_LEFT] = PA_CHANNEL_POSITION_FRONT_LEFT,
+    [CA_CHANNEL_FRONT_RIGHT] = PA_CHANNEL_POSITION_FRONT_RIGHT,
+    [CA_CHANNEL_FRONT_CENTER] = PA_CHANNEL_POSITION_FRONT_CENTER,
+    [CA_CHANNEL_REAR_LEFT] = PA_CHANNEL_POSITION_REAR_LEFT,
+    [CA_CHANNEL_REAR_RIGHT] = PA_CHANNEL_POSITION_REAR_RIGHT,
+    [CA_CHANNEL_REAR_CENTER] = PA_CHANNEL_POSITION_REAR_CENTER,
+    [CA_CHANNEL_LFE] = PA_CHANNEL_POSITION_LFE,
+    [CA_CHANNEL_FRONT_LEFT_OF_CENTER] = PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+    [CA_CHANNEL_FRONT_RIGHT_OF_CENTER] = PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+    [CA_CHANNEL_SIDE_LEFT] = PA_CHANNEL_POSITION_SIDE_LEFT,
+    [CA_CHANNEL_SIDE_RIGHT] = PA_CHANNEL_POSITION_SIDE_RIGHT,
+    [CA_CHANNEL_TOP_CENTER] = PA_CHANNEL_POSITION_TOP_CENTER,
+    [CA_CHANNEL_TOP_FRONT_LEFT] = PA_CHANNEL_POSITION_FRONT_LEFT,
+    [CA_CHANNEL_TOP_FRONT_RIGHT] = PA_CHANNEL_POSITION_FRONT_RIGHT,
+    [CA_CHANNEL_TOP_FRONT_CENTER] = PA_CHANNEL_POSITION_FRONT_CENTER,
+    [CA_CHANNEL_TOP_REAR_LEFT] = PA_CHANNEL_POSITION_REAR_LEFT,
+    [CA_CHANNEL_TOP_REAR_RIGHT] = PA_CHANNEL_POSITION_REAR_RIGHT,
+    [CA_CHANNEL_TOP_REAR_CENTER] = PA_CHANNEL_POSITION_TOP_REAR_CENTER
+};
+
+static ca_bool_t convert_channel_map(ca_sound_file *f, pa_channel_map *cm) {
+    const ca_channel_position_t *positions;
+    unsigned c;
+
+    ca_assert(f);
+    ca_assert(cm);
+
+    if (!(positions = ca_sound_file_get_channel_map(f)))
+        return FALSE;
+
+    cm->channels = ca_sound_file_get_nchannels(f);
+    for (c = 0; c < cm->channels; c++)
+        cm->map[c] = channel_table[positions[c]];
+
+    return TRUE;
+}
+
 int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_callback_t cb, void *userdata) {
     struct private *p;
     pa_proplist *l = NULL;
@@ -701,6 +740,8 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     ca_bool_t volume_set = FALSE;
     pa_cvolume cvol;
     pa_sample_spec ss;
+    pa_channel_map cm;
+    ca_bool_t cm_good;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
     struct outstanding *out = NULL;
     int try = 3;
@@ -841,6 +882,8 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
+    cm_good = convert_channel_map(out->file, &cm);
+
     if (!name) {
         if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
             if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
@@ -851,7 +894,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
     pa_threaded_mainloop_lock(p->mainloop);
 
-    if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, NULL, l))) {
+    if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, cm_good ? &cm : NULL, l))) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
         goto finish;
@@ -997,6 +1040,8 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     const char *n, *ct;
     char *name = NULL;
     pa_sample_spec ss;
+    pa_channel_map cm;
+    ca_bool_t cm_good;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_PERMANENT;
     struct outstanding *out;
     int ret;
@@ -1062,6 +1107,8 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
+    cm_good = convert_channel_map(out->file, &cm);
+
     pa_threaded_mainloop_lock(p->mainloop);
 
     if (!p->context) {
@@ -1070,7 +1117,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         goto finish;
     }
 
-    if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, NULL, l))) {
+    if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, cm_good ? &cm : NULL, l))) {
         ret = translate_error(pa_context_errno(p->context));
 
         pa_threaded_mainloop_unlock(p->mainloop);

@@ -121,6 +121,15 @@ ca_sample_type_t ca_sound_file_get_sample_type(ca_sound_file *f) {
     return f->type;
 }
 
+const ca_channel_position_t* ca_sound_file_get_channel_map(ca_sound_file *f) {
+    ca_assert(f);
+
+    if (f->wav)
+        return ca_wav_get_channel_map(f->wav);
+    else
+        return ca_vorbis_get_channel_map(f->vorbis);
+}
+
 int ca_sound_file_read_int16(ca_sound_file *f, int16_t *d, size_t *n) {
     ca_return_val_if_fail(f, CA_ERROR_INVALID);
     ca_return_val_if_fail(d, CA_ERROR_INVALID);
