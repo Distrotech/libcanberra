@@ -35,6 +35,30 @@ extern "C" {
 #endif
 
 /**
+ * CA_MAJOR:
+ *
+ * Evaluates to the major version number of libcanberra.
+ */
+#define CA_MAJOR (@CA_MAJOR@)
+
+/**
+ * CA_MINOR:
+ *
+ * Evaluates to the minor version number of libcanberra.
+ */
+#define CA_MINOR (@CA_MINOR@)
+
+/**
+ * CA_CHECK_VERSION:
+ *
+ * Evaluates to TRUE when the library version is newer than the
+ * specified parameters.
+ */
+#define CA_CHECK_VERSION(major,minor)                           \
+    (CA_MAJOR > (major) ||                                      \
+     (CA_MAJOR == (major) && CA_MINOR >= (minor)))
+
+/**
  * CA_PROP_MEDIA_NAME:
  *
  * A name describing the media being played. Localized if possible and applicable.

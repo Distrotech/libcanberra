@@ -19,9 +19,13 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
+m4_define([ca_major],[0])
+m4_define([ca_minor],[13])
+m4_define([ca_version],[ca_major.ca_minor])
+
 AC_PREREQ(2.63)
 
-AC_INIT([libcanberra],[0.12],[mzyvopnaoreen (at) 0pointer (dot) de])
+AC_INIT([libcanberra],[ca_version],[mzyvopnaoreen (at) 0pointer (dot) de])
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
@@ -564,6 +568,9 @@ AM_CONDITIONAL([BUILTIN_OSS], [test "x$BUILTIN_OSS" = x1])
 AM_CONDITIONAL([BUILTIN_GSTREAMER], [test "x$BUILTIN_GSTREAMER" = x1])
 AM_CONDITIONAL([BUILTIN_NULL], [test "x$BUILTIN_NULL" = x1])
 
+AC_SUBST([CA_MAJOR],[ca_major])
+AC_SUBST([CA_MINOR],[ca_minor])
+
 GTK_DOC_CHECK(1.9)
 
 ###################################
@@ -575,6 +582,7 @@ Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
+src/canberra.h
 gtkdoc/Makefile
 doc/Makefile
 doc/README.html
