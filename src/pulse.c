@@ -730,7 +730,7 @@ static ca_bool_t convert_channel_map(ca_sound_file *f, pa_channel_map *cm) {
 int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_callback_t cb, void *userdata) {
     struct private *p;
     pa_proplist *l = NULL;
-    const char *n, *vol, *ct;
+    const char *n, *vol, *ct, *channel;
     char *name = NULL;
 #if defined(PA_MAJOR) && ((PA_MAJOR > 0) || (PA_MAJOR == 0 && PA_MINOR > 9) || (PA_MAJOR == 0 && PA_MINOR == 9 && PA_MICRO >= 15))
     pa_volume_t v = (pa_volume_t) -1;
@@ -741,6 +741,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     pa_cvolume cvol;
     pa_sample_spec ss;
     pa_channel_map cm;
+    pa_channel_position_t position = PA_CHANNEL_POSITION_INVALID;
     ca_bool_t cm_good;
     ca_cache_control_t cache_control = CA_CACHE_CONTROL_NEVER;
     struct outstanding *out = NULL;
@@ -800,13 +801,32 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             goto finish;
         }
 
+    if ((channel = pa_proplist_gets(l, "canberra.force_channel"))) {
+        pa_channel_map t;
+
+        if (!pa_channel_map_parse(&t, channel) ||
+            t.channels != 1) {
+            ret = CA_ERROR_INVALID;
+            goto finish;
+        }
+
+        position = t.map[0];
+
+        /* We cannot remap cached samples, so let's fail when cacheing
+         * shall be used */
+        if (cache_control != CA_CACHE_CONTROL_NEVER) {
+            ret = CA_ERROR_NOTSUPPORTED;
+            goto finish;
+        }
+    }
+
     strip_prefix(l, "canberra.");
     add_common(l);
 
     if ((ret = subscribe(c)) < 0)
         goto finish;
 
-    if (name) {
+    if (name && cache_control != CA_CACHE_CONTROL_NEVER) {
 
         /* Ok, this sample has an event id, let's try to play it from the cache */
 
@@ -882,7 +902,17 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     ss.channels = (uint8_t) ca_sound_file_get_nchannels(out->file);
     ss.rate = ca_sound_file_get_rate(out->file);
 
-    cm_good = convert_channel_map(out->file, &cm);
+    if (position != PA_CHANNEL_POSITION_INVALID) {
+        unsigned u;
+        /* Apply canberra.force_channel */
+
+        cm.channels = ss.channels;
+        for (u = 0; u < cm.channels; u++)
+            cm.map[u] = position;
+
+        cm_good = TRUE;
+    } else
+        cm_good = convert_channel_map(out->file, &cm);
 
     if (!name) {
         if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
@@ -912,6 +942,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 #else
                                    0
 #endif
+                                   | (position != PA_CHANNEL_POSITION_INVALID ? PA_STREAM_NO_REMIX_CHANNELS : 0)
                                    , volume_set ? &cvol : NULL, NULL) < 0) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
@@ -1085,6 +1116,11 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
     if (cache_control != CA_CACHE_CONTROL_PERMANENT) {
         ret = CA_ERROR_INVALID;
+        goto finish;
+    }
+
+    if ((ct = pa_proplist_gets(l, "canberra.force_channel"))) {
+        ret = CA_ERROR_NOTSUPPORTED;
         goto finish;
     }
 
