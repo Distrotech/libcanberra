@@ -233,6 +233,11 @@ static int open_alsa(ca_context *c, struct outstanding *out) {
     ca_return_val_if_fail(c->private, CA_ERROR_STATE);
     ca_return_val_if_fail(out, CA_ERROR_INVALID);
 
+    /* In ALSA we need to open different devices for doing
+     * multichannel audio. This cnnot be done in a backend-independant
+     * wa, hence we limit ourselves to mono/stereo only. */
+    ca_return_val_if_fail(ca_sound_file_get_nchannels(out->file) <= 2, CA_ERROR_NOTSUPPORTED);
+
     p = PRIVATE(c);
 
     if ((ret = snd_pcm_open(&out->pcm, c->device ? c->device : "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
