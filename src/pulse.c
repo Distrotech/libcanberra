@@ -801,7 +801,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             goto finish;
         }
 
-    if ((channel = pa_proplist_gets(l, "canberra.force_channel"))) {
+    if ((channel = pa_proplist_gets(l, CA_PROP_CANBERRA_FORCE_CHANNEL))) {
         pa_channel_map t;
 
         if (!pa_channel_map_parse(&t, channel) ||
@@ -1119,7 +1119,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         goto finish;
     }
 
-    if ((ct = pa_proplist_gets(l, "canberra.force_channel"))) {
+    if ((ct = pa_proplist_gets(l, CA_PROP_CANBERRA_FORCE_CHANNEL))) {
         ret = CA_ERROR_NOTSUPPORTED;
         goto finish;
     }

@@ -391,6 +391,23 @@ extern "C" {
 #define CA_PROP_CANBERRA_ENABLE                    "canberra.enable"
 
 /**
+ * CA_PROP_CANBERRA_FORCE_CHANNEL:
+ *
+ * A special property that can be used to control on which channel a
+ * sound is played. The value should be one of mono, front-left,
+ * front-right, front-center, rear-left, rear-right, rear-center, lfe,
+ * front-left-of-center, front-right-of-center, side-left, side-right,
+ * top-center, top-front-left, top-front-right, top-front-center,
+ * top-rear-left, top-rear-right, top-rear-center. This property is
+ * only honoured by some backends, other backends may choose to ignore
+ * it completely.
+ *
+ * If the list of properties is handed on to the sound server this
+ * property is stripped from it.
+ */
+#define CA_PROP_CANBERRA_FORCE_CHANNEL             "canberra.force_channel"
+
+/**
  * ca_context:
  *
  * A libcanberra context object.
