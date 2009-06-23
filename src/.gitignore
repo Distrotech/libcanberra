@@ -7,3 +7,4 @@ canberra-gtk-play
 .deps
 *.la
 test-canberra
+canberra.h
