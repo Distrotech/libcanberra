@@ -190,7 +190,8 @@ int ca_proplist_setf(ca_proplist *p, const char *key, const char *format, ...) {
     p->prop_hashtable[h] = prop;
 
     prop->prev_item = NULL;
-    prop->next_item = p->first_item;
+    if ((prop->next_item = p->first_item))
+        prop->next_item->prev_item = prop;
     p->first_item = prop;
 
 finish:
@@ -248,7 +249,8 @@ int ca_proplist_set(ca_proplist *p, const char *key, const void *data, size_t nb
     p->prop_hashtable[h] = prop;
 
     prop->prev_item = NULL;
-    prop->next_item = p->first_item;
+    if ((prop->next_item = p->first_item))
+        prop->next_item->prev_item = prop;
     p->first_item = prop;
 
 finish:
