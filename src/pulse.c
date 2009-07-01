@@ -69,6 +69,7 @@ struct private {
     pa_context *context;
     ca_theme_data *theme;
     ca_bool_t subscribed;
+    ca_bool_t reconnect;
 
     ca_mutex *outstanding_mutex;
     CA_LLIST_HEAD(struct outstanding, outstanding);
@@ -195,7 +196,7 @@ static int translate_error(int error) {
     return table[error];
 }
 
-static int context_connect(ca_context *c) {
+static int context_connect(ca_context *c, ca_bool_t nofail) {
     pa_proplist *l;
     struct private *p;
     int ret;
@@ -205,16 +206,13 @@ static int context_connect(ca_context *c) {
     ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
     ca_return_val_if_fail(!p->context, CA_ERROR_STATE);
 
-    if ((ret = convert_proplist(&l, c->props)) < 0) {
-        driver_destroy(c);
+    if ((ret = convert_proplist(&l, c->props)) < 0)
         return ret;
-    }
 
     strip_prefix(l, "canberra.");
 
     if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
         pa_proplist_free(l);
-        driver_destroy(c);
         return CA_ERROR_OOM;
     }
 
@@ -223,9 +221,13 @@ static int context_connect(ca_context *c) {
     pa_context_set_state_callback(p->context, context_state_cb, c);
     pa_context_set_subscribe_callback(p->context, context_subscribe_cb, c);
 
-    if (pa_context_connect(p->context, NULL, PA_CONTEXT_NOFAIL, NULL) < 0) {
+    if (pa_context_connect(p->context, NULL, nofail ? PA_CONTEXT_NOFAIL : 0, NULL) < 0) {
         ret = translate_error(pa_context_errno(p->context));
-        driver_destroy(c);
+
+        pa_context_disconnect(p->context);
+        pa_context_unref(p->context);
+        p->context = NULL;
+
         return ret;
     }
 
@@ -270,16 +272,20 @@ static void context_state_cb(pa_context *pc, void *userdata) {
 
         ca_mutex_unlock(p->outstanding_mutex);
 
-        if (p->context) {
-            pa_context_disconnect(p->context);
-            pa_context_unref(p->context);
-            p->subscribed = FALSE;
-            p->context = NULL;
-        }
+        if (state == PA_CONTEXT_FAILED && p->reconnect) {
 
-        /* FIXME: recycle previous pa_context_proplist and restore state as much as possible? */
-        if (context_connect(c) != CA_SUCCESS)
-            return;
+            if (p->context) {
+                pa_context_disconnect(p->context);
+                pa_context_unref(p->context);
+                p->context = NULL;
+            }
+
+            p->subscribed = FALSE;
+
+            /* If we managed to connect once, then let's try to
+             * reconnect, and pass NOFAIL */
+            context_connect(c, TRUE);
+        }
     }
 
     pa_threaded_mainloop_signal(p->mainloop, FALSE);
@@ -338,7 +344,6 @@ int driver_open(ca_context *c) {
     if (!(c->private = p = ca_new0(struct private, 1)))
         return CA_ERROR_OOM;
 
-
     if (!(p->outstanding_mutex = ca_mutex_new())) {
         driver_destroy(c);
         return CA_ERROR_OOM;
@@ -349,8 +354,12 @@ int driver_open(ca_context *c) {
         return CA_ERROR_OOM;
     }
 
-    if ((ret = context_connect(c)) != CA_SUCCESS)
+    /* The initial connection is without NOFAIL, since we want to have
+     * this call fail cleanly if we cannot connect. */
+    if ((ret = context_connect(c, FALSE)) != CA_SUCCESS) {
+        driver_destroy(c);
         return ret;
+    }
 
     pa_threaded_mainloop_lock(p->mainloop);
 
@@ -361,7 +370,9 @@ int driver_open(ca_context *c) {
     }
 
     for (;;) {
-        pa_context_state_t state = pa_context_get_state(p->context);
+        pa_context_state_t state;
+
+        state = pa_context_get_state(p->context);
 
         if (state == PA_CONTEXT_READY)
             break;
@@ -377,6 +388,10 @@ int driver_open(ca_context *c) {
 
         pa_threaded_mainloop_wait(p->mainloop);
     }
+
+    /* OK, the connection suceeded once, if it dies now try to
+     * reconnect */
+    p->reconnect = TRUE;
 
     pa_threaded_mainloop_unlock(p->mainloop);
 
@@ -838,6 +853,12 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
             pa_threaded_mainloop_lock(p->mainloop);
 
+            if (!p->context) {
+                ret = CA_ERROR_STATE;
+                pa_threaded_mainloop_unlock(p->mainloop);
+                goto finish;
+            }
+
             /* Let's try to play the sample */
             if (!(o = pa_context_play_sample_with_proplist(p->context, name, c->device, v, l, play_sample_cb, out))) {
                 ret = translate_error(pa_context_errno(p->context));
@@ -927,6 +948,12 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
     pa_threaded_mainloop_lock(p->mainloop);
 
+    if (!p->context) {
+        ret = CA_ERROR_STATE;
+        pa_threaded_mainloop_unlock(p->mainloop);
+        goto finish;
+    }
+
     if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, cm_good ? &cm : NULL, l))) {
         ret = translate_error(pa_context_errno(p->context));
         pa_threaded_mainloop_unlock(p->mainloop);
@@ -955,16 +982,19 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     for (;;) {
         pa_stream_state_t state = pa_stream_get_state(out->stream);
 
+        if (!p->context) {
+            ret = CA_ERROR_STATE;
+            pa_threaded_mainloop_unlock(p->mainloop);
+            goto finish;
+        }
+
         /* Stream sucessfully created */
         if (state == PA_STREAM_READY)
             break;
 
         /* Check for failure */
-        if (state == PA_STREAM_FAILED) { /* it means it was disconnected */
-            if (pa_context_errno(p->context) == PA_OK) /* and context reconnected immediately */
-                ret = CA_ERROR_STATE;
-            else
-                ret = translate_error(pa_context_errno(p->context));
+        if (state == PA_STREAM_FAILED) {
+            ret = translate_error(pa_context_errno(p->context));
             pa_threaded_mainloop_unlock(p->mainloop);
             goto finish;
         }
@@ -1174,6 +1204,12 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
     for (;;) {
         pa_stream_state_t state = pa_stream_get_state(out->stream);
+
+        if (!p->context) {
+            ret = CA_ERROR_STATE;
+            pa_threaded_mainloop_unlock(p->mainloop);
+            goto finish;
+        }
 
         /* Stream sucessfully created and uploaded */
         if (state == PA_STREAM_TERMINATED)
