@@ -60,7 +60,7 @@ static gboolean idle_play(gpointer userdata) {
 static void callback(ca_context *c, uint32_t id, int error, void *userdata) {
 
     if (error < 0) {
-        g_printerr("Failed to play sound: %s\n", ca_strerror(error));
+        g_printerr("Failed to play sound (callback): %s\n", ca_strerror(error));
         ret = 1;
 
     } else if (n_loops > 1) {
