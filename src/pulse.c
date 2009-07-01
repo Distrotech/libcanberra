@@ -596,6 +596,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
     struct private *p;
     void *data;
     int ret;
+    ca_bool_t eof = FALSE;
 
     ca_assert(s);
     ca_assert(bytes > 0);
@@ -614,8 +615,10 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
         if ((ret = ca_sound_file_read_arbitrary(out->file, data, &rbytes)) < 0)
             goto finish;
 
-        if (rbytes <= 0)
+        if (rbytes <= 0) {
+            eof = TRUE;
             break;
+        }
 
         ca_assert(rbytes <= bytes);
 
@@ -629,7 +632,7 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
         bytes -= rbytes;
     }
 
-    if (ca_sound_file_get_size(out->file) <= 0) {
+    if (eof || ca_sound_file_get_size(out->file) <= 0) {
 
         /* We reached EOF */
 
