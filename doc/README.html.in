@@ -38,6 +38,10 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Thu 2 Jul 2009: </div> <p class="news-text"><a
+href="@PACKAGE_URL@libcanberra-0.14.tar.gz">Version 0.14</a> released;
+bug fixes</p>
+
 <div class="news-date">Tue 23 Jun 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.13.tar.gz">Version 0.13</a> released;
 multichannel support; gtk multihead support; bug fixes</p>
@@ -171,7 +175,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, June 2009</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, July 2009</address>
 
 </body>
 </html>
