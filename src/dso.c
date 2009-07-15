@@ -68,9 +68,12 @@ static int ca_error_from_lt_error(int code) {
         [LT_ERROR_CLOSE_RESIDENT_MODULE] = CA_ERROR_INTERNAL,
         [LT_ERROR_INVALID_MUTEX_ARGS] = CA_ERROR_INTERNAL,
         [LT_ERROR_INVALID_POSITION] = CA_ERROR_INTERNAL
-    };
+#ifdef LT_ERROR_CONFLICTING_FLAGS
+        , [LT_ERROR_CONFLICTING_FLAGS] = CA_ERROR_INTERNAL
+#endif
+};
 
-    if (code < 0 || code >= LT_ERROR_MAX)
+    if (code < 0 || code >= CA_ELEMENTSOF(table))
         return CA_ERROR_INTERNAL;
 
     return table[code];
