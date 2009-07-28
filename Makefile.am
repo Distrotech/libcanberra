@@ -55,7 +55,7 @@ README:
 	$(MAKE) -C doc README
 	ln -s doc/README README
 
-homepage: all dist
+homepage: dist
 	test -d $$HOME/homepage/private
 	mkdir -p $$HOME/homepage/private/projects/libcanberra $$HOME/homepage/private/projects/libcanberra/gtkdoc
 	cp libcanberra-@PACKAGE_VERSION@.tar.gz $$HOME/homepage/private/projects/libcanberra
