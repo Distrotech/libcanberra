@@ -135,8 +135,6 @@ ca_context *ca_gtk_context_get_for_screen(GdkScreen *screen) {
     ca_context_change_props_full(c, p);
     ca_proplist_destroy(p);
 
-    GDK_THREADS_ENTER();
-
     s = gtk_settings_get_for_screen(screen);
 
     ca_return_val_if_fail(s, NULL);
@@ -152,8 +150,6 @@ ca_context *ca_gtk_context_get_for_screen(GdkScreen *screen) {
         read_enable_event_sounds(c, s);
     } else
         g_debug("This Gtk+ version doesn't have the GtkSettings::gtk-enable-event-sounds property.");
-
-    GDK_THREADS_LEAVE();
 
     g_object_set_data_full(G_OBJECT(screen), "canberra::gtk::context", c, (GDestroyNotify) ca_context_destroy);
 
