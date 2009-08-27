@@ -157,11 +157,14 @@ const ca_channel_position_t* ca_vorbis_get_channel_map(ca_vorbis *v) {
             v->channel_map[3] = CA_CHANNEL_REAR_RIGHT;
             /* fall through */
 
-        case 1:
+        case 2:
             v->channel_map[0] = CA_CHANNEL_FRONT_LEFT;
             v->channel_map[1] = CA_CHANNEL_FRONT_RIGHT;
             return v->channel_map;
 
+        case 1:
+            v->channel_map[0] = CA_CHANNEL_MONO;
+            return v->channel_map;
     }
 
     return NULL;
