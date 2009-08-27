@@ -38,7 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
-<div class="news-date">Wed 5 Auf 2009: </div> <p class="news-text"><a
+<div class="news-date">Thu 27 Aug 2009: </div> <p class="news-text"><a
+href="@PACKAGE_URL@libcanberra-0.16.tar.gz">Version 0.16</a> released;
+add new <tt>ca_context_playing()</tt> call</p>
+
+<div class="news-date">Wed 5 Aug 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.15.tar.gz">Version 0.15</a> released;
 bug fixes</p>
 
