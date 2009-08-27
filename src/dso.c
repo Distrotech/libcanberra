@@ -73,7 +73,7 @@ static int ca_error_from_lt_error(int code) {
 #endif
 };
 
-    if (code < 0 || code >= CA_ELEMENTSOF(table))
+    if (code < 0 || code >= (int) CA_ELEMENTSOF(table))
         return CA_ERROR_INTERNAL;
 
     return table[code];
