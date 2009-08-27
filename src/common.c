@@ -689,3 +689,32 @@ int ca_parse_cache_control(ca_cache_control_t *control, const char *c) {
 
     return CA_SUCCESS;
 }
+
+/**
+ * ca_context_playing:
+ * @c: the context to check if sound is still playing
+ * @id: the id that identify the sounds to check
+ * @playing: a pointer to a boolean that will be updated with the play status
+ *
+ * Check if at least one sound with the specified id is still
+ * playing. Returns 0 in *playing if no sound with this id is playing
+ * anymore or non-zero if there is at least one playing.
+ *
+ * Returns: 0 on success, negative error code on error.
+ * Since: 0.16
+ */
+int ca_context_playing(ca_context *c, uint32_t id, int *playing)  {
+    int ret;
+
+    ca_return_val_if_fail(!ca_detect_fork(), CA_ERROR_FORKED);
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(playing, CA_ERROR_INVALID);
+    ca_mutex_lock(c->mutex);
+    ca_return_val_if_fail_unlock(c->opened, CA_ERROR_STATE, c->mutex);
+
+    ret = driver_playing(c, id, playing);
+
+    ca_mutex_unlock(c->mutex);
+
+    return ret;
+}

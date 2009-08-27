@@ -485,6 +485,7 @@ int ca_context_play(ca_context *c, uint32_t id, ...) __attribute__((sentinel));
 int ca_context_cache_full(ca_context *c, ca_proplist *p);
 int ca_context_cache(ca_context *c, ...) __attribute__((sentinel));
 int ca_context_cancel(ca_context *c, uint32_t id);
+int ca_context_playing(ca_context *c, uint32_t id, int *playing);
 
 const char *ca_strerror(int code);
 

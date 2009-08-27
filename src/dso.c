@@ -42,6 +42,7 @@ struct private_dso {
     int (*driver_play)(ca_context *c, uint32_t id, ca_proplist *p, ca_finish_callback_t cb, void *userdata);
     int (*driver_cancel)(ca_context *c, uint32_t id);
     int (*driver_cache)(ca_context *c, ca_proplist *p);
+    int (*driver_playing)(ca_context *c, uint32_t id, int *playing);
 };
 
 #define PRIVATE_DSO(c) ((struct private_dso *) ((c)->private_dso))
@@ -257,7 +258,8 @@ int driver_open(ca_context *c) {
         !(p->driver_change_props = GET_FUNC_PTR(p->module, driver, "driver_change_props", int, (ca_context *, ca_proplist *, ca_proplist *))) ||
         !(p->driver_play = GET_FUNC_PTR(p->module, driver, "driver_play", int, (ca_context*, uint32_t, ca_proplist *, ca_finish_callback_t, void *))) ||
         !(p->driver_cancel = GET_FUNC_PTR(p->module, driver, "driver_cancel", int, (ca_context*, uint32_t))) ||
-        !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *)))) {
+        !(p->driver_cache = GET_FUNC_PTR(p->module, driver, "driver_cache", int, (ca_context*, ca_proplist *))) ||
+        !(p->driver_playing = GET_FUNC_PTR(p->module, driver, "driver_playing", int, (ca_context*, uint32_t, int*)))) {
 
         ca_free(driver);
         driver_destroy(c);
@@ -360,4 +362,17 @@ int driver_cache(ca_context *c, ca_proplist *pl) {
     ca_return_val_if_fail(p->driver_cache, CA_ERROR_STATE);
 
     return p->driver_cache(c, pl);
+}
+
+int driver_playing(ca_context *c, uint32_t id, int *playing) {
+    struct private_dso *p;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(c->private_dso, CA_ERROR_STATE);
+    ca_return_val_if_fail(playing, CA_ERROR_INVALID);
+
+    p = PRIVATE_DSO(c);
+    ca_return_val_if_fail(p->driver_playing, CA_ERROR_STATE);
+
+    return p->driver_playing(c, id, playing);
 }

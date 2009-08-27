@@ -330,3 +330,32 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
     return ret;
 }
+
+int driver_playing(ca_context *c, uint32_t id, int *playing) {
+    int ret = CA_SUCCESS;
+    struct private *p;
+    struct backend *b;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(playing, CA_ERROR_INVALID);
+    ca_return_val_if_fail(c->private, CA_ERROR_STATE);
+
+    p = PRIVATE(c);
+
+    *playing = 0;
+
+    for (b = p->backends; b; b = b->next) {
+        int r, _playing = 0;
+
+        r = ca_context_playing(b->context, id, &_playing);
+
+        /* We only return the first failure */
+        if (ret == CA_SUCCESS)
+            ret = r;
+
+        if (_playing)
+            *playing = 1;
+    }
+
+    return ret;
+}

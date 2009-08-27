@@ -63,6 +63,7 @@ ca_context_play_full
 ca_context_cancel
 ca_context_cache
 ca_context_cache_full
+ca_context_playing
 
 <SUBSECTION>
 ca_strerror

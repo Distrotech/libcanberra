@@ -1271,3 +1271,33 @@ finish_unlocked:
 
     return ret;
 }
+
+int driver_playing(ca_context *c, uint32_t id, int *playing) {
+    struct private *p;
+    struct outstanding *out;
+
+    ca_return_val_if_fail(c, CA_ERROR_INVALID);
+    ca_return_val_if_fail(c->private, CA_ERROR_STATE);
+    ca_return_val_if_fail(playing, CA_ERROR_INVALID);
+
+    p = PRIVATE(c);
+
+    *playing = 0;
+
+    ca_mutex_lock(p->outstanding_mutex);
+
+    for (out = p->outstanding; out; out = out->next) {
+
+        if (out->type == OUTSTANDING_UPLOAD ||
+            out->id != id ||
+            out->sink_input == PA_INVALID_INDEX)
+            continue;
+
+        *playing = 1;
+        break;
+    }
+
+    ca_mutex_unlock(p->outstanding_mutex);
+
+    return CA_SUCCESS;
+}
