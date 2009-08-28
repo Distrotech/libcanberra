@@ -628,10 +628,8 @@ static void dispatch_sound_event(SoundEventData *d) {
 /*         g_warning("Failed to play event sound: %s", ca_strerror(ret)); */
 }
 
-static gboolean idle_cb(void *userdata) {
+static void dispatch_queue(void) {
     SoundEventData *d;
-
-    idle_id = 0;
 
     while ((d = g_queue_pop_head(&sound_event_queue))) {
 
@@ -643,6 +641,12 @@ static gboolean idle_cb(void *userdata) {
         dispatch_sound_event(d);
         free_sound_event(d);
     }
+}
+
+static gboolean idle_cb(void *userdata) {
+    idle_id = 0;
+
+    dispatch_queue();
 
     return FALSE;
 }
@@ -742,6 +746,11 @@ static void connect_settings(void) {
     connected = TRUE;
 }
 
+static gboolean quit_handler(gpointer data) {
+    dispatch_queue();
+    return FALSE;
+}
+
 G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
 
     /* This is the same quark libgnomeui uses! */
@@ -763,6 +772,8 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_NOTEBOOK, "switch-page", &signal_id_notebook_switch_page);
     install_hook(GTK_TYPE_TREE_VIEW, "cursor-changed", &signal_id_tree_view_cursor_changed);
     install_hook(GTK_TYPE_ICON_VIEW, "selection-changed", &signal_id_icon_view_selection_changed);
+
+    gtk_quit_add(1, quit_handler, NULL);
 }
 
 G_MODULE_EXPORT gchar* g_module_check_init(GModule *module);
