@@ -804,6 +804,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     int ret;
     pa_operation *o;
     char *sp;
+    pa_buffer_attr ba;
 
     ca_return_val_if_fail(c, CA_ERROR_INVALID);
     ca_return_val_if_fail(proplist, CA_ERROR_INVALID);
@@ -999,7 +1000,15 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     if (volume_set)
         pa_cvolume_set(&cvol, ss.channels, v);
 
-    if (pa_stream_connect_playback(out->stream, NULL, NULL,
+    /* Make sure we get the longest latency possible, to minimize CPU
+     * consumption */
+    ba.maxlength = (uint32_t) -1;
+    ba.tlength = (uint32_t) -1;
+    ba.prebuf = (uint32_t) -1;
+    ba.minreq = (uint32_t) -1;
+    ba.fragsize = (uint32_t) -1;
+
+    if (pa_stream_connect_playback(out->stream, NULL, &ba,
 #ifdef PA_STREAM_FAIL_ON_SUSPEND
                                    PA_STREAM_FAIL_ON_SUSPEND
 #else
