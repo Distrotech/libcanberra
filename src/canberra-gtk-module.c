@@ -328,7 +328,7 @@ static gboolean is_hidden(GdkDisplay *d, GdkWindow *w) {
 
 static void dispatch_sound_event(SoundEventData *d) {
     int ret = CA_SUCCESS;
-    static gboolean menu_is_popped_up = TRUE;
+    static gboolean menu_is_popped_up = FALSE;
 
     if (g_object_get_qdata(d->object, disable_sound_quark))
         return;
@@ -343,7 +343,7 @@ static void dispatch_sound_event(SoundEventData *d) {
 
         if (is_menu_hint(hint)) {
 
-            if (menu_is_popped_up) {
+            if (!menu_is_popped_up) {
                 ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "menu-popup",
                                              CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
