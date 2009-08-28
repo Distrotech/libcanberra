@@ -100,8 +100,8 @@ static guint
     signal_id_icon_view_selection_changed;
 
 static GQuark
-    disable_sound_quark,
-    was_hidden_quark;
+    disable_sound_quark/* , */
+    /* was_hidden_quark */;
 
 /* Make sure GCC doesn't warn us about a missing prototype for this
  * exported function */
@@ -292,39 +292,43 @@ static SoundEventData* filter_sound_event(SoundEventData *d) {
     return d;
 }
 
-static gboolean is_hidden(GdkDisplay *d, GdkWindow *w) {
-    Atom type_return;
-    gint format_return;
-    gulong nitems_return;
-    gulong bytes_after_return;
-    guchar *data = NULL;
-    gboolean r = FALSE;
+/* static gboolean is_hidden(GdkDisplay *d, GdkWindow *w) { */
+/*     Atom type_return; */
+/*     gint format_return; */
+/*     gulong nitems_return; */
+/*     gulong bytes_after_return; */
+/*     guchar *data = NULL; */
+/*     gboolean r = FALSE; */
 
-    if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
-                            gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE"),
-                            0, G_MAXLONG, False, XA_ATOM, &type_return,
-                            &format_return, &nitems_return, &bytes_after_return,
-                            &data) != Success)
-        return FALSE;
+/*     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w), */
+/*                             gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE"), */
+/*                             0, G_MAXLONG, False, XA_ATOM, &type_return, */
+/*                             &format_return, &nitems_return, &bytes_after_return, */
+/*                             &data) != Success) */
+/*         return FALSE; */
 
-    if (type_return == XA_ATOM && format_return == 32 && data) {
-        unsigned i;
+/*     if (type_return == XA_ATOM && format_return == 32 && data) { */
+/*         unsigned i; */
 
-        for (i = 0; i < nitems_return; i++) {
-            Atom atom = ((Atom*) data)[i];
+/*         for (i = 0; i < nitems_return; i++) { */
+/*             Atom atom = ((Atom*) data)[i]; */
 
-            if (atom == gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE_HIDDEN")) {
-                r = TRUE;
-                break;
-            }
-        }
-    }
 
-    if (type_return != None && data != NULL)
-        XFree (data);
+/*             g_debug("found %s", gdk_x11_get_xatom_name_for_display (d, atom)); */
 
-    return r;
-}
+/*             if (atom == gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE_HIDDEN")) { */
+/*                 g_debug("found hidden atom"); */
+/*                 r = TRUE; */
+/*                 /\* break; *\/ */
+/*             } */
+/*         } */
+/*     } */
+
+/*     if (type_return != None && data != NULL) */
+/*         XFree (data); */
+
+/*     return r; */
+/* } */
 
 static void dispatch_sound_event(SoundEventData *d) {
     int ret = CA_SUCCESS;
@@ -344,6 +348,7 @@ static void dispatch_sound_event(SoundEventData *d) {
         if (is_menu_hint(hint)) {
 
             if (!menu_is_popped_up) {
+
                 ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "menu-popup",
                                              CA_PROP_EVENT_DESCRIPTION, "Menu popped up",
@@ -460,15 +465,23 @@ static void dispatch_sound_event(SoundEventData *d) {
 
     if (GTK_IS_WINDOW(d->object) && d->signal_id == signal_id_widget_window_state_event) {
         GdkEventWindowState *e;
-        gboolean h, ph;
+        /* gboolean h, ph; */
 
         e = (GdkEventWindowState*) d->event;
 
-        h = is_hidden(gdk_screen_get_display(gdk_event_get_screen(d->event)), e->window);
-        ph = !!g_object_get_qdata(d->object, was_hidden_quark);
-        g_object_set_qdata(d->object, was_hidden_quark, GINT_TO_POINTER(h));
+        /* g_message("aussen"); */
 
-        if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) && h && !ph) {
+        /* h = is_hidden(gdk_screen_get_display(gdk_event_get_screen(d->event)), e->window); */
+        /* ph = !!g_object_get_qdata(d->object, was_hidden_quark); */
+        /* g_object_set_qdata(d->object, was_hidden_quark, GINT_TO_POINTER(h)); */
+
+        /* g_message("%i %i %i %i", */
+        /*           !!(e->changed_mask & GDK_WINDOW_STATE_ICONIFIED), */
+        /*           !!(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED), */
+        /*           !!h, */
+        /*           !!ph); */
+
+        if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) /*&& h && !ph*/) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-minimized",
@@ -484,7 +497,7 @@ static void dispatch_sound_event(SoundEventData *d) {
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
 
-        } else if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && !(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) && ph) {
+        } else if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && !(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) /* && ph */) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-unminimized",
@@ -755,7 +768,7 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
 
     /* This is the same quark libgnomeui uses! */
     disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
-    was_hidden_quark = g_quark_from_string("canberra_was_hidden");
+    /* was_hidden_quark = g_quark_from_string("canberra_was_hidden"); */
 
     /* Hook up the gtk setting */
     connect_settings();
