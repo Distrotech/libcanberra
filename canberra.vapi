@@ -131,5 +131,6 @@ namespace Canberra {
         public int cache_full(Proplist p);
         public int cache(...);
         public int cancel(uint32 id);
+		public int playing(uint32 id, out bool playing);
     }
 }
