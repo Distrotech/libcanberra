@@ -21,109 +21,109 @@
 [CCode (cprefix = "CA_", lower_case_cprefix = "ca_", cheader_filename = "canberra.h")]
 namespace Canberra {
 
-    public static const int MAJOR;
-    public static const int MINOR;
+        public static const int MAJOR;
+        public static const int MINOR;
 
-    [CCode (cname="CA_CHECK_VERSION")]
-    public static bool CHECK_VERSION(int major, int minor);
+        [CCode (cname="CA_CHECK_VERSION")]
+        public static bool CHECK_VERSION(int major, int minor);
 
-    public static const string PROP_MEDIA_NAME;
-    public static const string PROP_MEDIA_TITLE;
-    public static const string PROP_MEDIA_ARTIST;
-    public static const string PROP_MEDIA_LANGUAGE;
-    public static const string PROP_MEDIA_FILENAME;
-    public static const string PROP_MEDIA_ICON;
-    public static const string PROP_MEDIA_ICON_NAME;
-    public static const string PROP_MEDIA_ROLE;
-    public static const string PROP_EVENT_ID;
-    public static const string PROP_EVENT_DESCRIPTION;
-    public static const string PROP_EVENT_MOUSE_X;
-    public static const string PROP_EVENT_MOUSE_Y;
-    public static const string PROP_EVENT_MOUSE_HPOS;
-    public static const string PROP_EVENT_MOUSE_VPOS;
-    public static const string PROP_EVENT_MOUSE_BUTTON;
-    public static const string PROP_WINDOW_NAME;
-    public static const string PROP_WINDOW_ID;
-    public static const string PROP_WINDOW_ICON;
-    public static const string PROP_WINDOW_ICON_NAME;
-    public static const string PROP_WINDOW_X11_DISPLAY;
-    public static const string PROP_WINDOW_X11_SCREEN;
-    public static const string PROP_WINDOW_X11_MONITOR;
-    public static const string PROP_WINDOW_X11_XID;
-    public static const string PROP_APPLICATION_NAME;
-    public static const string PROP_APPLICATION_ID;
-    public static const string PROP_APPLICATION_VERSION;
-    public static const string PROP_APPLICATION_ICON;
-    public static const string PROP_APPLICATION_ICON_NAME;
-    public static const string PROP_APPLICATION_LANGUAGE;
-    public static const string PROP_APPLICATION_PROCESS_ID;
-    public static const string PROP_APPLICATION_PROCESS_BINARY;
-    public static const string PROP_APPLICATION_PROCESS_USER;
-    public static const string PROP_APPLICATION_PROCESS_HOST;
-    public static const string PROP_CANBERRA_CACHE_CONTROL;
-    public static const string PROP_CANBERRA_VOLUME;
-    public static const string PROP_CANBERRA_XDG_THEME_NAME;
-    public static const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
-    public static const string PROP_CANBERRA_ENABLE;
+        public static const string PROP_MEDIA_NAME;
+        public static const string PROP_MEDIA_TITLE;
+        public static const string PROP_MEDIA_ARTIST;
+        public static const string PROP_MEDIA_LANGUAGE;
+        public static const string PROP_MEDIA_FILENAME;
+        public static const string PROP_MEDIA_ICON;
+        public static const string PROP_MEDIA_ICON_NAME;
+        public static const string PROP_MEDIA_ROLE;
+        public static const string PROP_EVENT_ID;
+        public static const string PROP_EVENT_DESCRIPTION;
+        public static const string PROP_EVENT_MOUSE_X;
+        public static const string PROP_EVENT_MOUSE_Y;
+        public static const string PROP_EVENT_MOUSE_HPOS;
+        public static const string PROP_EVENT_MOUSE_VPOS;
+        public static const string PROP_EVENT_MOUSE_BUTTON;
+        public static const string PROP_WINDOW_NAME;
+        public static const string PROP_WINDOW_ID;
+        public static const string PROP_WINDOW_ICON;
+        public static const string PROP_WINDOW_ICON_NAME;
+        public static const string PROP_WINDOW_X11_DISPLAY;
+        public static const string PROP_WINDOW_X11_SCREEN;
+        public static const string PROP_WINDOW_X11_MONITOR;
+        public static const string PROP_WINDOW_X11_XID;
+        public static const string PROP_APPLICATION_NAME;
+        public static const string PROP_APPLICATION_ID;
+        public static const string PROP_APPLICATION_VERSION;
+        public static const string PROP_APPLICATION_ICON;
+        public static const string PROP_APPLICATION_ICON_NAME;
+        public static const string PROP_APPLICATION_LANGUAGE;
+        public static const string PROP_APPLICATION_PROCESS_ID;
+        public static const string PROP_APPLICATION_PROCESS_BINARY;
+        public static const string PROP_APPLICATION_PROCESS_USER;
+        public static const string PROP_APPLICATION_PROCESS_HOST;
+        public static const string PROP_CANBERRA_CACHE_CONTROL;
+        public static const string PROP_CANBERRA_VOLUME;
+        public static const string PROP_CANBERRA_XDG_THEME_NAME;
+        public static const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
+        public static const string PROP_CANBERRA_ENABLE;
 
-    [CCode (cname = "CA_SUCCESS")]
-    public static const int SUCCESS;
+        [CCode (cname = "CA_SUCCESS")]
+        public static const int SUCCESS;
 
-    [CCode (cname = "int", cprefix = "CA_ERROR_")]
-    public enum Error {
-        NOTSUPPORTED,
-        INVALID,
-        STATE,
-        OOM,
-        NODRIVER,
-        SYSTEM,
-        CORRUPT,
-        TOOBIG,
-        NOTFOUND,
-        DESTROYED,
-        CANCELED,
-        NOTAVAILABLE,
-        ACCESS,
-        IO,
-        INTERNAL,
-        DISABLED,
-        FORKED
-    }
+        [CCode (cname = "int", cprefix = "CA_ERROR_")]
+        public enum Error {
+                NOTSUPPORTED,
+                INVALID,
+                STATE,
+                OOM,
+                NODRIVER,
+                SYSTEM,
+                CORRUPT,
+                TOOBIG,
+                NOTFOUND,
+                DESTROYED,
+                CANCELED,
+                NOTAVAILABLE,
+                ACCESS,
+                IO,
+                INTERNAL,
+                DISABLED,
+                FORKED
+        }
 
-    public unowned string? strerror(int code);
+        public unowned string? strerror(int code);
 
-    public delegate void FinishCallback(Context c, uint32 id, int code);
+        public delegate void FinishCallback(Context c, uint32 id, int code);
 
-    [Compact]
-    [CCode (cname = "ca_proplist", free_function = "")]
-    public class Proplist {
+        [Compact]
+        [CCode (cname = "ca_proplist", free_function = "")]
+        public class Proplist {
 
-        public static int create(out Proplist p);
-        public int destroy();
-        public int sets(string key, string value);
-        [PrintfFormat]
-        public int setf(string key, string format, ...);
-        public int set(string key, void* data, size_t nbytes);
-    }
+                public static int create(out Proplist p);
+                public int destroy();
+                public int sets(string key, string value);
+                [PrintfFormat]
+                public int setf(string key, string format, ...);
+                public int set(string key, void* data, size_t nbytes);
+        }
 
-    [Compact]
-    [CCode (cname = "ca_context", free_function = "")]
-    public class Context {
+        [Compact]
+        [CCode (cname = "ca_context", free_function = "")]
+        public class Context {
 
 
-        public static int create(out Context context);
-        public int destroy();
-        public int set_driver(string? driver = null);
-        public int change_device(string? device = null);
-        public int open();
-        public int change_props(...);
-        public int change_props_full(Proplist p);
-        [CCode (instance_pos = 0)]
-        public int play_full(uint32 id, Proplist p, FinishCallback? cb = null);
-        public int play(uint32 id, ...);
-        public int cache_full(Proplist p);
-        public int cache(...);
-        public int cancel(uint32 id);
-        public int playing(uint32 id, out bool playing);
-    }
+                public static int create(out Context context);
+                public int destroy();
+                public int set_driver(string? driver = null);
+                public int change_device(string? device = null);
+                public int open();
+                public int change_props(...);
+                public int change_props_full(Proplist p);
+                [CCode (instance_pos = 0)]
+                public int play_full(uint32 id, Proplist p, FinishCallback? cb = null);
+                public int play(uint32 id, ...);
+                public int cache_full(Proplist p);
+                public int cache(...);
+                public int cancel(uint32 id);
+                public int playing(uint32 id, out bool playing);
+        }
 }
