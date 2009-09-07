@@ -87,7 +87,10 @@ namespace Canberra {
                 IO,
                 INTERNAL,
                 DISABLED,
-                FORKED
+                FORKED,
+
+                [CCode (cname = "_CA_ERROR_MAX")]
+                _MAX
         }
 
         public unowned string? strerror(int code);
