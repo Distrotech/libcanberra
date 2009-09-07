@@ -92,7 +92,7 @@ namespace Canberra {
         FORKED
     }
 
-    public unowned string strerror( Error code );
+    public unowned string? strerror( Error code );
 
     //
     // callback
@@ -120,14 +120,14 @@ namespace Canberra {
 
         public static int create( Context* context );
         public int destroy();
-        public int set_driver( string driver );
-        public int change_device( string device );
+        public int set_driver( string? driver = null);
+        public int change_device( string? device = null);
         public int open();
         [CCode (sentinel = "")]
         public int change_props( ... );
         public int change_props_full( Proplist p );
         [CCode (instance_pos = 0)]
-        public int play_full( uint32 id, Proplist p, FinishCallback cb );
+        public int play_full( uint32 id, Proplist p, FinishCallback? cb = null);
         [CCode (sentinel = "")]
         public int play( uint32 id, ... );
         public int cache_full( Proplist p );
