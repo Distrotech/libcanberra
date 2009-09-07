@@ -97,7 +97,6 @@ namespace Canberra {
         [Compact]
         [CCode (cname = "ca_proplist", free_function = "")]
         public class Proplist {
-
                 public static int create(out Proplist p);
                 public int destroy();
                 public int sets(string key, string value);
@@ -109,8 +108,6 @@ namespace Canberra {
         [Compact]
         [CCode (cname = "ca_context", free_function = "")]
         public class Context {
-
-
                 public static int create(out Context context);
                 public int destroy();
                 public int set_driver(string? driver = null);
@@ -118,7 +115,6 @@ namespace Canberra {
                 public int open();
                 public int change_props(...);
                 public int change_props_full(Proplist p);
-                [CCode (instance_pos = 0)]
                 public int play_full(uint32 id, Proplist p, FinishCallback? cb = null);
                 public int play(uint32 id, ...);
                 public int cache_full(Proplist p);
