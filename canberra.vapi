@@ -95,10 +95,9 @@ namespace Canberra {
         public delegate void FinishCallback(Context c, uint32 id, int code);
 
         [Compact]
-        [CCode (cname = "ca_proplist", free_function = "")]
+        [CCode (cname = "ca_proplist", free_function = "ca_proplist_destroy")]
         public class Proplist {
                 public static int create(out Proplist p);
-                public int destroy();
                 public int sets(string key, string value);
                 [PrintfFormat]
                 public int setf(string key, string format, ...);
@@ -106,10 +105,9 @@ namespace Canberra {
         }
 
         [Compact]
-        [CCode (cname = "ca_context", free_function = "")]
+        [CCode (cname = "ca_context", free_function = "ca_context_destroy")]
         public class Context {
                 public static int create(out Context context);
-                public int destroy();
                 public int set_driver(string? driver = null);
                 public int change_device(string? device = null);
                 public int open();
