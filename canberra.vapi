@@ -92,12 +92,12 @@ namespace Canberra {
         FORKED
     }
 
-    public unowned string? strerror( Error code );
+    public unowned string? strerror(Error code);
 
     //
     // callback
     //
-    public delegate void FinishCallback( Context context, uint32 id, Error code );
+    public delegate void FinishCallback(Context context, uint32 id, Error code);
 
     //
     // property list
@@ -106,33 +106,33 @@ namespace Canberra {
     [CCode (cname = "ca_proplist", free_function = "")]
     public class Proplist {
 
-        public static int create( Proplist* p );
+        public static int create(out Proplist p);
         public int destroy();
-        public int sets( string key, string value );
+        public int sets(string key, string value);
         [PrintfFormat]
-        public int setf( string key, string format, ... );
-        public int set( string key, void* data, size_t nbytes );
+        public int setf(string key, string format, ...);
+        public int set(string key, void* data, size_t nbytes);
     }
 
     [Compact]
     [CCode (cname = "ca_context", free_function = "")]
     public class Context {
 
-        public static int create( Context* context );
+        public static int create(out Context context);
         public int destroy();
-        public int set_driver( string? driver = null);
-        public int change_device( string? device = null);
+        public int set_driver(string? driver = null);
+        public int change_device(string? device = null);
         public int open();
         [CCode (sentinel = "")]
-        public int change_props( ... );
-        public int change_props_full( Proplist p );
+        public int change_props(...);
+        public int change_props_full(Proplist p);
         [CCode (instance_pos = 0)]
-        public int play_full( uint32 id, Proplist p, FinishCallback? cb = null);
+        public int play_full(uint32 id, Proplist p, FinishCallback? cb = null);
         [CCode (sentinel = "")]
-        public int play( uint32 id, ... );
-        public int cache_full( Proplist p );
+        public int play(uint32 id, ...);
+        public int cache_full(Proplist p);
         [CCode (sentinel = "")]
-        public int cache( ... );
-        public int cancel( uint32 id );
+        public int cache(...);
+        public int cancel(uint32 id);
     }
 }
