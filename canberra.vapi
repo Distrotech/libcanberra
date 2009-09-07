@@ -18,14 +18,15 @@
   <http://www.gnu.org/licenses/>.
 ***/
 
-using Posix;
-
 [CCode (cprefix = "CA_", lower_case_cprefix = "ca_", cheader_filename = "canberra.h")]
 namespace Canberra {
 
-    //
-    // properties
-    //
+    public static const int MAJOR;
+    public static const int MINOR;
+
+    [CCode (cname="CA_CHECK_VERSION")]
+    public static bool CHECK_VERSION(int major, int minor);
+
     public static const string PROP_MEDIA_NAME;
     public static const string PROP_MEDIA_TITLE;
     public static const string PROP_MEDIA_ARTIST;
@@ -65,9 +66,6 @@ namespace Canberra {
     public static const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
     public static const string PROP_CANBERRA_ENABLE;
 
-    //
-    // errors
-    //
     [CCode (cname = "CA_SUCCESS")]
     public static const int SUCCESS;
 
@@ -94,14 +92,8 @@ namespace Canberra {
 
     public unowned string? strerror(int code);
 
-    //
-    // callback
-    //
-    public delegate void FinishCallback(Context context, uint32 id, Error code);
+    public delegate void FinishCallback(Context c, uint32 id, int code);
 
-    //
-    // property list
-    //
     [Compact]
     [CCode (cname = "ca_proplist", free_function = "")]
     public class Proplist {
@@ -117,6 +109,7 @@ namespace Canberra {
     [Compact]
     [CCode (cname = "ca_context", free_function = "")]
     public class Context {
+
 
         public static int create(out Context context);
         public int destroy();
