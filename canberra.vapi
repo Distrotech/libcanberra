@@ -107,32 +107,32 @@ namespace Canberra {
     public class Proplist {
 
         public static int create( Proplist* p );
-        public Error destroy();
-        public Error sets( string key, string value );
+        public int destroy();
+        public int sets( string key, string value );
         [PrintfFormat]
-        public Error setf( string key, string format, ... );
-        public Error set( string key, void* data, size_t nbytes );
+        public int setf( string key, string format, ... );
+        public int set( string key, void* data, size_t nbytes );
     }
 
     [Compact]
     [CCode (cname = "ca_context", free_function = "")]
     public class Context {
 
-        public static Error create( Context* context );
-        public Error destroy();
-        public Error set_driver( string driver );
-        public Error change_device( string device );
-        public Error open();
+        public static int create( Context* context );
+        public int destroy();
+        public int set_driver( string driver );
+        public int change_device( string device );
+        public int open();
         [CCode (sentinel = "")]
-        public Error change_props( ... );
-        public Error change_props_full( Proplist p );
+        public int change_props( ... );
+        public int change_props_full( Proplist p );
         [CCode (instance_pos = 0)]
-        public Error play_full( uint32 id, Proplist p, FinishCallback cb );
+        public int play_full( uint32 id, Proplist p, FinishCallback cb );
         [CCode (sentinel = "")]
-        public Error play( uint32 id, ... );
-        public Error cache_full( Proplist p );
+        public int play( uint32 id, ... );
+        public int cache_full( Proplist p );
         [CCode (sentinel = "")]
-        public Error cache( ... );
-        public Error cancel( uint32 id );
+        public int cache( ... );
+        public int cancel( uint32 id );
     }
 }
