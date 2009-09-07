@@ -123,15 +123,12 @@ namespace Canberra {
         public int set_driver(string? driver = null);
         public int change_device(string? device = null);
         public int open();
-        [CCode (sentinel = "")]
         public int change_props(...);
         public int change_props_full(Proplist p);
         [CCode (instance_pos = 0)]
         public int play_full(uint32 id, Proplist p, FinishCallback? cb = null);
-        [CCode (sentinel = "")]
         public int play(uint32 id, ...);
         public int cache_full(Proplist p);
-        [CCode (sentinel = "")]
         public int cache(...);
         public int cancel(uint32 id);
     }
