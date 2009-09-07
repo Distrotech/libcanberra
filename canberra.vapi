@@ -92,7 +92,7 @@ namespace Canberra {
         FORKED
     }
 
-    public unowned string? strerror(Error code);
+    public unowned string? strerror(int code);
 
     //
     // callback
