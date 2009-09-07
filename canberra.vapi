@@ -26,50 +26,50 @@ namespace Canberra {
     //
     // properties
     //
-    public const string PROP_MEDIA_NAME;
-    public const string PROP_MEDIA_TITLE;
-    public const string PROP_MEDIA_ARTIST;
-    public const string PROP_MEDIA_LANGUAGE;
-    public const string PROP_MEDIA_FILENAME;
-    public const string PROP_MEDIA_ICON;
-    public const string PROP_MEDIA_ICON_NAME;
-    public const string PROP_MEDIA_ROLE;
-    public const string PROP_EVENT_ID;
-    public const string PROP_EVENT_DESCRIPTION;
-    public const string PROP_EVENT_MOUSE_X;
-    public const string PROP_EVENT_MOUSE_Y;
-    public const string PROP_EVENT_MOUSE_HPOS;
-    public const string PROP_EVENT_MOUSE_VPOS;
-    public const string PROP_EVENT_MOUSE_BUTTON;
-    public const string PROP_WINDOW_NAME;
-    public const string PROP_WINDOW_ID;
-    public const string PROP_WINDOW_ICON;
-    public const string PROP_WINDOW_ICON_NAME;
-    public const string PROP_WINDOW_X11_DISPLAY;
-    public const string PROP_WINDOW_X11_SCREEN;
-    public const string PROP_WINDOW_X11_MONITOR;
-    public const string PROP_WINDOW_X11_XID;
-    public const string PROP_APPLICATION_NAME;
-    public const string PROP_APPLICATION_ID;
-    public const string PROP_APPLICATION_VERSION;
-    public const string PROP_APPLICATION_ICON;
-    public const string PROP_APPLICATION_ICON_NAME;
-    public const string PROP_APPLICATION_LANGUAGE;
-    public const string PROP_APPLICATION_PROCESS_ID;
-    public const string PROP_APPLICATION_PROCESS_BINARY;
-    public const string PROP_APPLICATION_PROCESS_USER;
-    public const string PROP_APPLICATION_PROCESS_HOST;
-    public const string PROP_CANBERRA_CACHE_CONTROL;
-    public const string PROP_CANBERRA_VOLUME;
-    public const string PROP_CANBERRA_XDG_THEME_NAME;
-    public const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
-    public const string PROP_CANBERRA_ENABLE;
+    public static const string PROP_MEDIA_NAME;
+    public static const string PROP_MEDIA_TITLE;
+    public static const string PROP_MEDIA_ARTIST;
+    public static const string PROP_MEDIA_LANGUAGE;
+    public static const string PROP_MEDIA_FILENAME;
+    public static const string PROP_MEDIA_ICON;
+    public static const string PROP_MEDIA_ICON_NAME;
+    public static const string PROP_MEDIA_ROLE;
+    public static const string PROP_EVENT_ID;
+    public static const string PROP_EVENT_DESCRIPTION;
+    public static const string PROP_EVENT_MOUSE_X;
+    public static const string PROP_EVENT_MOUSE_Y;
+    public static const string PROP_EVENT_MOUSE_HPOS;
+    public static const string PROP_EVENT_MOUSE_VPOS;
+    public static const string PROP_EVENT_MOUSE_BUTTON;
+    public static const string PROP_WINDOW_NAME;
+    public static const string PROP_WINDOW_ID;
+    public static const string PROP_WINDOW_ICON;
+    public static const string PROP_WINDOW_ICON_NAME;
+    public static const string PROP_WINDOW_X11_DISPLAY;
+    public static const string PROP_WINDOW_X11_SCREEN;
+    public static const string PROP_WINDOW_X11_MONITOR;
+    public static const string PROP_WINDOW_X11_XID;
+    public static const string PROP_APPLICATION_NAME;
+    public static const string PROP_APPLICATION_ID;
+    public static const string PROP_APPLICATION_VERSION;
+    public static const string PROP_APPLICATION_ICON;
+    public static const string PROP_APPLICATION_ICON_NAME;
+    public static const string PROP_APPLICATION_LANGUAGE;
+    public static const string PROP_APPLICATION_PROCESS_ID;
+    public static const string PROP_APPLICATION_PROCESS_BINARY;
+    public static const string PROP_APPLICATION_PROCESS_USER;
+    public static const string PROP_APPLICATION_PROCESS_HOST;
+    public static const string PROP_CANBERRA_CACHE_CONTROL;
+    public static const string PROP_CANBERRA_VOLUME;
+    public static const string PROP_CANBERRA_XDG_THEME_NAME;
+    public static const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
+    public static const string PROP_CANBERRA_ENABLE;
 
     //
     // errors
     //
     [CCode (cname = "CA_SUCCESS")]
-    public const int SUCCESS;
+    public static const int SUCCESS;
 
     [CCode (cname = "int", cprefix = "CA_ERROR_")]
     public enum Error {
