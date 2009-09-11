@@ -318,6 +318,7 @@ canberra_gtk_play_CFLAGS = \
 
 EXTRA_DIST += \
 	libcanberra-login-sound.desktop.in \
+	libcanberra-ready-sound.desktop.in \
 	libcanberra-logout-sound.sh.in
 
 gnomeautostart_DATA = \
@@ -331,6 +332,7 @@ gnomeshutdown_SCRIPTS = \
 
 CLEANFILES = \
 	libcanberra-login-sound.desktop \
+	libcanberra-ready-sound.desktop \
 	libcanberra-logout-sound.sh
 
 libcanberra-logout-sound.sh: libcanberra-logout-sound.sh.in Makefile
