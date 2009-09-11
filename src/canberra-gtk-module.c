@@ -769,9 +769,12 @@ static void install_hook(GType type, const char *sig, guint *sn) {
 static void read_enable_input_feedback_sounds(GtkSettings *s) {
     gboolean enabled = !disabled;
 
-    g_object_get(G_OBJECT(s), "gtk-enable-input-feedback-sounds", &enabled, NULL);
-
-    disabled = !enabled;
+    if (g_getenv("CANBERRA_FORCE_INPUT_FEEDBACK_SOUNDS"))
+        disabled = FALSE;
+    else {
+        g_object_get(G_OBJECT(s), "gtk-enable-input-feedback-sounds", &enabled, NULL);
+        disabled = !enabled;
+    }
 }
 
 static void enable_input_feedback_sounds_changed(GtkSettings *s, GParamSpec *arg1, gpointer userdata) {
