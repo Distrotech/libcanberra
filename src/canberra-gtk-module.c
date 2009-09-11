@@ -65,11 +65,11 @@ typedef struct {
    menu-replace
    tooltip-popup
    tooltip-popdown
-
-   TODO:
    drag-start
    drag-accept
    drag-fail
+
+   TODO:
    expander-toggle-on
    expander-toggle-off
    scroll-xxx
@@ -97,7 +97,10 @@ static guint
     signal_id_widget_window_state_event,
     signal_id_notebook_switch_page,
     signal_id_tree_view_cursor_changed,
-    signal_id_icon_view_selection_changed;
+    signal_id_icon_view_selection_changed,
+    signal_id_widget_drag_begin,
+    signal_id_widget_drag_failed,
+    signal_id_widget_drag_drop;
 
 static GQuark
     disable_sound_quark,
@@ -650,6 +653,7 @@ static void dispatch_sound_event(SoundEventData *d) {
                                     CA_PROP_EVENT_DESCRIPTION, "Tab changed",
                                     CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                     NULL);
+        goto finish;
     }
 
     if (GTK_IS_TREE_VIEW(d->object) && d->signal_id == signal_id_tree_view_cursor_changed) {
@@ -658,6 +662,7 @@ static void dispatch_sound_event(SoundEventData *d) {
                                     CA_PROP_EVENT_DESCRIPTION, "Item selected",
                                     CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                     NULL);
+        goto finish;
     }
 
     if (GTK_IS_ICON_VIEW(d->object) && d->signal_id == signal_id_icon_view_selection_changed) {
@@ -666,10 +671,45 @@ static void dispatch_sound_event(SoundEventData *d) {
                                     CA_PROP_EVENT_DESCRIPTION, "Item selected",
                                     CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                     NULL);
+        goto finish;
     }
 
-/*     if (ret != CA_SUCCESS) */
-/*         g_warning("Failed to play event sound: %s", ca_strerror(ret)); */
+    if (GTK_IS_WIDGET(d->object)) {
+
+        if (d->signal_id == signal_id_widget_drag_begin) {
+
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "drag-start",
+                                        CA_PROP_EVENT_DESCRIPTION, "Drag started",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+            goto finish;
+
+        } else if (d->signal_id == signal_id_widget_drag_drop) {
+
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "drag-accept",
+                                        CA_PROP_EVENT_DESCRIPTION, "Drag accepted",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+            goto finish;
+
+        } else if (d->signal_id == signal_id_widget_drag_failed) {
+
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "drag-fail",
+                                        CA_PROP_EVENT_DESCRIPTION, "Drag failed",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+            goto finish;
+        }
+    }
+
+finish:
+
+    ;
+    /* if (ret != CA_SUCCESS) */
+    /*     g_warning("Failed to play event sound: %s", ca_strerror(ret)); */
 }
 
 static void dispatch_queue(void) {
@@ -826,6 +866,9 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_NOTEBOOK, "switch-page", &signal_id_notebook_switch_page);
     install_hook(GTK_TYPE_TREE_VIEW, "cursor-changed", &signal_id_tree_view_cursor_changed);
     install_hook(GTK_TYPE_ICON_VIEW, "selection-changed", &signal_id_icon_view_selection_changed);
+    install_hook(GTK_TYPE_WIDGET, "drag-begin", &signal_id_widget_drag_begin);
+    install_hook(GTK_TYPE_WIDGET, "drag-drop", &signal_id_widget_drag_drop);
+    install_hook(GTK_TYPE_WIDGET, "drag-failed", &signal_id_widget_drag_failed);
 
     gtk_quit_add(1, quit_handler, NULL);
 }
