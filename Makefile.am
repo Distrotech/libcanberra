@@ -18,7 +18,14 @@
 
 dist_doc_DATA = README
 
-EXTRA_DIST = bootstrap.sh autogen.sh LGPL libcanberra.schemas
+EXTRA_DIST = \
+	bootstrap.sh \
+	autogen.sh \
+	LGPL \
+	libcanberra.schemas \
+	vala/libcanberra.vapi \
+	vala/libcanberra-gtk.vapi
+
 SUBDIRS = src gtkdoc doc
 
 MAINTAINERCLEANFILES = README
@@ -27,8 +34,12 @@ noinst_DATA = README
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcanberra.pc
 
+vapidir = $(datadir)/vala/vapi
+vapi_DATA = vala/libcanberra.vapi
+
 if HAVE_GTK
 pkgconfig_DATA += libcanberra-gtk.pc
+vapi_DATA += vala/libcanberra-gtk.vapi
 
 schemasdir       = $(GCONF_SCHEMA_FILE_DIR)
 schemas_DATA     = libcanberra.schemas
