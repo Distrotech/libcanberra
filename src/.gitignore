@@ -1,4 +1,5 @@
 libcanberra-login-sound.desktop
+libcanberra-ready-sound.desktop
 libcanberra-logout-sound.sh
 canberra-gtk-play
 .libs
