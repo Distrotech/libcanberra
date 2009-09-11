@@ -100,8 +100,8 @@ static guint
     signal_id_icon_view_selection_changed;
 
 static GQuark
-    disable_sound_quark/* , */
-    /* was_hidden_quark */;
+    disable_sound_quark,
+    was_iconized_quark;
 
 /* Make sure GCC doesn't warn us about a missing prototype for this
  * exported function */
@@ -292,43 +292,60 @@ static SoundEventData* filter_sound_event(SoundEventData *d) {
     return d;
 }
 
-/* static gboolean is_hidden(GdkDisplay *d, GdkWindow *w) { */
-/*     Atom type_return; */
-/*     gint format_return; */
-/*     gulong nitems_return; */
-/*     gulong bytes_after_return; */
-/*     guchar *data = NULL; */
-/*     gboolean r = FALSE; */
+static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
+    Atom type_return;
+    gint format_return;
+    gulong nitems_return;
+    gulong bytes_after_return;
+    guchar *data = NULL;
 
-/*     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w), */
-/*                             gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE"), */
-/*                             0, G_MAXLONG, False, XA_ATOM, &type_return, */
-/*                             &format_return, &nitems_return, &bytes_after_return, */
-/*                             &data) != Success) */
-/*         return FALSE; */
+    if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
+                            gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
+                            0, G_MAXLONG, False, XA_CARDINAL, &type_return,
+                            &format_return, &nitems_return, &bytes_after_return,
+                           &data) != Success)
+        return -1;
 
-/*     if (type_return == XA_ATOM && format_return == 32 && data) { */
-/*         unsigned i; */
+    if (type_return == XA_CARDINAL && format_return == 32 && data) {
+        guint32 desktop = *(guint32*) data;
 
-/*         for (i = 0; i < nitems_return; i++) { */
-/*             Atom atom = ((Atom*) data)[i]; */
+        if (desktop != 0xFFFFFFFF)
+            return (gint) desktop;
+    }
 
+    if (type_return != None && data != NULL)
+        XFree (data);
 
-/*             g_debug("found %s", gdk_x11_get_xatom_name_for_display (d, atom)); */
+    return -1;
+}
 
-/*             if (atom == gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_STATE_HIDDEN")) { */
-/*                 g_debug("found hidden atom"); */
-/*                 r = TRUE; */
-/*                 /\* break; *\/ */
-/*             } */
-/*         } */
-/*     } */
+static gint display_get_desktop(GdkDisplay *d) {
+    Atom type_return;
+    gint format_return;
+    gulong nitems_return;
+    gulong bytes_after_return;
+    guchar *data = NULL;
 
-/*     if (type_return != None && data != NULL) */
-/*         XFree (data); */
+    if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), DefaultRootWindow(GDK_DISPLAY_XDISPLAY(d)),
+                            gdk_x11_get_xatom_by_name_for_display(d, "_NET_CURRENT_DESKTOP"),
+                            0, G_MAXLONG, False, XA_CARDINAL, &type_return,
+                            &format_return, &nitems_return, &bytes_after_return,
+                            &data) != Success)
+        return -1;
 
-/*     return r; */
-/* } */
+    if (type_return == XA_CARDINAL && format_return == 32 && data) {
+
+        guint32 desktop = *(guint32*) data;
+
+        if (desktop != 0xFFFFFFFF)
+            return (gint) desktop;
+    }
+
+    if (type_return != None && data != NULL)
+        XFree (data);
+
+    return -1;
+}
 
 static void dispatch_sound_event(SoundEventData *d) {
     int ret = CA_SUCCESS;
@@ -465,23 +482,26 @@ static void dispatch_sound_event(SoundEventData *d) {
 
     if (GTK_IS_WINDOW(d->object) && d->signal_id == signal_id_widget_window_state_event) {
         GdkEventWindowState *e;
-        /* gboolean h, ph; */
+        gint w_desktop, c_desktop;
+        GdkDisplay *display;
 
         e = (GdkEventWindowState*) d->event;
 
-        /* g_message("aussen"); */
+        /* Unfortunately GDK_WINDOW_STATE_ICONIFIED is used both for
+         * proper minimizing and when a window becomes invisible
+         * because the desktop was switched. To handle this we check
+         * if the window becoming invisible is actually on the current
+         * desktop, and only if that's the case we assume it is being
+         * minimized. We then store this information, so that we know
+         * later on when the window is unminimized again. */
 
-        /* h = is_hidden(gdk_screen_get_display(gdk_event_get_screen(d->event)), e->window); */
-        /* ph = !!g_object_get_qdata(d->object, was_hidden_quark); */
-        /* g_object_set_qdata(d->object, was_hidden_quark, GINT_TO_POINTER(h)); */
+        display = gdk_screen_get_display(gdk_event_get_screen(d->event));
+        w_desktop = window_get_desktop(display, e->window);
+        c_desktop = display_get_desktop(display);
 
-        /* g_message("%i %i %i %i", */
-        /*           !!(e->changed_mask & GDK_WINDOW_STATE_ICONIFIED), */
-        /*           !!(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED), */
-        /*           !!h, */
-        /*           !!ph); */
-
-        if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) /*&& h && !ph*/) {
+        if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) &&
+            (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) &&
+            w_desktop == c_desktop) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-minimized",
@@ -489,7 +509,10 @@ static void dispatch_sound_event(SoundEventData *d) {
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
 
-        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) && (e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
+            g_object_set_qdata(d->object, was_iconized_quark, GINT_TO_POINTER(1));
+
+        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) &&
+                   (e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-maximized",
@@ -497,14 +520,22 @@ static void dispatch_sound_event(SoundEventData *d) {
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
 
-        } else if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) && !(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) /* && ph */) {
+            g_object_set_qdata(d->object, was_iconized_quark, GINT_TO_POINTER(0));
+
+        } else if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) &&
+                   !(e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) &&
+                   g_object_get_qdata(d->object, was_iconized_quark)) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-unminimized",
                                          CA_PROP_EVENT_DESCRIPTION, "Window unminimized",
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
-        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) && !(e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
+
+            g_object_set_qdata(d->object, was_iconized_quark, GINT_TO_POINTER(0));
+
+        } else if ((e->changed_mask & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN)) &&
+                   !(e->new_window_state & (GDK_WINDOW_STATE_MAXIMIZED|GDK_WINDOW_STATE_FULLSCREEN))) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-unmaximized",
@@ -768,7 +799,7 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
 
     /* This is the same quark libgnomeui uses! */
     disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
-    /* was_hidden_quark = g_quark_from_string("canberra_was_hidden"); */
+    was_iconized_quark = g_quark_from_string("canberra_was_iconized");
 
     /* Hook up the gtk setting */
     connect_settings();
