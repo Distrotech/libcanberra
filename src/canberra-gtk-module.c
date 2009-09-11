@@ -680,8 +680,6 @@ static void dispatch_queue(void) {
         if (!(d = filter_sound_event(d)))
             continue;
 
-/*         g_message("Dispatching signal %s on %s", g_signal_name(d->signal_id), g_type_name(G_OBJECT_TYPE(d->object))); */
-
         dispatch_sound_event(d);
         free_sound_event(d);
     }
@@ -709,6 +707,17 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
 
     object = g_value_get_object(&param_values[0]);
 
+    /* g_message("signal '%s' on object of type '%s' with name '%s'", */
+    /*           g_signal_name(hint->signal_id), */
+    /*           G_OBJECT_TYPE_NAME(object), */
+    /*           gtk_widget_get_name(GTK_WIDGET(object))); */
+
+    /* if (GTK_IS_WINDOW(object)) */
+    /*     g_message("window role='%s' title='%s' type='%u'", */
+    /*               gtk_window_get_role(GTK_WINDOW(object)), */
+    /*               gtk_window_get_title(GTK_WINDOW(object)), */
+    /*               gtk_window_get_type_hint(GTK_WINDOW(object))); */
+
     /* Filter a few very often occuring signals as quickly as possible */
     if ((hint->signal_id == signal_id_widget_hide ||
          hint->signal_id == signal_id_widget_show ||
@@ -720,8 +729,6 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
         hint->signal_id != signal_id_dialog_response &&
         !GTK_WIDGET_DRAWABLE(object))
         return TRUE;
-
-/*     g_message("signal %s on %s", g_signal_name(hint->signal_id), g_type_name(G_OBJECT_TYPE(object))); */
 
     d = g_slice_new0(SoundEventData);
 
