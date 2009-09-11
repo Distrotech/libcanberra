@@ -68,10 +68,10 @@ typedef struct {
    drag-start
    drag-accept
    drag-fail
-
-   TODO:
    expander-toggle-on
    expander-toggle-off
+
+   TODO:
    scroll-xxx
    window-switch
    window-resize-xxx
@@ -100,7 +100,8 @@ static guint
     signal_id_icon_view_selection_changed,
     signal_id_widget_drag_begin,
     signal_id_widget_drag_failed,
-    signal_id_widget_drag_drop;
+    signal_id_widget_drag_drop,
+    signal_id_expander_activate;
 
 static GQuark
     disable_sound_quark,
@@ -674,6 +675,24 @@ static void dispatch_sound_event(SoundEventData *d) {
         goto finish;
     }
 
+    if (GTK_IS_EXPANDER(d->object) && d->signal_id == signal_id_expander_activate) {
+
+        if (gtk_expander_get_expanded(GTK_EXPANDER(d->object)))
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "expander-toggle-on",
+                                        CA_PROP_EVENT_DESCRIPTION, "Expander expanded",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+        else
+            ret = ca_gtk_play_for_event(d->event, 0,
+                                        CA_PROP_EVENT_ID, "expander-toggle-off",
+                                        CA_PROP_EVENT_DESCRIPTION, "Expander unexpanded",
+                                        CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                        NULL);
+
+        goto finish;
+    }
+
     if (GTK_IS_WIDGET(d->object)) {
 
         if (d->signal_id == signal_id_widget_drag_begin) {
@@ -869,6 +888,7 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     install_hook(GTK_TYPE_WIDGET, "drag-begin", &signal_id_widget_drag_begin);
     install_hook(GTK_TYPE_WIDGET, "drag-drop", &signal_id_widget_drag_drop);
     install_hook(GTK_TYPE_WIDGET, "drag-failed", &signal_id_widget_drag_failed);
+    install_hook(GTK_TYPE_EXPANDER, "activate", &signal_id_expander_activate);
 
     gtk_quit_add(1, quit_handler, NULL);
 }
