@@ -507,7 +507,7 @@ static void dispatch_sound_event(SoundEventData *d) {
 
         if ((e->changed_mask & GDK_WINDOW_STATE_ICONIFIED) &&
             (e->new_window_state & GDK_WINDOW_STATE_ICONIFIED) &&
-            w_desktop == c_desktop) {
+            (w_desktop == c_desktop || w_desktop < 0)) {
 
             ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                          CA_PROP_EVENT_ID, "window-minimized",
