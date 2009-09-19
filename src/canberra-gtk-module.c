@@ -418,7 +418,7 @@ static void dispatch_sound_event(SoundEventData *d) {
 
             }
 
-            if (!played_sound)
+            if (!played_sound && gtk_window_get_decorated(GTK_WINDOW(d->object)))
                 ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "window-new",
                                              CA_PROP_EVENT_DESCRIPTION, "Window shown",
