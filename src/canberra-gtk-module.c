@@ -302,6 +302,7 @@ static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
     gulong nitems_return;
     gulong bytes_after_return;
     guchar *data = NULL;
+    gint ret = -1;
 
     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
                             gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
@@ -314,13 +315,13 @@ static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
         guint32 desktop = *(guint32*) data;
 
         if (desktop != 0xFFFFFFFF)
-            return (gint) desktop;
+            ret = (gint) desktop;
     }
 
     if (type_return != None && data != NULL)
         XFree (data);
 
-    return -1;
+    return ret;
 }
 
 static gint display_get_desktop(GdkDisplay *d) {
@@ -329,6 +330,7 @@ static gint display_get_desktop(GdkDisplay *d) {
     gulong nitems_return;
     gulong bytes_after_return;
     guchar *data = NULL;
+    gint ret = -1;
 
     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), DefaultRootWindow(GDK_DISPLAY_XDISPLAY(d)),
                             gdk_x11_get_xatom_by_name_for_display(d, "_NET_CURRENT_DESKTOP"),
@@ -342,13 +344,13 @@ static gint display_get_desktop(GdkDisplay *d) {
         guint32 desktop = *(guint32*) data;
 
         if (desktop != 0xFFFFFFFF)
-            return (gint) desktop;
+            ret = (gint) desktop;
     }
 
     if (type_return != None && data != NULL)
         XFree (data);
 
-    return -1;
+    return ret;
 }
 
 static void dispatch_sound_event(SoundEventData *d) {
