@@ -275,6 +275,19 @@ extern "C" {
 #define CA_PROP_WINDOW_VPOS                        "window.vpos"
 
 /**
+ * CA_PROP_WINDOW_DESKTOP:
+ *
+ * If this sound event was triggered by a window on the screen and the
+ * windowing system supports multiple desktops, a comma seperated list
+ * of indexes of the desktops this window is visible on. If this
+ * property is an empty string, it is visible on all desktops
+ * (i.e. 'sticky'). The first desktop is 0. (e.g. "0,2,3")
+ *
+ * Since: 0.18
+ */
+#define CA_PROP_WINDOW_DESKTOP                    "window.desktop"
+
+/**
  * CA_PROP_WINDOW_X11_DISPLAY:
  *
  * If this sound event was triggered by a window on the screen and the
