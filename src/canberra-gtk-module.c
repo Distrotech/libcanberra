@@ -105,7 +105,8 @@ static guint
 
 static GQuark
     disable_sound_quark,
-    was_iconized_quark;
+    was_iconized_quark,
+    is_xembed_quark;
 
 /* Make sure GCC doesn't warn us about a missing prototype for this
  * exported function */
@@ -319,7 +320,7 @@ static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
     }
 
     if (type_return != None && data != NULL)
-        XFree (data);
+        XFree(data);
 
     return ret;
 }
@@ -348,7 +349,38 @@ static gint display_get_desktop(GdkDisplay *d) {
     }
 
     if (type_return != None && data != NULL)
-        XFree (data);
+        XFree(data);
+
+    return ret;
+}
+
+static gboolean window_is_xembed(GdkDisplay *d, GdkWindow *w) {
+    Atom type_return;
+    gint format_return;
+    gulong nitems_return;
+    gulong bytes_after_return;
+    guchar *data = NULL;
+    gboolean ret = FALSE;
+    Atom xembed;
+
+    /* Gnome Panel applets are XEMBED windows. We need to make sure we
+     * ignore them */
+
+    xembed = gdk_x11_get_xatom_by_name_for_display(d, "_XEMBED_INFO");
+
+    if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
+                           xembed,
+                           0, 2, False, xembed, &type_return,
+                           &format_return, &nitems_return, &bytes_after_return,
+                           &data) != Success) {
+        return FALSE;
+    }
+
+    if (type_return == xembed && format_return == 32 && data)
+        ret = TRUE;
+
+    if (type_return != None && data != NULL)
+        XFree(data);
 
     return ret;
 }
@@ -399,6 +431,13 @@ static void dispatch_sound_event(SoundEventData *d) {
                    hint == GDK_WINDOW_TYPE_HINT_DIALOG) {
 
             gboolean played_sound = FALSE;
+            gboolean is_xembed;
+
+            is_xembed = window_is_xembed(
+                    gtk_widget_get_display(GTK_WIDGET(d->object)),
+                    gtk_widget_get_window(GTK_WIDGET(d->object)));
+
+            g_object_set_qdata(d->object, is_xembed_quark, GINT_TO_POINTER(is_xembed));
 
             if (GTK_IS_MESSAGE_DIALOG(d->object)) {
                 GtkMessageType mt;
@@ -418,12 +457,17 @@ static void dispatch_sound_event(SoundEventData *d) {
 
             }
 
-            if (!played_sound && gtk_window_get_decorated(GTK_WINDOW(d->object)))
+            if (!played_sound &&
+                !is_xembed &&
+                gtk_window_get_decorated(GTK_WINDOW(d->object))) {
+
                 ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
                                              CA_PROP_EVENT_ID, "window-new",
                                              CA_PROP_EVENT_DESCRIPTION, "Window shown",
                                              CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                              NULL);
+
+            }
         }
     }
 
@@ -475,14 +519,20 @@ static void dispatch_sound_event(SoundEventData *d) {
                                          CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
                                          NULL);
 
-        } else if (hint == GDK_WINDOW_TYPE_HINT_NORMAL ||
-                   hint == GDK_WINDOW_TYPE_HINT_DIALOG) {
+        } else if ((hint == GDK_WINDOW_TYPE_HINT_NORMAL ||
+                    hint == GDK_WINDOW_TYPE_HINT_DIALOG)) {
 
-            ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
-                                         CA_PROP_EVENT_ID, "window-close",
-                                         CA_PROP_EVENT_DESCRIPTION, "Window closed",
-                                         CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
-                                         NULL);
+            gboolean is_xembed;
+
+            is_xembed = !!g_object_get_qdata(d->object, is_xembed_quark);
+
+            if (!is_xembed &&
+                gtk_window_get_decorated(GTK_WINDOW(d->object)))
+                ret = ca_gtk_play_for_widget(GTK_WIDGET(d->object), 0,
+                                             CA_PROP_EVENT_ID, "window-close",
+                                             CA_PROP_EVENT_DESCRIPTION, "Window closed",
+                                             CA_PROP_CANBERRA_CACHE_CONTROL, "permanent",
+                                             NULL);
         }
     }
 
@@ -871,6 +921,7 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
     /* This is the same quark libgnomeui uses! */
     disable_sound_quark = g_quark_from_string("gnome_disable_sound_events");
     was_iconized_quark = g_quark_from_string("canberra_was_iconized");
+    is_xembed_quark = g_quark_from_string("canberra_is_xembed");
 
     /* Hook up the gtk setting */
     connect_settings();
