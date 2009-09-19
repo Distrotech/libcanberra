@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <X11/Xatom.h>
 
 #include "canberra.h"
 #include "canberra-gtk.h"
@@ -167,6 +168,34 @@ static GtkWindow* get_toplevel(GtkWidget *w) {
     return GTK_WINDOW(w);
 }
 
+static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
+    Atom type_return;
+    gint format_return;
+    gulong nitems_return;
+    gulong bytes_after_return;
+    guchar *data = NULL;
+    gint ret = -1;
+
+    if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
+                           gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
+                           0, G_MAXLONG, False, XA_CARDINAL, &type_return,
+                           &format_return, &nitems_return, &bytes_after_return,
+                           &data) != Success)
+        return -1;
+
+    if (type_return == XA_CARDINAL && format_return == 32 && data) {
+        guint32 desktop = *(guint32*) data;
+
+        if (desktop != 0xFFFFFFFF)
+            ret = (gint) desktop;
+    }
+
+    if (type_return != None && data != NULL)
+        XFree(data);
+
+    return ret;
+}
+
 /**
  * ca_gtk_proplist_set_for_widget:
  * @p: The proplist to store these sound event properties in
@@ -217,18 +246,28 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
     if (GTK_WIDGET_REALIZED(GTK_WIDGET(w))) {
         GdkWindow *dw = NULL;
         GdkScreen *screen = NULL;
-        gint x = 0, y = 0, width = 0, height = 0, screen_width = 0, screen_height = 0;
+        GdkDisplay *display = NULL;
+        gint x = -1, y = -1, width = -1, height = -1, screen_width = -1, screen_height = -1;
 
         if ((dw = gtk_widget_get_window(GTK_WIDGET(w))))
             if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_X11_XID, "%lu", (unsigned long) GDK_WINDOW_XID(dw))) < 0)
                 return ret;
 
-
-        if ((screen = gtk_widget_get_screen(GTK_WIDGET(w)))) {
-
-            if ((t = gdk_display_get_name(gdk_screen_get_display(screen))))
+        if ((display = gtk_widget_get_display(GTK_WIDGET(w)))) {
+            if ((t = gdk_display_get_name(display)))
                 if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_X11_DISPLAY, t)) < 0)
                     return ret;
+
+            if (dw)  {
+                gint desktop = window_get_desktop(display, dw);
+
+                if (desktop >= 0)
+                    if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_DESKTOP, "%i", desktop)) < 0)
+                        return ret;
+            }
+        }
+
+        if ((screen = gtk_widget_get_screen(GTK_WIDGET(w)))) {
 
             if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_X11_SCREEN, "%i", gdk_screen_get_number(screen))) < 0)
                 return ret;
@@ -260,11 +299,10 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
             if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_HEIGHT, "%i", height)) < 0)
                 return ret;
 
-        if (x > 0 && width > 0) {
-            x += width/2;
-
+        if (x >= 0 && width > 0) {
             screen_width = gdk_screen_get_width(gtk_widget_get_screen(GTK_WIDGET(w)));
 
+            x += width/2;
             x = CA_CLAMP(x, 0, screen_width-1);
 
             /* We use these strange format strings here to avoid that libc
@@ -275,11 +313,10 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
                 return ret;
         }
 
-        if (y > 0 && height > 0) {
-            y += height/2;
-
+        if (y >= 0 && height > 0) {
             screen_height = gdk_screen_get_height(gtk_widget_get_screen(GTK_WIDGET(w)));
 
+            y += height/2;
             y = CA_CLAMP(y, 0, screen_height-1);
 
             if ((ret = ca_proplist_setf(p, CA_PROP_WINDOW_VPOS, "%i.%03i", (int) (y/(screen_height-1)), (int) (1000.0*y/(screen_height-1)) % 1000)) < 0)

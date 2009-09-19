@@ -306,9 +306,9 @@ static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
     gint ret = -1;
 
     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
-                            gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
-                            0, G_MAXLONG, False, XA_CARDINAL, &type_return,
-                            &format_return, &nitems_return, &bytes_after_return,
+                           gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
+                           0, G_MAXLONG, False, XA_CARDINAL, &type_return,
+                           &format_return, &nitems_return, &bytes_after_return,
                            &data) != Success)
         return -1;
 
@@ -334,10 +334,10 @@ static gint display_get_desktop(GdkDisplay *d) {
     gint ret = -1;
 
     if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), DefaultRootWindow(GDK_DISPLAY_XDISPLAY(d)),
-                            gdk_x11_get_xatom_by_name_for_display(d, "_NET_CURRENT_DESKTOP"),
-                            0, G_MAXLONG, False, XA_CARDINAL, &type_return,
-                            &format_return, &nitems_return, &bytes_after_return,
-                            &data) != Success)
+                           gdk_x11_get_xatom_by_name_for_display(d, "_NET_CURRENT_DESKTOP"),
+                           0, G_MAXLONG, False, XA_CARDINAL, &type_return,
+                           &format_return, &nitems_return, &bytes_after_return,
+                           &data) != Success)
         return -1;
 
     if (type_return == XA_CARDINAL && format_return == 32 && data) {
