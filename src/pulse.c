@@ -230,11 +230,13 @@ static int context_connect(ca_context *c, ca_bool_t nofail) {
     pa_context_set_subscribe_callback(p->context, context_subscribe_cb, c);
 
     if (pa_context_connect(p->context, NULL, nofail ? PA_CONTEXT_NOFAIL : 0, NULL) < 0) {
-        ret = translate_error(pa_context_errno(p->context));
+        ret = translate_error(p->context ? pa_context_errno(p->context) : PA_ERR_CONNECTIONREFUSED);
 
-        pa_context_disconnect(p->context);
-        pa_context_unref(p->context);
-        p->context = NULL;
+        if (p->context) {
+            pa_context_disconnect(p->context);
+            pa_context_unref(p->context);
+            p->context = NULL;
+        }
 
         return ret;
     }
@@ -382,6 +384,13 @@ int driver_open(ca_context *c) {
 
     for (;;) {
         pa_context_state_t state;
+
+        if (!p->context) {
+            ret = translate_error(PA_ERR_CONNECTIONREFUSED);
+            pa_threaded_mainloop_unlock(p->mainloop);
+            driver_destroy(c);
+            return ret;
+        }
 
         state = pa_context_get_state(p->context);
 
@@ -921,7 +930,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
             pa_threaded_mainloop_unlock(p->mainloop);
 
             /* The operation might have been canceled due to connection termination */
-            if (canceled) {
+            if (canceled || !p->context) {
                 ret = CA_ERROR_DISCONNECTED;
                 goto finish_unlocked;
             }
@@ -1021,12 +1030,14 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     }
 
     for (;;) {
-        pa_stream_state_t state = pa_stream_get_state(out->stream);
+        pa_stream_state_t state;
 
-        if (!p->context) {
+        if (!p->context || !out->stream) {
             ret = CA_ERROR_STATE;
             goto finish_locked;
         }
+
+        state = pa_stream_get_state(out->stream);
 
         /* Stream sucessfully created */
         if (state == PA_STREAM_READY)
@@ -1240,12 +1251,14 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
     }
 
     for (;;) {
-        pa_stream_state_t state = pa_stream_get_state(out->stream);
+        pa_stream_state_t state;
 
-        if (!p->context) {
+        if (!p->context || !out->stream) {
             ret = CA_ERROR_STATE;
             goto finish_locked;
         }
+
+        state = pa_stream_get_state(out->stream);
 
         /* Stream sucessfully created and uploaded */
         if (state == PA_STREAM_TERMINATED)
