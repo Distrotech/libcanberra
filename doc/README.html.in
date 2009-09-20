@@ -38,6 +38,10 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Sun 20 Sep 2009: </div> <p class="news-text"><a
+href="@PACKAGE_URL@libcanberra-0.18.tar.gz">Version 0.18</a> released;
+numerous updates to Gtk support</p>
+
 <div class="news-date">Fri 12 Sep 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.17.tar.gz">Version 0.17</a> released;
 add vala vapi file; numerous updates to Gtk support</p>
