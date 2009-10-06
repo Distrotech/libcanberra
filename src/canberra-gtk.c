@@ -377,10 +377,10 @@ int ca_gtk_proplist_set_for_event(ca_proplist *p, GdkEvent *e) {
              * libc applies locale information on the formatting of
              * floating numbers. */
 
-            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_HPOS, "%i.%03i", (int) (x/width), (int) (1000.0*x/width) % 1000)) < 0)
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_HPOS, "%i.%03i", (int) (x/(width-1)), (int) (1000.0*x/(width-1)) % 1000)) < 0)
                 return ret;
 
-            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_VPOS, "%i.%03i", (int) (y/height), (int) (1000.0*y/height) % 1000)) < 0)
+            if ((ret = ca_proplist_setf(p, CA_PROP_EVENT_MOUSE_VPOS, "%i.%03i", (int) (y/(height-1)), (int) (1000.0*y/(height-1)) % 1000)) < 0)
                 return ret;
         }
     }
