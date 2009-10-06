@@ -392,6 +392,14 @@ static void dispatch_sound_event(SoundEventData *d) {
     if (g_object_get_qdata(d->object, disable_sound_quark))
         return;
 
+    /* The GdkWindow of the the widget might have changed while this
+     * event was queued for us. Make sure to update it from the
+     * current one if necessary. */
+    if (d->event && d->event->any.window) {
+        g_object_unref(d->event->any.window);
+        d->event->any.window = g_object_ref(GTK_OBJECT(gtk_widget_get_window(GTK_WIDGET(d->object))));
+    }
+
     if (d->signal_id == signal_id_widget_show) {
         GdkWindowTypeHint hint;
 
