@@ -38,9 +38,13 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Wed 14 Oct 2009: </div> <p class="news-text"><a
+href="@PACKAGE_URL@libcanberra-0.19.tar.gz">Version 0.19</a> released;
+some important fixes for the Gtk support</p>
+
 <div class="news-date">Sun 20 Sep 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.18.tar.gz">Version 0.18</a> released;
-numerous updates to Gtk support</p>
+numerous updates for the Gtk support</p>
 
 <div class="news-date">Fri 12 Sep 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.17.tar.gz">Version 0.17</a> released;
@@ -188,10 +192,12 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <p>If you want to report bugs, have questions or want to be notified about new releases, please join the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/"><tt>libcanberra-discuss</tt></a> mailing list.</p>
 
+<p>If you want to be notified about new git commits, please join the <a href="https://tango.0pointer.de/mailman/listinfo/libcanberra-commits/"><tt>libcanberra-commits</tt></a> mailing list.</p>
+
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, September 2009</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, October 2009</address>
 
 </body>
 </html>
