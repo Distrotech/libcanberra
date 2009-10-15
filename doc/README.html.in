@@ -38,6 +38,10 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Thu 15 Oct 2009: </div> <p class="news-text"><a
+href="@PACKAGE_URL@libcanberra-0.20.tar.gz">Version 0.20</a> released;
+minor casting fix</p>
+
 <div class="news-date">Wed 14 Oct 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.19.tar.gz">Version 0.19</a> released;
 some important fixes for the Gtk support</p>

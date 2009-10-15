@@ -20,7 +20,7 @@
 # <http://www.gnu.org/licenses/>.
 
 m4_define([ca_major],[0])
-m4_define([ca_minor],[19])
+m4_define([ca_minor],[20])
 m4_define([ca_version],[ca_major.ca_minor])
 
 AC_PREREQ(2.63)
