@@ -396,8 +396,12 @@ static void dispatch_sound_event(SoundEventData *d) {
      * event was queued for us. Make sure to update it from the
      * current one if necessary. */
     if (d->event && d->event->any.window) {
+        GtkWindow *window;
         g_object_unref(d->event->any.window);
-        d->event->any.window = g_object_ref(G_OBJECT(gtk_widget_get_window(GTK_WIDGET(d->object))));
+        if ((window = gtk_widget_get_window(GTK_WIDGET(d->object))))
+            d->event->any.window = g_object_ref(G_OBJECT(window));
+        else
+            d->event->any.window = NULL;
     }
 
     if (d->signal_id == signal_id_widget_show) {
