@@ -490,7 +490,11 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
     if (ret < 0)
         goto fail;
 
-    s = gdk_drawable_get_screen(GDK_DRAWABLE(e->any.window));
+    if (e->any.window)
+        s = gdk_drawable_get_screen(GDK_DRAWABLE(e->any.window));
+    else
+        s = gdk_screen_get_default();
+
     ret = ca_context_play_full(ca_gtk_context_get_for_screen(s), id, p, NULL, NULL);
 
 fail:
