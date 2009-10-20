@@ -38,6 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Tue 20 Oct
+2009: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.22.tar.gz">Version
+0.22</a> released; small fix to make sure we don't dereference a null
+pointer. </p>
+
 <div class="news-date">Fri 16 Oct 2009: </div> <p class="news-text"><a
 href="@PACKAGE_URL@libcanberra-0.21.tar.gz">Version 0.21</a> released;
 suppress casting warning</p>
