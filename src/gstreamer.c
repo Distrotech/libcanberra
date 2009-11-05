@@ -277,12 +277,15 @@ static int ca_gst_sound_file_open(ca_sound_file **_f, const char *fn) {
     if ((fd = open(fn, O_RDONLY)) == -1)
         return errno == ENOENT ? CA_ERROR_NOTFOUND : CA_ERROR_SYSTEM;
 
-    if (!(f = ca_new0(ca_sound_file, 1)))
+    if (!(f = ca_new0(ca_sound_file, 1))) {
+        close(fd);
         return CA_ERROR_OOM;
+    }
 
     if (!(f->fdsrc = gst_element_factory_make("fdsrc", NULL))) {
+        close(fd);
         ca_free(f);
-        return CA_ERROR_OOM;
+	return CA_ERROR_OOM;
     }
 
     g_object_set(GST_OBJECT(f->fdsrc), "fd", fd, NULL);
