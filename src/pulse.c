@@ -57,6 +57,7 @@ struct outstanding {
     uint32_t id;
     uint32_t sink_input;
     pa_stream *stream;
+    pa_operation *drain_operation;
     ca_finish_callback_t callback;
     void *userdata;
     ca_sound_file *file;
@@ -85,6 +86,12 @@ static void outstanding_disconnect(struct outstanding *o) {
     ca_assert(o);
 
     if (o->stream) {
+        if (o->drain_operation) {
+            pa_operation_cancel(o->drain_operation);
+            pa_operation_unref(o->drain_operation);
+            o->drain_operation = NULL;
+        }
+
         pa_stream_set_write_callback(o->stream, NULL, NULL);
         pa_stream_set_state_callback(o->stream, NULL, NULL);
         pa_stream_disconnect(o->stream);
@@ -645,6 +652,11 @@ static void stream_drain_cb(pa_stream *s, int success, void *userdata) {
         out->finished = TRUE;
     }
 
+    if (out->drain_operation) {
+        pa_operation_unref(out->drain_operation);
+        out->drain_operation = NULL;
+    }
+
     pa_threaded_mainloop_signal(p->mainloop, FALSE);
 }
 
@@ -704,15 +716,17 @@ static void stream_write_cb(pa_stream *s, size_t bytes, void *userdata) {
             pa_threaded_mainloop_signal(p->mainloop, FALSE);
 
         } else {
-            pa_operation *o;
             ca_assert(out->type == OUTSTANDING_STREAM);
 
-            if (!(o = pa_stream_drain(s, stream_drain_cb, out))) {
+            if (out->drain_operation) {
+                pa_operation_cancel(out->drain_operation);
+                pa_operation_unref(out->drain_operation);
+            }
+
+            if (!(out->drain_operation = pa_stream_drain(s, stream_drain_cb, out))) {
                 ret = translate_error(pa_context_errno(p->context));
                 goto finish;
             }
-
-            pa_operation_unref(o);
         }
 
         pa_stream_set_write_callback(s, NULL, NULL);
