@@ -46,6 +46,13 @@ namespace Canberra {
         public const string PROP_WINDOW_ID;
         public const string PROP_WINDOW_ICON;
         public const string PROP_WINDOW_ICON_NAME;
+        public const string PROP_WINDOW_X;
+        public const string PROP_WINDOW_Y;
+        public const string PROP_WINDOW_WIDTH;
+        public const string PROP_WINDOW_HEIGHT;
+        public const string PROP_WINDOW_HPOS;
+        public const string PROP_WINDOW_VPOS;
+        public const string PROP_WINDOW_DESKTOP;
         public const string PROP_WINDOW_X11_DISPLAY;
         public const string PROP_WINDOW_X11_SCREEN;
         public const string PROP_WINDOW_X11_MONITOR;
@@ -65,6 +72,7 @@ namespace Canberra {
         public const string PROP_CANBERRA_XDG_THEME_NAME;
         public const string PROP_CANBERRA_XDG_THEME_OUTPUT_PROFILE;
         public const string PROP_CANBERRA_ENABLE;
+        public const string PROP_CANBERRA_FORCE_CHANNEL;
 
         [CCode (cname = "CA_SUCCESS")]
         public const int SUCCESS;
@@ -88,6 +96,7 @@ namespace Canberra {
                 INTERNAL,
                 DISABLED,
                 FORKED,
+                DISCONNECTED,
 
                 [CCode (cname = "_CA_ERROR_MAX")]
                 _MAX
