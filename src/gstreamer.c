@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <gst/gst.h>
 
@@ -285,7 +286,7 @@ static int ca_gst_sound_file_open(ca_sound_file **_f, const char *fn) {
     if (!(f->fdsrc = gst_element_factory_make("fdsrc", NULL))) {
         close(fd);
         ca_free(f);
-	return CA_ERROR_OOM;
+        return CA_ERROR_OOM;
     }
 
     g_object_set(GST_OBJECT(f->fdsrc), "fd", fd, NULL);
