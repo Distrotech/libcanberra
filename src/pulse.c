@@ -1017,7 +1017,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
     ba.minreq = (uint32_t) -1;
     ba.fragsize = (uint32_t) -1;
 
-    if (pa_stream_connect_playback(out->stream, NULL, &ba,
+    if (pa_stream_connect_playback(out->stream, c->device, &ba,
 #ifdef PA_STREAM_FAIL_ON_SUSPEND
                                    PA_STREAM_FAIL_ON_SUSPEND
 #else
