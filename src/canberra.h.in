@@ -483,6 +483,8 @@ extern "C" {
  *
  * If the list of properties is handed on to the sound server this
  * property is stripped from it.
+ *
+ * Since: 0.13
  */
 #define CA_PROP_CANBERRA_FORCE_CHANNEL             "canberra.force_channel"
 
