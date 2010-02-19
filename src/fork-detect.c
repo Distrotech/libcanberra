@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 /***
   This file is part of libcanberra.
 
@@ -28,24 +30,24 @@
 #include "fork-detect.h"
 
 int ca_detect_fork(void) {
-    static volatile pid_t pid = (pid_t) -1;
-    pid_t v;
+        static volatile pid_t pid = (pid_t) -1;
+        pid_t v;
 
-    /* Some really stupid applications (Hey, vim, that means you!)
-     * love to fork after initializing gtk/libcanberra. This is really
-     * bad style. We however have to deal with this cleanly, so we try
-     * to detect the forks making sure all our calls fail cleanly
-     * after the fork. */
+        /* Some really stupid applications (Hey, vim, that means you!)
+         * love to fork after initializing gtk/libcanberra. This is really
+         * bad style. We however have to deal with this cleanly, so we try
+         * to detect the forks making sure all our calls fail cleanly
+         * after the fork. */
 
-    /* Ideally we'd use atomic operations here, but we don't have them
-     * and this is not exactly crucial, so we don't care */
+        /* Ideally we'd use atomic operations here, but we don't have them
+         * and this is not exactly crucial, so we don't care */
 
-    v = pid;
+        v = pid;
 
-    if (v == getpid() || v == (pid_t) -1) {
-        pid = getpid();
-        return 0;
-    }
+        if (v == getpid() || v == (pid_t) -1) {
+                pid = getpid();
+                return 0;
+        }
 
-    return 1;
+        return 1;
 }

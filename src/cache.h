@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberracachehfoo
 #define foocanberracachehfoo
 
@@ -24,19 +26,19 @@
 #include "read-sound-file.h"
 
 int ca_cache_lookup_sound(
-        ca_sound_file **f,
-        ca_sound_file_open_callback_t sfopen,
-        char **sound_path,
-        const char *theme,
-        const char *name,
-        const char *locale,
-        const char *profile);
+                ca_sound_file **f,
+                ca_sound_file_open_callback_t sfopen,
+                char **sound_path,
+                const char *theme,
+                const char *name,
+                const char *locale,
+                const char *profile);
 
 int ca_cache_store_sound(
-        const char *theme,
-        const char *name,
-        const char *locale,
-        const char *profile,
-        const char *fname);
+                const char *theme,
+                const char *name,
+                const char *locale,
+                const char *profile,
+                const char *fname);
 
 #endif

@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberradriverorderhfoo
 #define foocanberradriverorderhfoo
 

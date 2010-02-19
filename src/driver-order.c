@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 /***
   This file is part of libcanberra.
 
@@ -29,17 +31,17 @@
 
 const char* const ca_driver_order[] = {
 #ifdef HAVE_PULSE
-    "pulse",
+        "pulse",
 #endif
 #ifdef HAVE_ALSA
-    "alsa",
+        "alsa",
 #endif
 #ifdef HAVE_OSS
-    "oss",
+        "oss",
 #endif
 #ifdef HAVE_GSTREAMER
-    "gstreamer",
+        "gstreamer",
 #endif
-    /* ... */
-    NULL
+        /* ... */
+        NULL
 };

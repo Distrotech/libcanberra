@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberrahfoo
 #define foocanberrahfoo
 
@@ -54,9 +56,9 @@ extern "C" {
  * Evaluates to TRUE when the library version is newer than the
  * specified parameters.
  */
-#define CA_CHECK_VERSION(major,minor)                           \
-    ((CA_MAJOR > (major)) ||                                    \
-     (CA_MAJOR == (major) && CA_MINOR >= (minor)))
+#define CA_CHECK_VERSION(major,minor)                   \
+        ((CA_MAJOR > (major)) ||                        \
+         (CA_MAJOR == (major) && CA_MINOR >= (minor)))
 
 /**
  * CA_PROP_MEDIA_NAME:
@@ -519,26 +521,26 @@ typedef void (*ca_finish_callback_t)(ca_context *c, uint32_t id, int error_code,
  * Error codes
  */
 enum {
-    CA_SUCCESS = 0,
-    CA_ERROR_NOTSUPPORTED = -1,
-    CA_ERROR_INVALID = -2,
-    CA_ERROR_STATE = -3,
-    CA_ERROR_OOM = -4,
-    CA_ERROR_NODRIVER = -5,
-    CA_ERROR_SYSTEM = -6,
-    CA_ERROR_CORRUPT = -7,
-    CA_ERROR_TOOBIG = -8,
-    CA_ERROR_NOTFOUND = -9,
-    CA_ERROR_DESTROYED = -10,
-    CA_ERROR_CANCELED = -11,
-    CA_ERROR_NOTAVAILABLE = -12,
-    CA_ERROR_ACCESS = -13,
-    CA_ERROR_IO = -14,
-    CA_ERROR_INTERNAL = -15,
-    CA_ERROR_DISABLED = -16,
-    CA_ERROR_FORKED = -17,
-    CA_ERROR_DISCONNECTED = -18,
-    _CA_ERROR_MAX = -19
+        CA_SUCCESS = 0,
+        CA_ERROR_NOTSUPPORTED = -1,
+        CA_ERROR_INVALID = -2,
+        CA_ERROR_STATE = -3,
+        CA_ERROR_OOM = -4,
+        CA_ERROR_NODRIVER = -5,
+        CA_ERROR_SYSTEM = -6,
+        CA_ERROR_CORRUPT = -7,
+        CA_ERROR_TOOBIG = -8,
+        CA_ERROR_NOTFOUND = -9,
+        CA_ERROR_DESTROYED = -10,
+        CA_ERROR_CANCELED = -11,
+        CA_ERROR_NOTAVAILABLE = -12,
+        CA_ERROR_ACCESS = -13,
+        CA_ERROR_IO = -14,
+        CA_ERROR_INTERNAL = -15,
+        CA_ERROR_DISABLED = -16,
+        CA_ERROR_FORKED = -17,
+        CA_ERROR_DISCONNECTED = -18,
+        _CA_ERROR_MAX = -19
 };
 
 /**

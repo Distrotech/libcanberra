@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 /***
   This file is part of libcanberra.
 
@@ -25,10 +27,10 @@
 #include "macro.h"
 
 ca_bool_t ca_debug(void) {
-    const char *d;
+        const char *d;
 
-    if ((d = getenv("CANBERRA_DEBUG")))
-        return !!*d;
+        if ((d = getenv("CANBERRA_DEBUG")))
+                return !!*d;
 
-    return FALSE;
+        return FALSE;
 }

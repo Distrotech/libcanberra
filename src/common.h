@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberracommonh
 #define foocanberracommonh
 
@@ -26,24 +28,24 @@
 #include "mutex.h"
 
 struct ca_context {
-    ca_bool_t opened;
-    ca_mutex *mutex;
+        ca_bool_t opened;
+        ca_mutex *mutex;
 
-    ca_proplist *props;
+        ca_proplist *props;
 
-    char *driver;
-    char *device;
+        char *driver;
+        char *device;
 
-    void *private;
+        void *private;
 #ifdef HAVE_DSO
-    void *private_dso;
+        void *private_dso;
 #endif
 };
 
 typedef enum ca_cache_control {
-    CA_CACHE_CONTROL_NEVER,
-    CA_CACHE_CONTROL_PERMANENT,
-    CA_CACHE_CONTROL_VOLATILE
+        CA_CACHE_CONTROL_NEVER,
+        CA_CACHE_CONTROL_PERMANENT,
+        CA_CACHE_CONTROL_VOLATILE
 } ca_cache_control_t;
 
 int ca_parse_cache_control(ca_cache_control_t *control, const char *c);

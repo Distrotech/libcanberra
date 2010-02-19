@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 /***
   This file is part of libcanberra.
 
@@ -29,50 +31,50 @@
 #include "malloc.h"
 
 struct ca_mutex {
-    pthread_mutex_t mutex;
+        pthread_mutex_t mutex;
 };
 
 ca_mutex* ca_mutex_new(void) {
-    ca_mutex *m;
+        ca_mutex *m;
 
-    if (!(m = ca_new(ca_mutex, 1)))
-        return NULL;
+        if (!(m = ca_new(ca_mutex, 1)))
+                return NULL;
 
-    if (pthread_mutex_init(&m->mutex, NULL) < 0) {
-        ca_free(m);
-        return NULL;
-    }
+        if (pthread_mutex_init(&m->mutex, NULL) < 0) {
+                ca_free(m);
+                return NULL;
+        }
 
-    return m;
+        return m;
 }
 
 void ca_mutex_free(ca_mutex *m) {
-    ca_assert(m);
+        ca_assert(m);
 
-    ca_assert_se(pthread_mutex_destroy(&m->mutex) == 0);
-    ca_free(m);
+        ca_assert_se(pthread_mutex_destroy(&m->mutex) == 0);
+        ca_free(m);
 }
 
 void ca_mutex_lock(ca_mutex *m) {
-    ca_assert(m);
+        ca_assert(m);
 
-    ca_assert_se(pthread_mutex_lock(&m->mutex) == 0);
+        ca_assert_se(pthread_mutex_lock(&m->mutex) == 0);
 }
 
 ca_bool_t ca_mutex_try_lock(ca_mutex *m) {
-    int r;
-    ca_assert(m);
+        int r;
+        ca_assert(m);
 
-    if ((r = pthread_mutex_trylock(&m->mutex)) != 0) {
-        ca_assert(r == EBUSY);
-        return FALSE;
-    }
+        if ((r = pthread_mutex_trylock(&m->mutex)) != 0) {
+                ca_assert(r == EBUSY);
+                return FALSE;
+        }
 
-    return TRUE;
+        return TRUE;
 }
 
 void ca_mutex_unlock(ca_mutex *m) {
-    ca_assert(m);
+        ca_assert(m);
 
-    ca_assert_se(pthread_mutex_unlock(&m->mutex) == 0);
+        ca_assert_se(pthread_mutex_unlock(&m->mutex) == 0);
 }

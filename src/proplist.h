@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberraproplisthfoo
 #define foocanberraproplisthfoo
 
@@ -29,18 +31,18 @@
 #define N_HASHTABLE 31
 
 typedef struct ca_prop {
-    char *key;
-    size_t nbytes;
-    struct ca_prop *next_in_slot, *next_item, *prev_item;
+        char *key;
+        size_t nbytes;
+        struct ca_prop *next_in_slot, *next_item, *prev_item;
 } ca_prop;
 
 #define CA_PROP_DATA(p) ((void*) ((char*) (p) + CA_ALIGN(sizeof(ca_prop))))
 
 struct ca_proplist {
-    ca_mutex *mutex;
+        ca_mutex *mutex;
 
-    ca_prop *prop_hashtable[N_HASHTABLE];
-    ca_prop *first_item;
+        ca_prop *prop_hashtable[N_HASHTABLE];
+        ca_prop *first_item;
 };
 
 int ca_proplist_merge(ca_proplist **_a, ca_proplist *b, ca_proplist *c);

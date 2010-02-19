@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 /***
   This file is part of libcanberra.
 
@@ -30,69 +32,69 @@
 #include "macro.h"
 
 void* ca_memdup(const void* p, size_t size) {
-    void *r;
+        void *r;
 
-    ca_assert(p);
+        ca_assert(p);
 
-    if (!(r = ca_malloc(size)))
-        return NULL;
+        if (!(r = ca_malloc(size)))
+                return NULL;
 
-    memcpy(r, p, size);
-    return r;
+        memcpy(r, p, size);
+        return r;
 }
 
 char *ca_sprintf_malloc(const char *format, ...) {
-    size_t  size = 100;
-    char *c = NULL;
+        size_t  size = 100;
+        char *c = NULL;
 
-    ca_assert(format);
+        ca_assert(format);
 
-    for(;;) {
-        int r;
-        va_list ap;
+        for(;;) {
+                int r;
+                va_list ap;
 
-        ca_free(c);
+                ca_free(c);
 
-        if (!(c = ca_new(char, size)))
-            return NULL;
+                if (!(c = ca_new(char, size)))
+                        return NULL;
 
-        va_start(ap, format);
-        r = vsnprintf(c, size, format, ap);
-        va_end(ap);
+                va_start(ap, format);
+                r = vsnprintf(c, size, format, ap);
+                va_end(ap);
 
-        c[size-1] = 0;
+                c[size-1] = 0;
 
-        if (r > -1 && (size_t) r < size)
-            return c;
+                if (r > -1 && (size_t) r < size)
+                        return c;
 
-        if (r > -1)    /* glibc 2.1 */
-            size = (size_t) r+1;
-        else           /* glibc 2.0 */
-            size *= 2;
-    }
+                if (r > -1)    /* glibc 2.1 */
+                        size = (size_t) r+1;
+                else           /* glibc 2.0 */
+                        size *= 2;
+        }
 }
 
 #ifndef HAVE_STRNDUP
 char *ca_strndup(const char *s, size_t n) {
-    size_t n_avail;
-    char *p;
+        size_t n_avail;
+        char *p;
 
-    if (!s)
-        return NULL;
+        if (!s)
+                return NULL;
 
-    if (memchr(s, '\0', n)) {
-        n_avail = strlen(s);
-        if (n_avail > n)
-            n_avail = n;
-    } else
-        n_avail = n;
+        if (memchr(s, '\0', n)) {
+                n_avail = strlen(s);
+                if (n_avail > n)
+                        n_avail = n;
+        } else
+                n_avail = n;
 
-    if (!(p = ca_new(char, n_avail + 1)))
-        return NULL;
+        if (!(p = ca_new(char, n_avail + 1)))
+                return NULL;
 
-    memcpy(p, s, n_avail);
-    p[n_avail] = '\0';
+        memcpy(p, s, n_avail);
+        p[n_avail] = '\0';
 
-    return p;
+        return p;
 }
 #endif

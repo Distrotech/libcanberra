@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberramacrohfoo
 #define foocanberramacrohfoo
 
@@ -43,56 +45,56 @@
 #endif
 
 #define ca_return_if_fail(expr)                                         \
-    do {                                                                \
-        if (CA_UNLIKELY(!(expr))) {                                     \
-            if (ca_debug())                                             \
-                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-            return;                                                     \
-        }                                                               \
-    } while(FALSE)
+        do {                                                            \
+                if (CA_UNLIKELY(!(expr))) {                             \
+                        if (ca_debug())                                 \
+                                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                        return;                                         \
+                }                                                       \
+        } while(FALSE)
 
-#define ca_return_val_if_fail(expr, val) \
-    do { \
-        if (CA_UNLIKELY(!(expr))) {                                     \
-            if (ca_debug())                                             \
-                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-            return (val);                                               \
-        }                                                               \
-    } while(FALSE)
+#define ca_return_val_if_fail(expr, val)                                \
+        do {                                                            \
+                if (CA_UNLIKELY(!(expr))) {                             \
+                        if (ca_debug())                                 \
+                                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                        return (val);                                   \
+                }                                                       \
+        } while(FALSE)
 
 #define ca_return_null_if_fail(expr) ca_return_val_if_fail(expr, NULL)
 
 #define ca_return_if_fail_unlock(expr, mutex)                           \
-    do {                                                                \
-        if (CA_UNLIKELY(!(expr))) {                                     \
-            if (ca_debug())                                             \
-                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-            ca_mutex_unlock(mutex);                                     \
-            return;                                                     \
-        }                                                               \
-    } while(FALSE)
+        do {                                                            \
+                if (CA_UNLIKELY(!(expr))) {                             \
+                        if (ca_debug())                                 \
+                                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                        ca_mutex_unlock(mutex);                         \
+                        return;                                         \
+                }                                                       \
+        } while(FALSE)
 
 #define ca_return_val_if_fail_unlock(expr, val, mutex)                  \
-    do {                                                                \
-        if (CA_UNLIKELY(!(expr))) {                                     \
-            if (ca_debug())                                             \
-                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-            ca_mutex_unlock(mutex);                                     \
-            return (val);                                               \
-        }                                                               \
-    } while(FALSE)
+        do {                                                            \
+                if (CA_UNLIKELY(!(expr))) {                             \
+                        if (ca_debug())                                 \
+                                fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s().\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                        ca_mutex_unlock(mutex);                         \
+                        return (val);                                   \
+                }                                                       \
+        } while(FALSE)
 
 #define ca_return_null_if_fail_unlock(expr, mutex) ca_return_val_if_fail_unlock(expr, NULL, mutex)
 
 /* An assert which guarantees side effects of x, i.e. is never
  * optimized away */
 #define ca_assert_se(expr)                                              \
-    do {                                                                \
-        if (CA_UNLIKELY(!(expr))) {                                     \
-            fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s(). Aborting.\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-            abort();                                                    \
-        }                                                               \
-    } while (FALSE)
+        do {                                                            \
+                if (CA_UNLIKELY(!(expr))) {                             \
+                        fprintf(stderr, "Assertion '%s' failed at %s:%u, function %s(). Aborting.\n", #expr , __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                        abort();                                        \
+                }                                                       \
+        } while (FALSE)
 
 /* An assert that may be optimized away by defining NDEBUG */
 #ifdef NDEBUG
@@ -102,40 +104,40 @@
 #endif
 
 #define ca_assert_not_reached()                                         \
-    do {                                                                \
-        fprintf(stderr, "Code should not be reached at %s:%u, function %s(). Aborting.\n", __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
-        abort();                                                        \
-    } while (FALSE)
+        do {                                                            \
+                fprintf(stderr, "Code should not be reached at %s:%u, function %s(). Aborting.\n", __FILE__, __LINE__, CA_PRETTY_FUNCTION); \
+                abort();                                                \
+        } while (FALSE)
 
 #define CA_ELEMENTSOF(x) (sizeof(x)/sizeof((x)[0]))
 
 #ifdef __GNUC__
 #define CA_MAX(a,b)                             \
-    __extension__ ({ typeof(a) _a = (a);        \
-            typeof(b) _b = (b);                 \
-            _a > _b ? _a : _b;                  \
-        })
+        __extension__ ({ typeof(a) _a = (a);    \
+                        typeof(b) _b = (b);     \
+                        _a > _b ? _a : _b;      \
+                })
 #else
 #define CA_MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifdef __GNUC__
 #define CA_MIN(a,b)                             \
-    __extension__ ({ typeof(a) _a = (a);        \
-            typeof(b) _b = (b);                 \
-            _a < _b ? _a : _b;                  \
-        })
+        __extension__ ({ typeof(a) _a = (a);    \
+                        typeof(b) _b = (b);     \
+                        _a < _b ? _a : _b;      \
+                })
 #else
 #define CA_MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 #ifdef __GNUC__
 #define CA_CLAMP(x, low, high)                                          \
-    __extension__ ({ typeof(x) _x = (x);                                \
-            typeof(low) _low = (low);                                   \
-            typeof(high) _high = (high);                                \
-            ((_x > _high) ? _high : ((_x < _low) ? _low : _x));         \
-        })
+        __extension__ ({ typeof(x) _x = (x);                            \
+                        typeof(low) _low = (low);                       \
+                        typeof(high) _high = (high);                    \
+                        ((_x > _high) ? _high : ((_x < _low) ? _low : _x)); \
+                })
 #else
 #define CA_CLAMP(x, low, high) (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 #endif
@@ -165,7 +167,7 @@ typedef int ca_bool_t;
 ca_bool_t ca_debug(void);
 
 static inline size_t ca_align(size_t l) {
-    return (((l + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*));
+        return (((l + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*));
 }
 
 #define CA_ALIGN(x) (ca_align(x))
@@ -177,15 +179,15 @@ typedef void (*ca_free_cb_t)(void *);
 #endif
 
 #ifdef HAVE_BYTESWAP_H
-#define CA_INT16_SWAP(x) ((int16_t) bswap_16((uint16_t) x))
-#define CA_UINT16_SWAP(x) ((uint16_t) bswap_16((uint16_t) x))
-#define CA_INT32_SWAP(x) ((int32_t) bswap_32((uint32_t) x))
-#define CA_UINT32_SWAP(x) ((uint32_t) bswap_32((uint32_t) x))
+ #define CA_INT16_SWAP(x) ((int16_t) bswap_16((uint16_t) x))
+ #define CA_UINT16_SWAP(x) ((uint16_t) bswap_16((uint16_t) x))
+ #define CA_INT32_SWAP(x) ((int32_t) bswap_32((uint32_t) x))
+ #define CA_UINT32_SWAP(x) ((uint32_t) bswap_32((uint32_t) x))
 #else
-#define CA_INT16_SWAP(x) ( (int16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
-#define CA_UINT16_SWAP(x) ( (uint16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
-#define CA_INT32_SWAP(x) ( (int32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
-#define CA_UINT32_SWAP(x) ( (uint32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
+ #define CA_INT16_SWAP(x) ( (int16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
+ #define CA_UINT16_SWAP(x) ( (uint16_t) ( ((uint16_t) x >> 8) | ((uint16_t) x << 8) ) )
+ #define CA_INT32_SWAP(x) ( (int32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
+ #define CA_UINT32_SWAP(x) ( (uint32_t) ( ((uint32_t) x >> 24) | ((uint32_t) x << 24) | (((uint32_t) x & 0xFF00) << 8) | ((((uint32_t) x) >> 8) & 0xFF00) ) )
 #endif
 
 #ifdef WORDS_BIGENDIAN

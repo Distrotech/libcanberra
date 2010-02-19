@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8 -*-*/
+
 #ifndef foocanberrareadsoundfilehfoo
 #define foocanberrareadsoundfilehfoo
 
@@ -25,32 +27,32 @@
 #include <inttypes.h>
 
 typedef enum ca_sample_type {
-    CA_SAMPLE_S16NE,
-    CA_SAMPLE_S16RE,
-    CA_SAMPLE_U8
+        CA_SAMPLE_S16NE,
+        CA_SAMPLE_S16RE,
+        CA_SAMPLE_U8
 } ca_sample_type_t;
 
 typedef enum ca_channel_position {
-    CA_CHANNEL_MONO,
-    CA_CHANNEL_FRONT_LEFT,
-    CA_CHANNEL_FRONT_RIGHT,
-    CA_CHANNEL_FRONT_CENTER,
-    CA_CHANNEL_REAR_LEFT,
-    CA_CHANNEL_REAR_RIGHT,
-    CA_CHANNEL_REAR_CENTER,
-    CA_CHANNEL_LFE,
-    CA_CHANNEL_FRONT_LEFT_OF_CENTER,
-    CA_CHANNEL_FRONT_RIGHT_OF_CENTER,
-    CA_CHANNEL_SIDE_LEFT,
-    CA_CHANNEL_SIDE_RIGHT,
-    CA_CHANNEL_TOP_CENTER,
-    CA_CHANNEL_TOP_FRONT_LEFT,
-    CA_CHANNEL_TOP_FRONT_RIGHT,
-    CA_CHANNEL_TOP_FRONT_CENTER,
-    CA_CHANNEL_TOP_REAR_LEFT,
-    CA_CHANNEL_TOP_REAR_RIGHT,
-    CA_CHANNEL_TOP_REAR_CENTER,
-    _CA_CHANNEL_POSITION_MAX
+        CA_CHANNEL_MONO,
+        CA_CHANNEL_FRONT_LEFT,
+        CA_CHANNEL_FRONT_RIGHT,
+        CA_CHANNEL_FRONT_CENTER,
+        CA_CHANNEL_REAR_LEFT,
+        CA_CHANNEL_REAR_RIGHT,
+        CA_CHANNEL_REAR_CENTER,
+        CA_CHANNEL_LFE,
+        CA_CHANNEL_FRONT_LEFT_OF_CENTER,
+        CA_CHANNEL_FRONT_RIGHT_OF_CENTER,
+        CA_CHANNEL_SIDE_LEFT,
+        CA_CHANNEL_SIDE_RIGHT,
+        CA_CHANNEL_TOP_CENTER,
+        CA_CHANNEL_TOP_FRONT_LEFT,
+        CA_CHANNEL_TOP_FRONT_RIGHT,
+        CA_CHANNEL_TOP_FRONT_CENTER,
+        CA_CHANNEL_TOP_REAR_LEFT,
+        CA_CHANNEL_TOP_REAR_RIGHT,
+        CA_CHANNEL_TOP_REAR_CENTER,
+        _CA_CHANNEL_POSITION_MAX
 } ca_channel_position_t;
 
 typedef struct ca_sound_file ca_sound_file;
