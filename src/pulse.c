@@ -164,6 +164,8 @@ static void add_common(pa_proplist *l) {
                         pa_proplist_sets(l, CA_PROP_MEDIA_NAME, t);
                 else if ((t = pa_proplist_gets(l, CA_PROP_MEDIA_FILENAME)))
                         pa_proplist_sets(l, CA_PROP_MEDIA_NAME, t);
+                else
+                        pa_proplist_sets(l, CA_PROP_MEDIA_NAME, "libcanberra");
         }
 }
 
@@ -228,7 +230,16 @@ static int context_connect(ca_context *c, ca_bool_t nofail) {
 
         strip_prefix(l, "canberra.");
 
-        if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), "libcanberra", l))) {
+        if (!pa_proplist_contains(l, PA_PROP_APPLICATION_NAME)) {
+                pa_proplist_sets(l, PA_PROP_APPLICATION_NAME, "libcanberra");
+                pa_proplist_sets(l, PA_PROP_APPLICATION_VERSION, PACKAGE_VERSION);
+
+                if (!pa_proplist_contains(l, PA_PROP_APPLICATION_ID))
+                        pa_proplist_sets(l, PA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra");
+
+        }
+
+        if (!(p->context = pa_context_new_with_proplist(pa_threaded_mainloop_get_api(p->mainloop), NULL, l))) {
                 pa_proplist_free(l);
                 return CA_ERROR_OOM;
         }
@@ -999,14 +1010,6 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         } else
                 cm_good = convert_channel_map(out->file, &cm);
 
-        if (!name) {
-                if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
-                        if (!(n = pa_proplist_gets(l, CA_PROP_MEDIA_NAME)))
-                                n = "libcanberra";
-
-                name = ca_strdup(n);
-        }
-
         pa_threaded_mainloop_lock(p->mainloop);
 
         if (!p->context) {
@@ -1014,7 +1017,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
                 goto finish_locked;
         }
 
-        if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, cm_good ? &cm : NULL, l))) {
+        if (!(out->stream = pa_stream_new_with_proplist(p->context, NULL, &ss, cm_good ? &cm : NULL, l))) {
                 ret = translate_error(pa_context_errno(p->context));
                 goto finish_locked;
         }

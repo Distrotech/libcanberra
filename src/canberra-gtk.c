@@ -130,6 +130,14 @@ ca_context *ca_gtk_context_get_for_screen(GdkScreen *screen) {
 
         if ((name = g_get_application_name()))
                 ca_proplist_sets(p, CA_PROP_APPLICATION_NAME, name);
+        else {
+                ca_proplist_sets(p, CA_PROP_APPLICATION_NAME, "libcanberra-gtk");
+                ca_proplist_sets(p, CA_PROP_APPLICATION_VERSION, PACKAGE_VERSION);
+                ca_proplist_sets(p, CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.gtk");
+        }
+
+        if ((name = gtk_window_get_default_icon_name()))
+                ca_proplist_sets(p, CA_PROP_APPLICATION_ICON_NAME, name);
 
         if ((name = gdk_display_get_name(gdk_screen_get_display(screen))))
                 ca_proplist_sets(p, CA_PROP_WINDOW_X11_DISPLAY, name);

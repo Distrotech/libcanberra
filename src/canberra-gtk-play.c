@@ -161,7 +161,8 @@ int main (int argc, char *argv[]) {
 
         ca_context_change_props(ca_gtk_context_get(),
                                 CA_PROP_APPLICATION_NAME, "canberra-gtk-play",
-                                CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.GtkPlay",
+                                CA_PROP_APPLICATION_VERSION, PACKAGE_VERSION,
+                                CA_PROP_APPLICATION_ID, "org.freedesktop.libcanberra.gtk-play",
                                 NULL);
 
         if (event_id)
