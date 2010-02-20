@@ -343,7 +343,7 @@ static void context_subscribe_cb(pa_context *pc, pa_subscription_event_type_t t,
         for (out = p->outstanding; out; out = n) {
                 n = out->next;
 
-                if (!out->clean_up ||out->type != OUTSTANDING_SAMPLE || out->sink_input != idx)
+                if (!out->clean_up || out->type != OUTSTANDING_SAMPLE || out->sink_input != idx)
                         continue;
 
                 outstanding_disconnect(out);
@@ -954,6 +954,11 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
 
                         pa_operation_unref(o);
 
+                        if (!canceled && p->context && out->error == CA_SUCCESS) {
+                                ret = CA_SUCCESS;
+                                goto finish_locked;
+                        }
+
                         pa_threaded_mainloop_unlock(p->mainloop);
 
                         /* The operation might have been canceled due to connection termination */
@@ -962,7 +967,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
                                 goto finish_unlocked;
                         }
 
-                        /* Did we manage to play the sample or did some other error occur? */
+                        /* Did some other error occur? */
                         if (out->error != CA_ERROR_NOTFOUND) {
                                 ret = out->error;
                                 goto finish_unlocked;
@@ -1173,7 +1178,6 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
         struct private *p;
         pa_proplist *l = NULL;
         const char *n, *ct;
-        char *name = NULL;
         pa_sample_spec ss;
         pa_channel_map cm;
         ca_bool_t cm_good;
@@ -1204,11 +1208,6 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
 
         if (!(n = pa_proplist_gets(l, CA_PROP_EVENT_ID))) {
                 ret = CA_ERROR_INVALID;
-                goto finish_unlocked;
-        }
-
-        if (!(name = ca_strdup(n))) {
-                ret = CA_ERROR_OOM;
                 goto finish_unlocked;
         }
 
@@ -1256,7 +1255,7 @@ int driver_cache(ca_context *c, ca_proplist *proplist) {
                 goto finish_locked;
         }
 
-        if (!(out->stream = pa_stream_new_with_proplist(p->context, name, &ss, cm_good ? &cm : NULL, l))) {
+        if (!(out->stream = pa_stream_new_with_proplist(p->context, NULL, &ss, cm_good ? &cm : NULL, l))) {
                 ret = translate_error(pa_context_errno(p->context));
                 goto finish_locked;
         }
@@ -1307,8 +1306,6 @@ finish_unlocked:
 
         if (l)
                 pa_proplist_free(l);
-
-        ca_free(name);
 
         return ret;
 }
