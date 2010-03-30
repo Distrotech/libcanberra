@@ -663,11 +663,11 @@ static void stream_drain_cb(pa_stream *s, int success, void *userdata) {
                 pa_stream_disconnect(s);
                 out->error = err;
                 out->finished = TRUE;
-        }
 
-        if (out->drain_operation) {
-                pa_operation_unref(out->drain_operation);
-                out->drain_operation = NULL;
+                if (out->drain_operation) {
+                        pa_operation_unref(out->drain_operation);
+                        out->drain_operation = NULL;
+                }
         }
 
         pa_threaded_mainloop_signal(p->mainloop, FALSE);
