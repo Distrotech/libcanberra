@@ -31,7 +31,7 @@
 
 int ca_detect_fork(void) {
         static volatile pid_t pid = (pid_t) -1;
-        pid_t v;
+        pid_t v, we;
 
         /* Some really stupid applications (Hey, vim, that means you!)
          * love to fork after initializing gtk/libcanberra. This is really
@@ -43,9 +43,10 @@ int ca_detect_fork(void) {
          * and this is not exactly crucial, so we don't care */
 
         v = pid;
+        we = getpid();
 
-        if (v == getpid() || v == (pid_t) -1) {
-                pid = getpid();
+        if (v == we || v == (pid_t) -1) {
+                pid = we;
                 return 0;
         }
 
