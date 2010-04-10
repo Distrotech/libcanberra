@@ -450,7 +450,7 @@ static void dispatch_sound_event(SoundEventData *d) {
                         gboolean is_xembed;
 
                         is_xembed =
-                                GTK_WIDGET_REALIZED(GTK_WIDGET(d->object)) &&
+                                gtk_widget_get_realized(GTK_WIDGET(d->object)) &&
                                 window_is_xembed(
                                                 gtk_widget_get_display(GTK_WIDGET(d->object)),
                                                 gtk_widget_get_window(GTK_WIDGET(d->object)));
@@ -568,7 +568,7 @@ static void dispatch_sound_event(SoundEventData *d) {
                  * minimized. We then store this information, so that we know
                  * later on when the window is unminimized again. */
 
-                if (GTK_WIDGET_REALIZED(GTK_WIDGET(d->object))) {
+                if (gtk_widget_get_realized(GTK_WIDGET(d->object))) {
                         GdkDisplay *display;
 
                         display = gtk_widget_get_display(GTK_WIDGET(d->object));
@@ -639,7 +639,7 @@ static void dispatch_sound_event(SoundEventData *d) {
 
         } else if (GTK_IS_MENU_ITEM(d->object) && d->signal_id == signal_id_menu_item_activate) {
 
-                if (!GTK_MENU_ITEM(d->object)->submenu)
+                if (!gtk_menu_item_get_submenu(GTK_MENU_ITEM(d->object)))
                         ret = ca_gtk_play_for_event(d->event, 0,
                                                     CA_PROP_EVENT_ID, "menu-click",
                                                     CA_PROP_EVENT_DESCRIPTION, "Menu item clicked",
@@ -859,7 +859,7 @@ static gboolean emission_hook_cb(GSignalInvocationHint *hint, guint n_param_valu
 
         if (hint->signal_id != signal_id_widget_hide &&
             hint->signal_id != signal_id_dialog_response &&
-            !GTK_WIDGET_DRAWABLE(object))
+            !gtk_widget_is_drawable(GTK_WIDGET (object)))
                 return TRUE;
 
         d = g_slice_new0(SoundEventData);

@@ -252,7 +252,7 @@ int ca_gtk_proplist_set_for_widget(ca_proplist *p, GtkWidget *widget) {
                 if ((ret = ca_proplist_sets(p, CA_PROP_WINDOW_ICON_NAME, t)) < 0)
                         return ret;
 
-        if (GTK_WIDGET_REALIZED(GTK_WIDGET(w))) {
+        if (gtk_widget_get_realized(GTK_WIDGET(w))) {
                 GdkWindow *dw = NULL;
                 GdkScreen *screen = NULL;
                 GdkDisplay *display = NULL;

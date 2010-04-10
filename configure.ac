@@ -354,7 +354,7 @@ AC_ARG_ENABLE([gtk],
 
 AM_CONDITIONAL([GCONF_SCHEMAS_INSTALL], [false])
 if test "x${gtk}" != xno ; then
-    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 >= 2.13.4 gthread-2.0 ],
+    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 >= 2.20.0 gthread-2.0 ],
         [
             HAVE_GTK=1
             AC_DEFINE([HAVE_GTK], 1, [Have GTK?])
