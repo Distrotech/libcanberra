@@ -38,6 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Mon 19 Apr
+2010: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.24.tar.gz">Version
+0.24</a> released; GTK code is now fine with GSEAL. Minor fixes in the
+PulseAudio backend, other fixes.</p>
+
 <div class="news-date">Sat 20 Feb
 2010: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.23.tar.gz">Version
 0.23</a> released; various minor fixes in the pulse and gstreamer

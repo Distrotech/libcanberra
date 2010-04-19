@@ -39,7 +39,6 @@ AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [1:6:1])
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
 
-A
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 if type -p stow > /dev/null && test -d /usr/local/stow ; then
