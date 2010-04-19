@@ -20,7 +20,7 @@
 # <http://www.gnu.org/licenses/>.
 
 m4_define([ca_major],[0])
-m4_define([ca_minor],[23])
+m4_define([ca_minor],[24])
 m4_define([ca_version],[ca_major.ca_minor])
 
 AC_PREREQ(2.63)
@@ -33,13 +33,13 @@ AC_CONFIG_MACRO_DIR(m4)
 AM_INIT_AUTOMAKE([foreign 1.10 -Wall])
 
 AC_SUBST(PACKAGE_URL, [http://0pointer.de/lennart/projects/libcanberra/])
-
-AC_SUBST(LIBCANBERRA_VERSION_INFO, [2:2:2])
-AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [1:5:1])
+AC_SUBST(LIBCANBERRA_VERSION_INFO, [2:3:2])
+AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [1:6:1])
 
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
 
+A
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 if type -p stow > /dev/null && test -d /usr/local/stow ; then
