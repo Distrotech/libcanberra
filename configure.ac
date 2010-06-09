@@ -374,12 +374,53 @@ else
     HAVE_GTK=0
 fi
 
-
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_MODULES_DIR)
 AC_SUBST(HAVE_GTK)
 AM_CONDITIONAL([HAVE_GTK], [test "x$HAVE_GTK" = x1])
+
+AC_ARG_ENABLE([gtk3],
+    AS_HELP_STRING([--disable-gtk3], [Disable optional GTK+ 3 support]),
+        [
+            case "${enableval}" in
+                yes) gtk3=yes ;;
+                no) gtk3=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-gtk3) ;;
+            esac
+        ],
+        [gtk3=auto])
+
+AM_CONDITIONAL([GCONF_SCHEMAS_INSTALL], [false])
+if test "x${gtk3}" != xno ; then
+    PKG_CHECK_MODULES(GTK3, [ gtk+-3.0 gthread-2.0 ],
+        [
+            HAVE_GTK3=1
+            AC_DEFINE([HAVE_GTK3], 1, [Have GTK3?])
+
+            AC_PATH_PROG(GCONFTOOL, gconftool-2)
+	    AM_GCONF_SOURCE_2
+
+            GTK3_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-3.0`
+            GTK3_MODULES_DIR="${libdir}/gtk-3.0/modules"
+        ],
+        [
+            HAVE_GTK3=0
+            if test "x$gtk3" = xyes ; then
+                AC_MSG_ERROR([*** GTK3 not found ***])
+            fi
+        ])
+else
+    HAVE_GTK3=0
+fi
+
+AC_SUBST(GTK3_CFLAGS)
+AC_SUBST(GTK3_LIBS)
+AC_SUBST(GTK3_MODULES_DIR)
+AC_SUBST(HAVE_GTK3)
+AM_CONDITIONAL([HAVE_GTK3], [test "x$HAVE_GTK3" = x1])
+
+AM_CONDITIONAL([HAVE_GTK_ANY], [test "x$HAVE_GTK" = x1 -o "x$HAVE_GTK3" = x1])
 
 #### TDB cache support (optional) ####
 
@@ -583,6 +624,7 @@ Makefile
 src/Makefile
 libcanberra.pc
 libcanberra-gtk.pc
+libcanberra-gtk3.pc
 src/canberra.h
 gtkdoc/Makefile
 doc/Makefile
@@ -646,6 +688,11 @@ if test "x$HAVE_GTK" = "x1" ; then
    ENABLE_GTK=yes
 fi
 
+ENABLE_GTK3=no
+if test "x$HAVE_GTK3" = "x1" ; then
+   ENABLE_GTK3=yes
+fi
+
 ENABLE_TDB=no
 if test "x$HAVE_TDB" = "x1" ; then
    ENABLE_TDB=yes
@@ -681,6 +728,8 @@ echo "
     Enable lookup cache:    ${ENABLE_CACHE}
     Enable GTK+:            ${ENABLE_GTK}
     GTK Modules Directory:  ${GTK_MODULES_DIR}
+    Enable GTK3+:           ${ENABLE_GTK3}
+    GTK3 Modules Directory: ${GTK3_MODULES_DIR}
 "
 
 
