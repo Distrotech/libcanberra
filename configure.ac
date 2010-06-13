@@ -392,7 +392,6 @@ AC_ARG_ENABLE([gtk3],
         ],
         [gtk3=auto])
 
-AM_CONDITIONAL([GCONF_SCHEMAS_INSTALL], [false])
 if test "x${gtk3}" != xno ; then
     PKG_CHECK_MODULES(GTK3, [ gtk+-3.0 gthread-2.0 ],
         [
