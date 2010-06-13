@@ -227,6 +227,10 @@ static void db_close(void) CA_GCC_DESTRUCTOR;
 
 static void db_close(void) {
         /* Only here to make this valgrind clean */
+
+        if (!getenv("VALGRIND"))
+                return;
+
         if (mutex) {
                 ca_mutex_free(mutex);
                 mutex = NULL;
