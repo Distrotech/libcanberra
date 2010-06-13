@@ -314,8 +314,10 @@ libcanberra_gtk3_module_la_LDFLAGS = \
 	-avoid-version -module -export-dynamic
 
 install-exec-hook:
-	cd $(DESTDIR)$(gtk3moduledir) && \
-               $(LN_S) libcanberra-gtk3-module.so libcanberra-gtk-module.so
+	$(MKDIR_P) -m 755 $(DESTDIR)$(gtk3moduledir)
+	( cd $(DESTDIR)$(gtk3moduledir) && \
+		rm -f libcanberra-gtk-module.so && \
+	        $(LN_S) libcanberra-gtk3-module.so libcanberra-gtk-module.so )
 
 endif
 

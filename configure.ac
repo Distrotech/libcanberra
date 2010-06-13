@@ -49,6 +49,7 @@ fi
 #### Checks for programs. ####
 
 AC_PROG_MKDIR_P
+AC_PROG_LN_S
 
 # CC
 
