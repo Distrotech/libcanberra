@@ -24,7 +24,7 @@ CLEANFILES =
 
 if USE_LYNX
 README: README.html
-	lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,README,' > $@
+	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,README,' > $@
 
 CLEANFILES += README
 endif

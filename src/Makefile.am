@@ -400,14 +400,14 @@ CLEANFILES = \
 	libcanberra-logout-sound.sh
 
 libcanberra-logout-sound.sh: libcanberra-logout-sound.sh.in Makefile
-	sed -e 's,@bindir\@,$(bindir),g' < $< > $@
-	chmod +x $@
+	$(AM_V_GEN)sed -e 's,@bindir\@,$(bindir),g' < $< > $@ && \
+		chmod +x $@
 
 libcanberra-login-sound.desktop: libcanberra-login-sound.desktop.in Makefile
-	sed -e 's,@bindir\@,$(bindir),g' < $< > $@
+	$(AM_V_GEN)sed -e 's,@bindir\@,$(bindir),g' < $< > $@
 
 libcanberra-ready-sound.desktop: libcanberra-ready-sound.desktop.in Makefile
-	sed -e 's,@bindir\@,$(bindir),g' < $< > $@
+	$(AM_V_GEN)sed -e 's,@bindir\@,$(bindir),g' < $< > $@
 
 endif
 
