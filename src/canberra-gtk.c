@@ -505,7 +505,11 @@ int ca_gtk_play_for_event(GdkEvent *e, uint32_t id, ...) {
                 goto fail;
 
         if (e->any.window)
+#if GTK_CHECK_VERSION (2, 90, 7)
+                s = gdk_window_get_screen(e->any.window);
+#else
                 s = gdk_drawable_get_screen(GDK_DRAWABLE(e->any.window));
+#endif
         else
                 s = gdk_screen_get_default();
 
