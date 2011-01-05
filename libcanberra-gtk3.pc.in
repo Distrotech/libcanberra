@@ -1,7 +1,7 @@
 prefix=@prefix@
 exec_prefix=${prefix}
 libdir=@libdir@
-includedir=${prefix}/include
+includedir=@includedir@
 
 Name: libcanberra-gtk3
 Description: Gtk3 Event Sound API
