@@ -176,6 +176,11 @@ static int db_open(void) {
         if ((ret = get_cache_home(&c)) < 0)
                 goto finish;
 
+        if (!c) {
+                ret = CA_ERROR_NOTFOUND;
+                goto finish;
+        }
+
         /* Try to create, just in case it doesn't exist yet. We don't do
          * this recursively however. */
         mkdir(c, 0755);
@@ -396,21 +401,23 @@ static int get_last_change(time_t *t) {
         if ((ret = ca_get_data_home(&e)) < 0)
                 goto finish;
 
-        if (!(k = ca_new(char, strlen(e) + sizeof("/sounds")))) {
+        *t = 0;
+
+        if (e) {
+                if (!(k = ca_new(char, strlen(e) + sizeof("/sounds")))) {
+                        ca_free(e);
+                        ret = CA_ERROR_OOM;
+                        goto finish;
+                }
+
+                sprintf(k, "%s/sounds", e);
                 ca_free(e);
-                ret = CA_ERROR_OOM;
-                goto finish;
+
+                if (stat(k, &st) >= 0)
+                        *t = st.st_mtime;
+
+                ca_free(k);
         }
-
-        sprintf(k, "%s/sounds", e);
-        ca_free(e);
-
-        if (stat(k, &st) >= 0)
-                *t = st.st_mtime;
-        else
-                *t = 0;
-
-        ca_free(k);
 
         g = ca_get_data_dirs();
 
