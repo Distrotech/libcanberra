@@ -287,6 +287,39 @@ fi
 AC_SUBST(PULSE_CFLAGS)
 AC_SUBST(PULSE_LIBS)
 
+#### UDEV support (optional) ####
+
+AC_ARG_ENABLE([udev],
+    AS_HELP_STRING([--disable-udev], [Disable optional udev support]),
+        [
+            case "${enableval}" in
+                yes) udev=yes ;;
+                no) udev=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-udev) ;;
+            esac
+        ],
+        [udev=auto])
+
+if test "x${udev}" != xno ; then
+    PKG_CHECK_MODULES(UDEV, [ libudev >= 160 ],
+        [
+            HAVE_UDEV=1
+            AC_DEFINE([HAVE_UDEV], 1, [Have udev?])
+        ],
+        [
+            HAVE_UDEV=0
+            if test "x$udev" = xyes ; then
+                AC_MSG_ERROR([*** udev not found ***])
+            fi
+        ])
+else
+    HAVE_UDEV=0
+fi
+
+AC_SUBST(UDEV_CFLAGS)
+AC_SUBST(UDEV_LIBS)
+AM_CONDITIONAL([HAVE_UDEV], [test "x$HAVE_UDEV" = x1])
+
 #### GStreamer support (optional) ####
 
 AC_ARG_ENABLE([gstreamer],
@@ -703,6 +736,11 @@ if test "x$HAVE_CACHE" = "x1" ; then
    ENABLE_CACHE=yes
 fi
 
+ENABLE_UDEV=no
+if test "x$HAVE_UDEV" = "x1" ; then
+   ENABLE_UDEV=yes
+fi
+
 echo "
  ---{ $PACKAGE_NAME $VERSION }---
 
@@ -730,6 +768,7 @@ echo "
     GTK Modules Directory:  ${GTK_MODULES_DIR}
     Enable GTK3+:           ${ENABLE_GTK3}
     GTK3 Modules Directory: ${GTK3_MODULES_DIR}
+    Enable udev:            ${ENABLE_UDEV}
 "
 
 

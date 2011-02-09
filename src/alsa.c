@@ -224,7 +224,6 @@ static const snd_pcm_format_t sample_type_table[] = {
 };
 
 static int open_alsa(ca_context *c, struct outstanding *out) {
-        struct private *p;
         int ret;
         snd_pcm_hw_params_t *hwparams;
         unsigned rate;
@@ -239,8 +238,6 @@ static int open_alsa(ca_context *c, struct outstanding *out) {
          * multichannel audio. This cnnot be done in a backend-independant
          * wa, hence we limit ourselves to mono/stereo only. */
         ca_return_val_if_fail(ca_sound_file_get_nchannels(out->file) <= 2, CA_ERROR_NOTSUPPORTED);
-
-        p = PRIVATE(c);
 
         if ((ret = snd_pcm_open(&out->pcm, c->device ? c->device : "default", SND_PCM_STREAM_PLAYBACK, 0)) < 0)
                 goto finish;

@@ -273,9 +273,30 @@ libcanberra_null_la_LDFLAGS = \
 endif
 endif
 
+bin_PROGRAMS =
+
+if HAVE_UDEV
+if HAVE_ALSA
+
+bin_PROGRAMS += \
+	canberra-boot
+
+canberra_boot_SOURCES = \
+	canberra-boot.c
+
+canberra_boot_LDADD = \
+	$(UDEV_LIBS) \
+	libcanberra.la
+
+canberra_boot_CFLAGS = \
+	$(UDEV_CFLAGS)
+
+endif
+endif
+
 if HAVE_GTK_ANY
 
-bin_PROGRAMS = \
+bin_PROGRAMS += \
 	canberra-gtk-play
 
 include_HEADERS += \
