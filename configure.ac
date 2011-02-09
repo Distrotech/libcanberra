@@ -502,6 +502,18 @@ if test "x${HAVE_CACHE}" = x1 ; then
      AC_DEFINE([HAVE_CACHE], 1, [Do cacheing?])
 fi
 
+#
+# systemd
+#
+AC_ARG_WITH([systemdsystemunitdir],
+        AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
+        [],
+        [with_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)])
+if test "x$with_systemdsystemunitdir" != xno; then
+        AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
+
 ### LYNX documentation generation ###
 
 AC_ARG_ENABLE([lynx],
@@ -769,6 +781,7 @@ echo "
     Enable GTK3+:           ${ENABLE_GTK3}
     GTK3 Modules Directory: ${GTK3_MODULES_DIR}
     Enable udev:            ${ENABLE_UDEV}
+    systemd Unit Directory: ${with_systemdsystemunitdir}
 "
 
 

@@ -1,3 +1,6 @@
+src/canberra-system-bootup.service
+src/canberra-system-shutdown-reboot.service
+src/canberra-system-shutdown.service
 libcanberra-gtk3.pc
 README
 Makefile

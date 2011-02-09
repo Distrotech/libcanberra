@@ -66,7 +66,10 @@ else
 install-data-local:
 endif
 
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS =  \
+	--enable-gtk-doc \
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
+
 ACLOCAL_AMFLAGS = -I m4
 
 README:

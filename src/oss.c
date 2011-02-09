@@ -230,7 +230,6 @@ static int translate_error(int error) {
 }
 
 static int open_oss(ca_context *c, struct outstanding *out) {
-        struct private *p;
         int mode, val, test, ret;
 
         ca_return_val_if_fail(c, CA_ERROR_INVALID);
@@ -240,8 +239,6 @@ static int open_oss(ca_context *c, struct outstanding *out) {
         /* In OSS we have no way to configure a channel mapping for
          * multichannel streams. We cannot support those files hence */
         ca_return_val_if_fail(ca_sound_file_get_nchannels(out->file) <= 2, CA_ERROR_NOTSUPPORTED);
-
-        p = PRIVATE(c);
 
         if ((out->pcm = open(c->device ? c->device : "/dev/dsp", O_WRONLY | O_NONBLOCK, 0)) < 0)
                 goto finish_errno;
