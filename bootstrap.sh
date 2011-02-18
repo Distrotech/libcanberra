@@ -70,7 +70,7 @@ else
     run_versioned automake "$VERSION" --copy --foreign --add-missing
 
     if test "x$NOCONFIGURE" = "x"; then
-        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc "$@"
+        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc=yes --enable-gtk-doc-html "$@"
         make clean
     fi
 fi
