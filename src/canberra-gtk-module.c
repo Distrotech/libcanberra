@@ -932,10 +932,14 @@ static void connect_settings(void) {
         connected = TRUE;
 }
 
+#if GTK_CHECK_VERSION(3,0,0)
+#warning "We really need a quit handler in Gtk 3.0, https://bugzilla.gnome.org/show_bug.cgi?id=639770"
+#else
 static gboolean quit_handler(gpointer data) {
         dispatch_queue();
         return FALSE;
 }
+#endif
 
 G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
 
@@ -964,7 +968,9 @@ G_MODULE_EXPORT void gtk_module_init(gint *argc, gchar ***argv[]) {
         install_hook(GTK_TYPE_WIDGET, "drag-failed", &signal_id_widget_drag_failed);
         install_hook(GTK_TYPE_EXPANDER, "activate", &signal_id_expander_activate);
 
+#if !GTK_CHECK_VERSION(3,0,0)
         gtk_quit_add(1, quit_handler, NULL);
+#endif
 }
 
 G_MODULE_EXPORT gchar* g_module_check_init(GModule *module);
