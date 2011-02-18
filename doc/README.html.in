@@ -10,7 +10,7 @@
 <body>
 <h1><a name="top">libcanberra @PACKAGE_VERSION@</a></h1>
 
-<p><i>Copyright 2008-2010 Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;</i></p>
+<p><i>Copyright 2008-2011 Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;</i></p>
 
 <ul class="toc">
     <li><a href="#license">License</a></li>
@@ -37,6 +37,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
+
+<div class="news-date">Fri 18 Feb
+2011: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.27.tar.gz">Version
+0.27</a> released; Gtk+ 3.x fixes; add new tool to implement boot-up
+sounds when used with systemd; other fixes</p>
 
 <div class="news-date">Mon 4 Oct
 2010: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.26.tar.gz">Version
@@ -229,7 +234,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, October 2010</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, February 2011</address>
 
 </body>
 </html>
