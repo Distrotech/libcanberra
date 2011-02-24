@@ -25,7 +25,9 @@ gnomeshutdowndir = $(datadir)/gnome/shutdown
 
 gnomeautostartdir = $(datadir)/gnome/autostart
 
-gdmautostartdir = $(datadir)/gdm/autostart/LoginWindow/
+gdmautostartdir = $(datadir)/gdm/autostart/LoginWindow
+
+gsdgtkmodulesdir = $(libdir)/gnome-settings-daemon-3.0/gtk-modules
 
 AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
 #AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"/home/lennart/projects/libcanberra/src/.libs\"
@@ -417,6 +419,9 @@ endif
 endif
 
 if HAVE_GTK_ANY
+
+dist_gsdgtkmodules_DATA = \
+	canberra-gtk-module.desktop
 
 canberra_gtk_play_SOURCES = \
 	canberra-gtk-play.c
