@@ -38,6 +38,11 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Thu 24 Feb
+2011: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.28.tar.gz">Version
+0.28</a> released; Hook properly into GNOME 3.0 sessions; this drops
+support for GNOME 2.0 sessions, but not applications.</p>
+
 <div class="news-date">Fri 18 Feb
 2011: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.27.tar.gz">Version
 0.27</a> released; Gtk+ 3.x fixes; add new tool to implement boot-up
