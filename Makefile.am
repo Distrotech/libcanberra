@@ -16,7 +16,11 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-dist_doc_DATA = README
+dist_doc_DATA =
+
+if USE_LYNX
+dist_doc_DATA += README
+endif
 
 EXTRA_DIST = \
 	autogen.sh \
@@ -27,7 +31,9 @@ EXTRA_DIST = \
 SUBDIRS = src gtkdoc doc
 
 MAINTAINERCLEANFILES = README
+if USE_LYNX
 noinst_DATA = README
+endif
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcanberra.pc

@@ -16,7 +16,7 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-noinst_DATA = README.html README
+noinst_DATA = README.html
 EXTRA_DIST = $(noinst_DATA) style.css README.html.in
 
 MAINTAINERCLEANFILES = README.html
@@ -26,6 +26,7 @@ if USE_LYNX
 README: README.html
 	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,README,' > $@
 
+noinst_DATA += README
 CLEANFILES += README
 endif
 
