@@ -225,6 +225,9 @@ static int context_connect(ca_context *c, ca_bool_t nofail) {
         ca_return_val_if_fail(p->mainloop, CA_ERROR_STATE);
         ca_return_val_if_fail(!p->context, CA_ERROR_STATE);
 
+        /* If this immediate attempt fails, don't try to reconnect. */
+        p->reconnect = FALSE;
+
         if ((ret = convert_proplist(&l, c->props)) < 0)
                 return ret;
 
@@ -317,7 +320,11 @@ static void context_state_cb(pa_context *pc, void *userdata) {
                          * reconnect, and pass NOFAIL */
                         context_connect(c, TRUE);
                 }
-        }
+
+        } else if (state == PA_CONTEXT_READY)
+                /* OK, the connection suceeded once, if it dies now try to
+                 * reconnect */
+                p->reconnect = TRUE;
 
         pa_threaded_mainloop_signal(p->mainloop, FALSE);
 }
@@ -428,10 +435,6 @@ int driver_open(ca_context *c) {
 
                 pa_threaded_mainloop_wait(p->mainloop);
         }
-
-        /* OK, the connection suceeded once, if it dies now try to
-         * reconnect */
-        p->reconnect = TRUE;
 
         pa_threaded_mainloop_unlock(p->mainloop);
 
