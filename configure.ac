@@ -23,27 +23,31 @@ m4_define([ca_major],[0])
 m4_define([ca_minor],[28])
 m4_define([ca_version],[ca_major.ca_minor])
 
-AC_PREREQ(2.63)
+AC_PREREQ([2.68])
 
-AC_INIT([libcanberra],[ca_version],[mzyvopnaoreen (at) 0pointer (dot) de])
+AC_INIT([libcanberra],
+        [ca_version],
+        [mzyvopnaoreen (at) 0pointer (dot) de],
+        [systemd],
+        [http://0pointer.de/lennart/projects/libcanberra/])
+
 AC_CONFIG_SRCDIR([src/common.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR(m4)
+AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE([foreign 1.10 -Wall])
+AM_INIT_AUTOMAKE([foreign 1.11 -Wall silent-rules tar-pax no-dist-gzip dist-xz])
+AM_SILENT_RULES([yes])
 
-AC_SUBST(PACKAGE_URL, [http://0pointer.de/lennart/projects/libcanberra/])
 AC_SUBST(LIBCANBERRA_VERSION_INFO, [2:5:2])
 AC_SUBST(LIBCANBERRA_GTK_VERSION_INFO, [1:8:1])
 
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
 
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
 if type -p stow > /dev/null && test -d /usr/local/stow ; then
-   AC_MSG_NOTICE([*** Found /usr/local/stow: default install prefix set to /usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION} ***])
-   ac_default_prefix="/usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION}"
+        AC_MSG_NOTICE([*** Found /usr/local/stow: default install prefix set to /usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION} ***])
+        ac_default_prefix="/usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION}"
 fi
 
 #### Checks for programs. ####
@@ -63,11 +67,56 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_PROG_CXX
 
-DESIRED_FLAGS="-Wall -W -Wextra -pedantic -pipe -Wno-long-long -Winline -Wvla -Wno-overlength-strings -Wunsafe-loop-optimizations -Wundef -Wformat=2 -Wlogical-op -Wsign-compare -Wpacked -Wformat-security -Wmissing-include-dirs -Wformat-nonliteral -Wold-style-definition -Wpointer-arith -Winit-self -Wdeclaration-after-statement -Wfloat-equal -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wredundant-decls -Wmissing-noreturn -Wshadow -Wendif-labels -Wstrict-aliasing=2 -Wcast-align -Wwrite-strings -Wno-unused-parameter -ffast-math -Wp,-D_FORTIFY_SOURCE=2 -fno-common -fdiagnostics-show-option -fno-strict-aliasing"
+CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
+        -pipe \
+        -Wall \
+        -W \
+        -Wextra \
+        -Winline \
+        -Wvla \
+        -Wundef \
+        -Wformat=2 \
+        -Wlogical-op \
+        -Wsign-compare \
+        -Wformat-security \
+        -Wmissing-include-dirs \
+        -Wformat-nonliteral \
+        -Wold-style-definition \
+        -Wpointer-arith \
+        -Winit-self \
+        -Wdeclaration-after-statement \
+        -Wfloat-equal \
+        -Wmissing-prototypes \
+        -Wstrict-prototypes \
+        -Wredundant-decls \
+        -Wmissing-declarations \
+        -Wmissing-noreturn \
+        -Wshadow \
+        -Wendif-labels \
+        -Wcast-align \
+        -Wstrict-aliasing=2 \
+        -Wwrite-strings \
+        -Wno-long-long \
+        -Wno-overlength-strings \
+        -Wno-unused-parameter \
+        -Wno-missing-field-initializers \
+        -Wno-unused-result \
+        -Wunsafe-loop-optimizations \
+        -Wpacked \
+        -Werror=overflow \
+        -Wp,-D_FORTIFY_SOURCE=2 \
+        -ffast-math \
+        -fno-common \
+        -fdiagnostics-show-option \
+        -fno-strict-aliasing \
+        -ffunction-sections \
+        -fdata-sections])
+AC_SUBST([WARNINGFLAGS], $with_cflags)
 
-for flag in $DESIRED_FLAGS ; do
-  CC_CHECK_CFLAGS([$flag], [CFLAGS="$CFLAGS $flag"])
-done
+CC_CHECK_FLAGS_APPEND([with_ldflags], [LDFLAGS], [\
+        -Wl,--as-needed \
+        -Wl,--gc-sections])
+AC_SUBST([GCLDFLAGS], $with_ldflags)
 
 #### libtool stuff ####
 LT_PREREQ(2.2)

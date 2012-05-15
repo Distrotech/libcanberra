@@ -29,10 +29,11 @@ gdmautostartdir = $(datadir)/gdm/autostart/LoginWindow
 
 gsdgtkmodulesdir = $(libdir)/gnome-settings-daemon-3.0/gtk-modules
 
-AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
-#AM_CFLAGS = $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"/home/lennart/projects/libcanberra/src/.libs\"
-AM_CXXFLAGS = $(PTHREAD_CFLAGS)
+AM_CFLAGS = $(WARNINGFLAGS) $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"$(plugindir)\"
+#AM_CFLAGS = $(WARNINGFLAGS) $(PTHREAD_CFLAGS) -DCA_PLUGIN_PATH=\"/home/lennart/projects/libcanberra/src/.libs\"
+AM_CXXFLAGS = $(WARNINGFLAGS) $(PTHREAD_CFLAGS)
 AM_LDADD = $(PTHREAD_LIBS)
+AM_LDFLAGS = $(GCLDFLAGS)
 
 EXTRA_DIST = \
 	map-file

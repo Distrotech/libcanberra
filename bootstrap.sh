@@ -18,59 +18,43 @@
 # License along with libcanberra. If not, see
 # <http://www.gnu.org/licenses/>.
 
-VERSION=1.10
-
-run_versioned() {
-    local P
-    local V
-
-    V=$(echo "$2" | sed -e 's,\.,,g')
-
-    if [ -e "`which $1$V 2> /dev/null`" ] ; then
-    	P="$1$V"
-    else
-	if [ -e "`which $1-$2 2> /dev/null`" ] ; then
-	    P="$1-$2"
-	else
-	    P="$1"
-	fi
-    fi
-
-    shift 2
-    "$P" "$@"
-}
-
-set -ex
-
-# We check for this here, because if pkg-config is not found in the
-# system, it's likely that the pkg.m4 macro file is also not present,
-# which will make PKG_PROG_PKG_CONFIG be undefined and the generated
-# configure file faulty.
-if ! pkg-config --version &>/dev/null; then
-    echo "pkg-config is required to bootstrap this program" &>/dev/null
-    exit 1
+if [ -f .git/hooks/pre-commit.sample -a ! -f .git/hooks/pre-commit ] ; then
+        cp -p .git/hooks/pre-commit.sample .git/hooks/pre-commit && \
+        chmod +x .git/hooks/pre-commit && \
+        echo "Activated pre-commit hook."
 fi
 
-if [ "x$1" = "xam" ] ; then
-    run_versioned automake "$VERSION" -a -c --foreign
-    ./config.status
+GTKDOCIZE=$(which gtkdocize 2>/dev/null)
+if test -z $GTKDOCIZE; then
+        echo "You don't have gtk-doc installed, and thus won't be able to generate the documentation."
+        echo 'EXTRA_DIST =' > gtk-doc.make
 else
-    rm -rf autom4te.cache
-    rm -f config.cache
+        gtkdocize
+        gtkdocargs=--enable-gtk-doc
+fi
 
-    touch config.rpath
-    test "x$LIBTOOLIZE" = "x" && LIBTOOLIZE=libtoolize
+autoreconf --force --install --symlink
 
-    mkdir -p m4
-    gtkdocize --copy --flavour no-tmpl --docdir gtkdoc
-    "$LIBTOOLIZE" -c --force --recursive
-    run_versioned aclocal "$VERSION" -I m4
-    run_versioned autoconf 2.63 -Wall
-    run_versioned autoheader 2.63
-    run_versioned automake "$VERSION" --copy --foreign --add-missing
+libdir() {
+        echo $(cd $1/$(gcc -print-multi-os-directory); pwd)
+}
 
-    if test "x$NOCONFIGURE" = "x"; then
-        CFLAGS="-g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-gtk-doc=yes --enable-gtk-doc-html "$@"
+args="\
+--sysconfdir=/etc \
+--localstatedir=/var \
+--libdir=$(libdir /usr/lib) \
+--libexecdir=/usr/lib \
+$gtkdocargs"
+
+if [ "x$1" == "xc" ]; then
+        ./configure CFLAGS='-g -O0 -Wp,-U_FORTIFY_SOURCE' $args
         make clean
-    fi
+else
+        echo
+        echo "----------------------------------------------------------------"
+        echo "Initialized build system. For a common configuration please run:"
+        echo "----------------------------------------------------------------"
+        echo
+        echo "./configure CFLAGS='-g -O0 -Wp,-U_FORTIFY_SOURCE' $args"
+        echo
 fi
