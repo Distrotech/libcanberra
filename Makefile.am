@@ -22,7 +22,6 @@ EXTRA_DIST = \
 	bootstrap.sh \
 	autogen.sh \
 	LGPL \
-	libcanberra.schemas \
 	vala/libcanberra.vapi \
 	vala/libcanberra-gtk.vapi
 
@@ -48,23 +47,6 @@ pkgconfig_DATA += libcanberra-gtk3.pc
 endif
 
 vapi_DATA += vala/libcanberra-gtk.vapi
-
-schemasdir = $(GCONF_SCHEMA_FILE_DIR)
-schemas_DATA = libcanberra.schemas
-
-if GCONF_SCHEMAS_INSTALL
-install-data-local:
-	if test -z "$(DESTDIR)" ; then \
-		for p in $(schemas_DATA) ; do \
-			GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) --makefile-install-rule $(top_srcdir)/$$p ; \
-                done ; \
-	fi
-else
-install-data-local:
-endif
-else
-install-data-local:
-endif
 
 DISTCHECK_CONFIGURE_FLAGS =  \
 	--enable-gtk-doc \
