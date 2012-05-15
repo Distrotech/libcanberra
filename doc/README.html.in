@@ -40,7 +40,7 @@ Lesser General Public License for more details.</p>
 
 <div class="news-date">Tue 15 May
 2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.29.tar.xz">Version
-0.28</a> released; A couple of bugfixes, drop GConf usage.</p>
+0.29</a> released; A couple of bugfixes, drop GConf usage.</p>
 
 <div class="news-date">Thu 24 Feb
 2011: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.28.tar.gz">Version
