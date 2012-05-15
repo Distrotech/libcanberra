@@ -10,7 +10,7 @@
 <body>
 <h1><a name="top">libcanberra @PACKAGE_VERSION@</a></h1>
 
-<p><i>Copyright 2008-2011 Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;</i></p>
+<p><i>Copyright 2008-2012 Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;</i></p>
 
 <ul class="toc">
     <li><a href="#license">License</a></li>
@@ -37,6 +37,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
+
+<div class="news-date">Tue 15 May
+2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.29.tar.gz">Version
+0.28</a> released; A couple of bugfixes, drop GConf usage.</p>
 
 <div class="news-date">Thu 24 Feb
 2011: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.28.tar.gz">Version
@@ -239,7 +243,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, February 2011</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, May 2012</address>
 
 </body>
 </html>
