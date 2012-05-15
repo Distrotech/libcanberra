@@ -39,7 +39,7 @@ Lesser General Public License for more details.</p>
 <h2><a name="news">News</a></h2>
 
 <div class="news-date">Tue 15 May
-2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.29.tar.gz">Version
+2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.29.tar.xz">Version
 0.28</a> released; A couple of bugfixes, drop GConf usage.</p>
 
 <div class="news-date">Thu 24 Feb
@@ -230,7 +230,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <p>The newest release is always available from <a href="@PACKAGE_URL@">@PACKAGE_URL@</a></p>
 
-<p>The current release is <a href="@PACKAGE_URL@libcanberra-@PACKAGE_VERSION@.tar.gz">@PACKAGE_VERSION@</a></p>
+<p>The current release is <a href="@PACKAGE_URL@libcanberra-@PACKAGE_VERSION@.tar.xz">@PACKAGE_VERSION@</a></p>
 
 <p>Get <tt>libcanberra</tt>'s development sources from the <a href="http://git-scm.com/">GIT</a> <a href="git://git.0pointer.de/libcanberra">repository</a> (<a href="http://git.0pointer.de/?p=libcanberra.git">gitweb</a>): </p>
 

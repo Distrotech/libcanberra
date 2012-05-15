@@ -63,7 +63,7 @@ README:
 homepage: dist
 	test -d $$HOME/homepage/private
 	mkdir -p $$HOME/homepage/private/projects/libcanberra $$HOME/homepage/private/projects/libcanberra/gtkdoc
-	cp libcanberra-@PACKAGE_VERSION@.tar.gz $$HOME/homepage/private/projects/libcanberra
+	cp libcanberra-@PACKAGE_VERSION@.tar.xz $$HOME/homepage/private/projects/libcanberra
 	cp doc/README.html doc/style.css $$HOME/homepage/private/projects/libcanberra
 	cp -a gtkdoc/html/* $$HOME/homepage/private/projects/libcanberra/gtkdoc
 	ln -sf README.html $$HOME/homepage/private/projects/libcanberra/index.html
