@@ -48,6 +48,8 @@ endif
 
 vapi_DATA += vala/libcanberra-gtk.vapi
 
+endif
+
 DISTCHECK_CONFIGURE_FLAGS =  \
 	--enable-gtk-doc \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
