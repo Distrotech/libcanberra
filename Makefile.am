@@ -19,7 +19,6 @@
 dist_doc_DATA = README
 
 EXTRA_DIST = \
-	bootstrap.sh \
 	autogen.sh \
 	LGPL \
 	vala/libcanberra.vapi \
