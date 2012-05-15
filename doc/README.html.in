@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?> <!-- -*-html-helper-*- -->
+<?xml version="1.0" encoding="utf-8"?> <!-- -*-html-helper-*- -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -220,11 +220,11 @@ compilation and <tt>make install</tt> (as root) for installation of
 
 <h2><a name="acks">Acknowledgements</a></h2>
 
-<p>Marc-André Lureau and Brian Cameron for the GStreamer backend.</p>
+<p>Marc-AndrÃ© Lureau and Brian Cameron for the GStreamer backend.</p>
 
 <p>Joe Marcus Clarke for the OSS backend.</p>
 
-<p>Diego Elio Pettenò for various build system fixes.</p>
+<p>Diego Elio PettenÃ² for various build system fixes.</p>
 
 <h2><a name="download">Download</a></h2>
 
