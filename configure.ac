@@ -28,7 +28,7 @@ AC_PREREQ([2.68])
 AC_INIT([libcanberra],
         [ca_version],
         [mzyvopnaoreen (at) 0pointer (dot) de],
-        [systemd],
+        [libcanberra],
         [http://0pointer.de/lennart/projects/libcanberra/])
 
 AC_CONFIG_SRCDIR([src/common.c])
