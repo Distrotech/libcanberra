@@ -29,7 +29,7 @@ if test -z $GTKDOCIZE; then
         echo "You don't have gtk-doc installed, and thus won't be able to generate the documentation."
         echo 'EXTRA_DIST =' > gtk-doc.make
 else
-        gtkdocize
+        gtkdocize --docdir gtkdoc/
         gtkdocargs=--enable-gtk-doc
 fi
 
