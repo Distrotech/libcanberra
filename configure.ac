@@ -383,7 +383,7 @@ AC_ARG_ENABLE([gstreamer],
         [gstreamer=auto])
 
 if test "x${gstreamer}" != xno ; then
-    PKG_CHECK_MODULES(GST, [ gstreamer-0.10 >= 0.10.15 ],
+    PKG_CHECK_MODULES(GST, [ gstreamer-1.0 >= 0.10.15 ],
         [
             HAVE_GSTREAMER=1
             AC_DEFINE([HAVE_GSTREAMER], 1, [Have GStreamer?])

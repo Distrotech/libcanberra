@@ -84,7 +84,7 @@ static void outstanding_free(struct outstanding *o) {
         if (o->pipeline) {
                 bus = gst_pipeline_get_bus(GST_PIPELINE (o->pipeline));
                 if (bus != NULL) {
-                        gst_bus_set_sync_handler(bus, NULL, NULL);
+                        gst_bus_set_sync_handler(bus, NULL, NULL, NULL);
                         gst_object_unref(bus);
                 }
 
@@ -307,7 +307,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gboolean arg1, gpoint
 
         sinkelement = GST_ELEMENT(data);
 
-        caps = gst_pad_get_caps(pad);
+        caps = gst_pad_query_caps(pad, NULL);
         if (gst_caps_is_empty(caps) || gst_caps_is_any(caps)) {
                 gst_caps_unref(caps);
                 return;
@@ -316,7 +316,7 @@ static void on_pad_added(GstElement *element, GstPad *pad, gboolean arg1, gpoint
         structure = gst_caps_get_structure(caps, 0);
         type = gst_structure_get_name(structure);
         if (g_str_has_prefix(type, "audio/x-raw") == TRUE) {
-                vpad = gst_element_get_pad(sinkelement, "sink");
+                vpad = gst_element_get_static_pad(sinkelement, "sink");
                 gst_pad_link(pad, vpad);
                 gst_object_unref(vpad);
         }
@@ -460,7 +460,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         }
 
         bus = gst_pipeline_get_bus(GST_PIPELINE (out->pipeline));
-        gst_bus_set_sync_handler(bus, bus_cb, out);
+        gst_bus_set_sync_handler(bus, bus_cb, out, NULL);
         gst_object_unref(bus);
 
         g_signal_connect(decodebin, "new-decoded-pad",
@@ -468,7 +468,7 @@ int driver_play(ca_context *c, uint32_t id, ca_proplist *proplist, ca_finish_cal
         gst_bin_add_many(GST_BIN (abin), audioconvert, audioresample, sink, NULL);
         gst_element_link_many(audioconvert, audioresample, sink, NULL);
 
-        audiopad = gst_element_get_pad(audioconvert, "sink");
+        audiopad = gst_element_get_static_pad(audioconvert, "sink");
         gst_element_add_pad(abin, gst_ghost_pad_new("sink", audiopad));
         gst_object_unref(audiopad);
 
