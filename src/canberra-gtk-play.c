@@ -134,7 +134,6 @@ int main (int argc, char *argv[]) {
         setlocale(LC_ALL, "");
 
         g_type_init();
-        g_thread_init(NULL);
 
         ca_proplist_create(&proplist);
 
