@@ -38,6 +38,10 @@ Lesser General Public License for more details.</p>
 
 <h2><a name="news">News</a></h2>
 
+<div class="news-date">Tue 25 Sep
+2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.30.tar.xz">Version
+0.30</a> released; Port to GStreamer 1.0.</p>
+
 <div class="news-date">Tue 15 May
 2012: </div> <p class="news-text"><a href="@PACKAGE_URL@libcanberra-0.29.tar.xz">Version
 0.29</a> released; A couple of bugfixes, drop GConf usage.</p>
@@ -243,7 +247,7 @@ compilation and <tt>make install</tt> (as root) for installation of
 <p><tt>libcanberra</tt>'s bugs are tracked at <a href="http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&amp;product=libcanberra">bugs.freedesktop.org</a>.</p>
 
 <hr/>
-<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, May 2012</address>
+<address class="grey">Lennart Poettering &lt;@PACKAGE_BUGREPORT@&gt;, September 2012</address>
 
 </body>
 </html>
