@@ -437,7 +437,7 @@ AC_ARG_ENABLE([gtk],
 
 AM_CONDITIONAL([GCONF_SCHEMAS_INSTALL], [false])
 if test "x${gtk}" != xno ; then
-    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 >= 2.20.0 gthread-2.0 glib-2.0 >= 2.32 x11 ],
+    PKG_CHECK_MODULES(GTK, [ gtk+-2.0 >= 2.20.0 gthread-2.0 glib-2.0 >= 2.32 gdk-2.0 x11 ],
         [
             HAVE_GTK=1
             AC_DEFINE([HAVE_GTK], 1, [Have GTK?])
@@ -473,7 +473,7 @@ AC_ARG_ENABLE([gtk3],
         [gtk3=auto])
 
 if test "x${gtk3}" != xno ; then
-    PKG_CHECK_MODULES(GTK3, [ gtk+-3.0 gthread-2.0 glib-2.0 >= 2.32 x11 ],
+    PKG_CHECK_MODULES(GTK3, [ gtk+-3.0 gthread-2.0 glib-2.0 >= 2.32 gdk-3.0 x11 ],
         [
             HAVE_GTK3=1
             AC_DEFINE([HAVE_GTK3], 1, [Have GTK3?])

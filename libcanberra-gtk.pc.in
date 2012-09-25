@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: libcanberra-gtk
 Description: Gtk Event Sound API
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lcanberra-gtk @PTHREAD_LIBS@
+Libs: -L${libdir} -lcanberra-gtk -lX11 @PTHREAD_LIBS@
 Cflags: -D_REENTRANT -I${includedir}
-Requires: libcanberra gtk+-2.0
+Requires: libcanberra gdk-2.0 gtk+-2.0
