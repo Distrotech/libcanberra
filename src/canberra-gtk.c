@@ -185,6 +185,11 @@ static gint window_get_desktop(GdkDisplay *d, GdkWindow *w) {
         guchar *data = NULL;
         gint ret = -1;
 
+#ifdef GDK_IS_X11_DISPLAY
+        if (!GDK_IS_X11_DISPLAY(d))
+                return 0;
+#endif
+
         if (XGetWindowProperty(GDK_DISPLAY_XDISPLAY(d), GDK_WINDOW_XID(w),
                                gdk_x11_get_xatom_by_name_for_display(d, "_NET_WM_DESKTOP"),
                                0, G_MAXLONG, False, XA_CARDINAL, &type_return,
