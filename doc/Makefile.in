@@ -96,7 +96,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@USE_LYNX_TRUE@am__append_1 = README
 subdir = doc
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(srcdir)/README.html.in README
@@ -314,8 +313,6 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_DATA = README.html README
 EXTRA_DIST = $(noinst_DATA) style.css README.html.in
-MAINTAINERCLEANFILES = README.html
-CLEANFILES = $(am__append_1)
 all: all-am
 
 .SUFFIXES:
@@ -420,7 +417,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -429,7 +425,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -511,8 +506,13 @@ uninstall-am:
 	tags-am uninstall uninstall-am
 
 
+#MAINTAINERCLEANFILES = README.html
+#CLEANFILES =
+
 @USE_LYNX_TRUE@README: README.html
-@USE_LYNX_TRUE@	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,README,' > $@
+@USE_LYNX_TRUE@	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,$(top_srcdir)/README,' > $@
+
+#CLEANFILES += README
 
 tidy: README.html
 	tidy -qe < README.html ; true

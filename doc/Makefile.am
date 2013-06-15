@@ -19,14 +19,14 @@
 noinst_DATA = README.html README
 EXTRA_DIST = $(noinst_DATA) style.css README.html.in
 
-MAINTAINERCLEANFILES = README.html
-CLEANFILES =
+#MAINTAINERCLEANFILES = README.html
+#CLEANFILES =
 
 if USE_LYNX
 README: README.html
-	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,README,' > $@
+	$(AM_V_GEN)lynx --dump $^ | sed 's,file://localhost/.*/doc/README.html,$(top_srcdir)/README,' > $@
 
-CLEANFILES += README
+#CLEANFILES += README
 endif
 
 tidy: README.html
