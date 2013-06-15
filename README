@@ -1,1 +1,286 @@
-doc/README
+                                libcanberra 0.29
+
+   Copyright 2008-2012 Lennart Poettering <mzyvopnaoreen (at) 0pointer
+   (dot) de>
+     * [1]License
+     * [2]News
+     * [3]Overview
+     * [4]Current Status
+     * [5]Documentation
+     * [6]Requirements
+     * [7]Installation
+     * [8]Acknowledgements
+     * [9]Download
+
+License
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU Lesser General Public License as published
+   by the Free Software Foundation, either version 2.1 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
+   General Public License for more details.
+
+News
+
+   Tue 15 May 2012:
+
+   [10]Version 0.29 released; A couple of bugfixes, drop GConf usage.
+
+   Thu 24 Feb 2011:
+
+   [11]Version 0.28 released; Hook properly into GNOME 3.0 sessions; this
+   drops support for GNOME 2.0 sessions, but not applications.
+
+   Fri 18 Feb 2011:
+
+   [12]Version 0.27 released; Gtk+ 3.x fixes; add new tool to implement
+   boot-up sounds when used with systemd; other fixes
+
+   Mon 4 Oct 2010:
+
+   [13]Version 0.26 released; Gtk+ 3.x fixes.
+
+   Sun 13 Jun 2010:
+
+   [14]Version 0.25 released; Optionally build with Gtk+ 3.x in addition
+   to Gtk+ 2.x.
+
+   Mon 19 Apr 2010:
+
+   [15]Version 0.24 released; GTK code is now fine with GSEAL. Minor fixes
+   in the PulseAudio backend, other fixes.
+
+   Sat 20 Feb 2010:
+
+   [16]Version 0.23 released; various minor fixes in the pulse and
+   gstreamer backends as well in the Vala API. Support for the recently
+   standardized Vorbis 6.1/7.1 multichannel modes.
+
+   Tue 20 Oct 2009:
+
+   [17]Version 0.22 released; small fix to make sure we don't dereference
+   a null pointer.
+
+   Fri 16 Oct 2009:
+
+   [18]Version 0.21 released; suppress casting warning
+
+   Thu 15 Oct 2009:
+
+   [19]Version 0.20 released; minor casting fix
+
+   Wed 14 Oct 2009:
+
+   [20]Version 0.19 released; some important fixes for the Gtk support
+
+   Sun 20 Sep 2009:
+
+   [21]Version 0.18 released; numerous updates for the Gtk support
+
+   Fri 12 Sep 2009:
+
+   [22]Version 0.17 released; add vala vapi file; numerous updates to Gtk
+   support
+
+   Thu 27 Aug 2009:
+
+   [23]Version 0.16 released; add new ca_context_playing() call
+
+   Wed 5 Aug 2009:
+
+   [24]Version 0.15 released; bug fixes
+
+   Thu 2 Jul 2009:
+
+   [25]Version 0.14 released; bug fixes
+
+   Tue 23 Jun 2009:
+
+   [26]Version 0.13 released; multichannel support; gtk multihead support;
+   bug fixes
+
+   Mon 13 Apr 2009:
+
+   [27]Version 0.12 released; changes include: various fixes and updates
+   for the PulseAudio backend; detect forks and return an error for all
+   functions in that case
+
+   Wed 21 Jan 2009:
+
+   [28]Version 0.11 released; changes include: major GStreamer backend
+   fixes; update to libtool 2.2; a few other fixes
+
+   Mon 6 Oct 2008:
+
+   [29]Version 0.10 released; changes include: install Gtk+ module using
+   GConf; a few other fixes
+
+   Tue 9 Sep 2008:
+
+   [30]Version 0.9 released; changes include: GStreamer fixes, include
+   (optional) libtdb based lookup cache.
+
+   Thu 28 Aug 2008:
+
+   [31]Version 0.8 released; changes include: new OSS and GStreamer
+   backend; portability fixes for FreeBSD/Solaris; the multi backend works
+   now
+
+   Thu 14 Aug 2008:
+
+   [32]Version 0.7 released; changes include: documentation updates;
+   various bug fixes; add this web site/README; allow playback of event
+   sounds with only a sound file path specified; other changes
+
+Overview
+
+   libcanberra is an implementation of the [33]XDG Sound Theme and Name
+   Specifications, for generating event sounds on free desktops, such as
+   [34]GNOME. It comes with several backends ([35]ALSA, [36]PulseAudio,
+   OSS, [37]GStreamer, null) and is designed to be portable. It consists
+   of the following parts:
+    1. libcanberra: the main library
+    2. libcanberra-gtk: some glue code to make it easier to use
+       libcanberra from Gtk+ applications
+    3. libcanberra-gtk-module: a Gtk+ module that uses libcanberra-gtk to
+       trigger input feedback event sounds
+
+   For more information see [38]the original announcement.
+
+Current Status
+
+   libcanberra is mostly feature complete. For now however it includes
+   backends only for ALSA, PulseAudio, OSS and GStreamer.
+
+   libcanberra has been declared [39]a blessed GNOME dependency.
+
+   The OSS driver is incomplete: only sound files that are in a format
+   natively understood by the sound card are supported. If the sample
+   type, channel map or sampling rate of the sound file are not supported
+   by the sound card no automatic conversion will take place and the file
+   will not be played. Also note that the OSS backend is most likely
+   incompatible with OSS4, due to subtle incompatibilities between OSS4
+   and the OSS 3.x.
+
+   It is recommended to always take the "shortest" path from libcanberra
+   to the audio device. I.e. don't use the GStreamer plugin if libcanberra
+   supports the final output target natively. Besides being more
+   resource-friendly and less error-prone, some advanced functionality
+   might get lost with each layer you add to your stack. For example:
+   while you could use libcanberra's Gstreamer backend to output to a
+   PulseAudio server this will not be able to make use of sample cacheing
+   or will be able to attach additional meta data to the sounds played,
+   which might be necessary for effects like positional event sounds.
+
+Documentation
+
+   You may browse the [40]gtkdoc generated [41]programing documentation of
+   the API.
+
+Requirements
+
+   Currently, libcanberra is tested on Linux only.
+
+   libcanberra was developed and tested on Fedora Rawhide from August
+   2008, it should work on most other Linux distributions (and maybe Unix
+   versions) since it uses GNU autoconf and GNU libtool for source code
+   configuration and shared library management.
+
+   libcanberra has no dependencies besides the OGG Vorbis development
+   headers and whatever the selected backends require. Gtk+ support is
+   optional. An optional lookup cache can be used if Samba's tdb trivial
+   database is available.
+
+Installation
+
+   As this package is made with the GNU autotools you should run
+   ./configure inside the distribution directory for configuring the
+   source tree. After that you should run make for compilation and make
+   install (as root) for installation of libcanberra.
+
+Acknowledgements
+
+   Marc-André Lureau and Brian Cameron for the GStreamer backend.
+
+   Joe Marcus Clarke for the OSS backend.
+
+   Diego Elio Pettenò for various build system fixes.
+
+Download
+
+   The newest release is always available from
+   [42]http://0pointer.de/lennart/projects/libcanberra/
+
+   The current release is [43]0.29
+
+   Get libcanberra's development sources from the [44]GIT [45]repository
+   ([46]gitweb):
+git clone git://git.0pointer.de/libcanberra
+
+   If you want to report bugs, have questions or want to be notified about
+   new releases, please join the [47]libcanberra-discuss mailing list.
+
+   If you want to be notified about new git commits, please join the
+   [48]libcanberra-commits mailing list.
+
+   libcanberra's bugs are tracked at [49]bugs.freedesktop.org.
+     __________________________________________________________________
+
+
+    Lennart Poettering <mzyvopnaoreen (at) 0pointer (dot) de>, May 2012
+
+References
+
+   1. ../README#license
+   2. ../README#news
+   3. ../README#overview
+   4. ../README#status
+   5. ../README#documentation
+   6. ../README#requirements
+   7. ../README#installation
+   8. ../README#acks
+   9. ../README#download
+  10. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.29.tar.xz
+  11. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.28.tar.gz
+  12. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.27.tar.gz
+  13. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.26.tar.gz
+  14. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.25.tar.gz
+  15. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.24.tar.gz
+  16. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.23.tar.gz
+  17. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.22.tar.gz
+  18. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.21.tar.gz
+  19. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.20.tar.gz
+  20. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.19.tar.gz
+  21. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.18.tar.gz
+  22. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.17.tar.gz
+  23. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.16.tar.gz
+  24. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.15.tar.gz
+  25. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.14.tar.gz
+  26. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.13.tar.gz
+  27. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.12.tar.gz
+  28. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.11.tar.gz
+  29. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.10.tar.gz
+  30. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.9.tar.gz
+  31. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.8.tar.gz
+  32. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.7.tar.gz
+  33. http://freedesktop.org/wiki/Specifications/sound-theme-spec
+  34. http://www.gnome.org/
+  35. http://alsa-project.org/
+  36. http://pulseaudio.org/
+  37. http://gstreamer.org/
+  38. http://0pointer.de/blog/projects/sixfold-announcement.html
+  39. http://mail.gnome.org/archives/devel-announce-list/2008-August/msg00001.html
+  40. http://www.gtk.org/gtk-doc/
+  41. http://0pointer.de/lennart/projects/libcanberra/gtkdoc/
+  42. http://0pointer.de/lennart/projects/libcanberra/
+  43. http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.29.tar.xz
+  44. http://git-scm.com/
+  45. git://git.0pointer.de/libcanberra
+  46. http://git.0pointer.de/?p=libcanberra.git
+  47. https://tango.0pointer.de/mailman/listinfo/libcanberra-discuss/
+  48. https://tango.0pointer.de/mailman/listinfo/libcanberra-commits/
+  49. http://bugs.freedesktop.org/buglist.cgi?bug_status=__open__&product=libcanberra
